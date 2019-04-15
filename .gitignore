@@ -54,6 +54,7 @@ dkms.conf
 # Project Files
 *.cproject
 *.project
+*.metadata
 
 # Log Files
 *.log
