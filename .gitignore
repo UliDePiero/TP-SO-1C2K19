@@ -61,3 +61,4 @@ dkms.conf
 [Dd]ebug*/
 [Rr]elease*/
 .settings/
+/.metadata/

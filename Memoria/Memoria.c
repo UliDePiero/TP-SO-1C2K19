@@ -44,14 +44,21 @@ int main()
 	configuracion = malloc(sizeof(ConfiguracionMemoria));
 	configurar(configuracion);
 
-	//servidor
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
+	//servidor
 	//socketEscucha= levantarServidorIPautomatica(configuracion->PUERTO, BACKLOG); //BACKLOG es la cantidad de clientes que pueden conectarse a este servidor
 	//socketActivo = aceptarComunicaciones(socketEscucha);
+
+	// cliente
+	//int socketLFS = conectarAUnServidor(configuracion->IP_FS, configuracion->PUERTO_FS);
+	//int socketSEED = conectarAUnServidor(configuracion->IP_SEEDS, configuracion->PUERTO_SEEDS);
+
 	free(configuracion);
 
 	cerrarSocket(socketActivo);
 	cerrarSocket(socketEscucha);
+	cerrarSocket(socketLFS);
+	cerrarSocket(socketSEED);
 }
 
 
