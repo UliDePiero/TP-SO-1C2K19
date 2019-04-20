@@ -24,10 +24,13 @@
 #include <commons/config.h>
 #include <commons/log.h>
 #include <arpa/inet.h>
+#include <sockets.h>
+#include <configuraciones.h>
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
 int socketEscucha;
-int	socketActivo;
+int maxSock;
+int socketActivo;
 int	socketLFS;
 int	socketSEED;
 
@@ -35,11 +38,14 @@ int	socketSEED;
 
 //Estructura para datos del archivo de configuracion
 typedef struct {
-	char PUERTO[10];
+	//char PUERTO[10];
+	int PUERTO;
 	char IP_FS[20];
-	char PUERTO_FS[10];
+	//char PUERTO_FS[10];
+	int PUERTO_FS;
 	char IP_SEEDS[100]; //Verificar
-	char PUERTO_SEEDS[100]; //Verificar
+	//char PUERTO_SEEDS[100]; //Verificar
+	int PUERTO_SEEDS[16];//Verificar
 	int RETARDO_MEM;
 	int RETARDO_FS;
 	int TAM_MEM;

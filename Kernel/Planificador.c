@@ -22,7 +22,8 @@ void configurar(ConfiguracionKernel* configuracion) {
 	//Relleno los campos con la info del archivo
 
 	strcpy(configuracion->IP_MEMORIA, archivoConfigSacarStringDe(archivoConfig, "IP_MEMORIA"));
-	strcpy(configuracion->PUERTO_MEMORIA, archivoConfigSacarStringDe(archivoConfig, "PUERTO_MEMORIA"));
+	//strcpy(configuracion->PUERTO_MEMORIA, archivoConfigSacarStringDe(archivoConfig, "PUERTO_MEMORIA"));
+	configuracion->PUERTO_MEMORIA = archivoConfigSacarIntDe(archivoConfig, "PUERTO_MEMORIA");
 	configuracion->QUANTUM = archivoConfigSacarIntDe(archivoConfig, "QUANTUM");
 	configuracion->MULTIPROCESAMIENTO = archivoConfigSacarIntDe(archivoConfig, "MULTIPROCESAMIENTO");
 	configuracion->METADATA_REFRESH = archivoConfigSacarIntDe(archivoConfig, "METADATA_REFRESH");
@@ -39,6 +40,8 @@ int main()
 
 	// cliente
 	//int socketMEMORIA = conectarAUnServidor(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA);
+	int socketMEMORIA = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA);
+	//int socketMEMORIA = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
 
 	free(configuracion);
 

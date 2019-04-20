@@ -23,10 +23,14 @@
 #include <commons/config.h>
 #include <commons/log.h>
 #include <arpa/inet.h>
+#include <sockets.h>
+#include <configuraciones.h>
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
+
 int socketEscucha;
-int	socketActivo;
+int maxSock;
+int socketActivo;
 
 pthread_t hiloCompactador;
 pthread_t hiloFileSystem;
@@ -35,7 +39,8 @@ pthread_t hiloFileSystem;
 
 //Estructura para datos del archivo de configuracion
 typedef struct {
-	char PUERTO[10];
+	//char PUERTO[10];
+	int PUERTO;
 	char PUNTO_MONTAJE[30];
 	int RETARDO;
 	int TAMAÑO_VALUE;

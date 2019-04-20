@@ -23,6 +23,8 @@
 #include <commons/config.h>
 #include <commons/log.h>
 #include <arpa/inet.h>
+#include <sockets.h>
+#include <configuraciones.h>
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
 int socketMemoria;
@@ -32,7 +34,8 @@ int socketMemoria;
 //Estructura para datos del archivo de configuracion
 typedef struct {
 	char IP_MEMORIA[20];
-	char PUERTO_MEMORIA[10];
+	//char PUERTO_MEMORIA[10];
+	int PUERTO_MEMORIA;
 	int QUANTUM;
 	int MULTIPROCESAMIENTO;
 	int METADATA_REFRESH;

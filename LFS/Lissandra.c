@@ -19,7 +19,8 @@ void configurar(ConfiguracionLFS* configuracion) {
 
 	//Relleno los campos con la info del archivo
 
-	strcpy(configuracion->PUERTO, archivoConfigSacarStringDe(archivoConfig, "PUERTO"));
+	//strcpy(configuracion->PUERTO, archivoConfigSacarStringDe(archivoConfig, "PUERTO"));
+	configuracion->PUERTO = archivoConfigSacarIntDe(archivoConfig, "PUERTO");
 	strcpy(configuracion->PUNTO_MONTAJE, archivoConfigSacarStringDe(archivoConfig, "PUNTO_MONTAJE"));
 	configuracion->RETARDO = archivoConfigSacarIntDe(archivoConfig, "RETARDO");
 	configuracion->TAMAÑO_VALUE = archivoConfigSacarIntDe(archivoConfig, "TAMAÑO_VALUE");
@@ -34,10 +35,38 @@ int main()
 
 	//servidor
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
-	//socketEscucha= levantarServidorIPautomatica(configuracion->PUERTO, BACKLOG); //BACKLOG es la cantidad de clientes que pueden conectarse a este servidor
-	//socketActivo = aceptarComunicaciones(socketEscucha);
+
+	/*socketEscucha= levantarServidorIPautomatica(configuracion->PUERTO, BACKLOG); //BACKLOG es la cantidad de clientes que pueden conectarse a este servidor
+	socketActivo = aceptarComunicaciones(socketEscucha);*/
+
+	fd_set setSocketsOrquestador;
+	FD_ZERO(&setSocketsOrquestador);
+
+	// Inicializacion de sockets y actualizacion del log
+
+	//socketEscucha = crearSocketEscucha(configuracion->PUERTO, logger);
+	socketEscucha = crearSocketEscucha(configuracion->PUERTO);
+
 	free(configuracion);
 
+	FD_SET(socketEscucha, &setSocketsOrquestador);
+	maxSock = socketEscucha;
+	tMensaje tipoMensaje;
+	char * sPayload;
+	while (1) {
+
+		puts("Escuchando");
+		//socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
+		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload);
+		printf("Socket comunicacion: %d \n", socketActivo);
+		if (socketActivo != -1) {
+
+			switch (tipoMensaje) {
+
+			}
+		}
+
+	}
 	crearHilo(&hiloCompactador,(void*)compactacion, NULL, "LFS");
 	crearHilo(&hiloFileSystem,(void*)fileSystem, NULL, "LFS");
 
