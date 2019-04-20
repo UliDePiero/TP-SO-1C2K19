@@ -8,6 +8,7 @@
 #ifndef API_KERNEL_H_
 #define API_KERNEL_H_
 
-
+int comandoValido(int inputs, char** comando);
+void informarComandoInvalido();
 
 #endif /* API_KERNEL_H_ */
