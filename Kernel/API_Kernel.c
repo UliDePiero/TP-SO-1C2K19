@@ -8,7 +8,7 @@
 
 
 
-int main(void){
+int api_kernel(void){
 	char* linea;
 	char** comando;
 	linea = readline(">");

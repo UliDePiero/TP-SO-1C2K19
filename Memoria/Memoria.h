@@ -34,6 +34,9 @@ int socketActivo;
 int	socketLFS;
 int	socketSEED;
 
+t_log* logger;
+char* logFile;
+
 ///---------------------ESTRUCTURA DE CONFIGURACION DE LFS-------------------------
 
 //Estructura para datos del archivo de configuracion

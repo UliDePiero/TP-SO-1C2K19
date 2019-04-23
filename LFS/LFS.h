@@ -35,6 +35,9 @@ int socketActivo;
 pthread_t hiloCompactador;
 pthread_t hiloFileSystem;
 
+t_log* logger;
+char* logFile;
+
 ///---------------------ESTRUCTURA DE CONFIGURACION DE LFS-------------------------
 
 //Estructura para datos del archivo de configuracion
@@ -43,14 +46,14 @@ typedef struct {
 	int PUERTO;
 	char PUNTO_MONTAJE[30];
 	int RETARDO;
-	int TAMAÑO_VALUE;
+	int TAMANIO_VALUE;
 	int TIEMPO_DUMP;
 } ConfiguracionLFS;
 /*
 PUERTO_ESCUCHA=5003
 PUNTO_MONTAJE="/mnt/LISSANDRA_FS/"
 RETARDO=500
-TAMAÑO_VALUE=4
+TAMANIO_VALUE=4
 TIEMPO_DUMP=5000
 */
 //Estructura para guardar la configuracion del proceso

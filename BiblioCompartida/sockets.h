@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <pthread.h>
 
 #include "log.h"
 #include "protocolo.h"
@@ -32,5 +33,7 @@ signed int getConnectionTimeOut(fd_set *setSockets, int *maxSock, int sockListen
 signed int connectToServer(char *ip_server, int puerto, t_log *logger);
 
 int desconectarseDe(int iSocket);
+
+void crearHiloIndependiente(pthread_t* hilo, void *(*funcion) (void *), void *__restrict argumento, char* proceso);
 
 #endif /* LIBSOCKETS_H_ */

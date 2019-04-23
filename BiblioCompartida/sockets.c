@@ -298,3 +298,15 @@ int desconectarseDe(int iSocket)
 		return EXIT_FAILURE;
 	}
 }
+
+///FUNCIONES DE HILOS
+
+//Creo un hilo asociado a hilo, con cierta funcion y cierto argumento asociado, y lo detacheo
+void crearHiloIndependiente(pthread_t* hilo, void *(*funcion) (void *), void *__restrict argumento, char* proceso) {
+
+	pthread_create(hilo, NULL, (void*) funcion, (void*) argumento);
+	printf("Creado el hilo %lu para el %s", *hilo, proceso);
+	pthread_detach((int) hilo);
+
+}
+//---------------------------------------------

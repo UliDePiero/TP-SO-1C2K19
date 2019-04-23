@@ -33,6 +33,7 @@ void configurar(ConfiguracionKernel* configuracion) {
 }
 int main()
 {
+	logger = log_create(logFile, "Planificador",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionKernel));
 	configurar(configuracion);
 
@@ -40,12 +41,11 @@ int main()
 
 	// cliente
 	//int socketMEMORIA = conectarAUnServidor(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA);
-	int socketMEMORIA = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA);
-	//int socketMEMORIA = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
+	int socketMEMORIA = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
 
 	free(configuracion);
 
-	cerrarSocket(socketMemoria);
+	desconectarseDe(socketMemoria);
 }
 
 
