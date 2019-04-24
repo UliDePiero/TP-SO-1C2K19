@@ -25,6 +25,8 @@
 #include <configuraciones.h>
 #include <commons/string.h>
 
+int api_kernel(void);
+void leerLinea(char* linea);
 int comandoValido(int inputs, char** comando);
 void informarComandoInvalido();
 
