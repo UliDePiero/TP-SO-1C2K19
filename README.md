@@ -10,9 +10,12 @@
 	
 	 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug
 
-	Para linkear también las commons debemos agregar dos rutas como por ejemplo: 
+	Para linkear también las commons debemos agregar dos rutas como por ejemplo:
+	
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug/
+	
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/utnso/workspace/so-commons-library/src/commons/Debug/
+	
 2) Verificar que cada ejecutable haya quedado bien linkeado a la BiblioCompartida
 
 3) Desde la consola, en la carpeta Debug de cada proyecto, ejecutar ldd Ejecutable y ver como está libBiblioCompartida.so
