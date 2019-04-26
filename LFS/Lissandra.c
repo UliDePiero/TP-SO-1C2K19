@@ -8,7 +8,7 @@
 void configurar(ConfiguracionLFS* configuracion) {
 
 	char* campos[] = {
-					   "PUERTO",
+					   "PUERTO_ESCUCHA",
 					   "PUNTO_MONTAJE",
 					   "RETARDO",
 					   "TAMANIO_VALUE",
@@ -20,7 +20,7 @@ void configurar(ConfiguracionLFS* configuracion) {
 	//Relleno los campos con la info del archivo
 
 	//strcpy(configuracion->PUERTO, archivoConfigSacarStringDe(archivoConfig, "PUERTO"));
-	configuracion->PUERTO = archivoConfigSacarIntDe(archivoConfig, "PUERTO");
+	configuracion->PUERTO_ESCUCHA = archivoConfigSacarIntDe(archivoConfig, "PUERTO_ESCUCHA");
 	strcpy(configuracion->PUNTO_MONTAJE, archivoConfigSacarStringDe(archivoConfig, "PUNTO_MONTAJE"));
 	configuracion->RETARDO = archivoConfigSacarIntDe(archivoConfig, "RETARDO");
 	configuracion->TAMANIO_VALUE = archivoConfigSacarIntDe(archivoConfig, "TAMANIO_VALUE");
@@ -37,7 +37,7 @@ int main()
 	//servidor
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
 
-	/*socketEscucha= levantarServidorIPautomatica(configuracion->PUERTO, BACKLOG); //BACKLOG es la cantidad de clientes que pueden conectarse a este servidor
+	/*socketEscucha= levantarServidorIPautomatica(configuracion->PUERTO_ESCUCHA, BACKLOG); //BACKLOG es la cantidad de clientes que pueden conectarse a este servidor
 	socketActivo = aceptarComunicaciones(socketEscucha);*/
 
 	fd_set setSocketsOrquestador;
@@ -45,10 +45,10 @@ int main()
 
 	// Inicializacion de sockets y actualizacion del log
 
-	socketEscucha = crearSocketEscucha(configuracion->PUERTO, logger);
+	socketEscucha = crearSocketEscucha(configuracion->PUERTO_ESCUCHA, logger);
 
 	free(configuracion);
-
+	//ESTO TIENE QUE IR EN UN HILO APARTE PARA QUE QUEDE EN LOOP
 	FD_SET(socketEscucha, &setSocketsOrquestador);
 	maxSock = socketEscucha;
 	tMensaje tipoMensaje;
@@ -57,7 +57,7 @@ int main()
 
 		puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
-		printf("Socket comunicacion: %d \n", socketActivo);
+		printf("Socket comunicacion: %d \n", socketActivo);//CORREGIR getConnection
 		if (socketActivo != -1) {
 
 			switch (tipoMensaje) {

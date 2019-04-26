@@ -46,8 +46,8 @@ typedef struct {
 	char IP_FS[20];
 	//char PUERTO_FS[10];
 	int PUERTO_FS;
-	char IP_SEEDS[100]; //Verificar
-	//char PUERTO_SEEDS[100]; //Verificar
+	char IP_SEEDS[16][20]; //Verificar
+	//char PUERTO_SEEDS[16][10]; //Verificar
 	int PUERTO_SEEDS[16];//Verificar
 	int RETARDO_MEM;
 	int RETARDO_FS;
@@ -58,9 +58,9 @@ typedef struct {
 } ConfiguracionMemoria;
 /*
 PUERTO=8001
-IP_FS="172.0.0.1"
+IP_FS=172.0.0.1
 PUERTO_FS=5003
-IP_SEEDS=["172.0.0.2","172.0.0.3"]
+IP_SEEDS=[172.0.0.2,172.0.0.3]
 PUERTO_SEEDS=[8000,8001]
 RETARDO_MEM=600
 RETARDO_FS=600

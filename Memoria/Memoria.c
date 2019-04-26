@@ -18,11 +18,10 @@ void configurar(ConfiguracionMemoria* configuracion) {
 					   "TAM_MEM",
 					   "RETARDO_JOURNAL",
 					   "RETARDO_GOSSIPING",
-					   "MEMORY_NUMBER=1"
+					   "MEMORY_NUMBER"
 					 };
 
 	t_config* archivoConfig = archivoConfigCrear(RUTA_CONFIG, campos);
-
 	//Relleno los campos con la info del archivo
 
 	//strcpy(configuracion->PUERTO, archivoConfigSacarStringDe(archivoConfig, "PUERTO"));
@@ -31,11 +30,8 @@ void configurar(ConfiguracionMemoria* configuracion) {
 	//strcpy(configuracion->PUERTO_FS, archivoConfigSacarStringDe(archivoConfig, "PUERTO_FS"));
 	configuracion->PUERTO_FS = archivoConfigSacarIntDe(archivoConfig, "PUERTO_FS");
 
-	//VER
-	//strcpy(configuracion->IP_SEEDS, archivoConfigSacarStringDe(archivoConfig, "IP_SEEDS"));
-
-	//VER
-	//configuracion->PUERTO_SEEDS = archivoConfigSacarIntDe(archivoConfig, "PUERTO_SEEDS");
+	memcpy(configuracion->IP_SEEDS, archivoConfigSacarArrayDe(archivoConfig, "IP_SEEDS"), sizeof (configuracion->IP_SEEDS));
+	memcpy(configuracion->PUERTO_SEEDS, archivoConfigSacarArrayDe(archivoConfig, "PUERTO_SEEDS"), sizeof (configuracion->PUERTO_SEEDS));
 
 	configuracion->RETARDO_MEM = archivoConfigSacarIntDe(archivoConfig, "RETARDO_MEM");
 	configuracion->RETARDO_FS = archivoConfigSacarIntDe(archivoConfig, "RETARDO_FS");
@@ -63,6 +59,8 @@ int main()
 
 	socketEscucha = crearSocketEscucha(configuracion->PUERTO, logger);
 
+	free(configuracion);
+	//ESTO TIENE QUE IR EN UN HILO APARTE PARA QUE QUEDE EN LOOP
 	FD_SET(socketEscucha, &setSocketsOrquestador);
 	maxSock = socketEscucha;
 	tMensaje tipoMensaje;
@@ -71,7 +69,7 @@ int main()
 
 		puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
-		printf("Socket comunicacion: %d \n", socketActivo);
+		printf("Socket comunicacion: %d \n", socketActivo); //CORREGIR getConnection
 		if (socketActivo != -1) {
 
 			switch (tipoMensaje) {
@@ -81,7 +79,7 @@ int main()
 
 	}
 
-
+	//ESTE PUEDE QUEDAR EN EL HILO PRINCIPAL
 	// cliente
 	//int socketLFS = conectarAUnServidor(configuracion->IP_FS, configuracion->PUERTO_FS);
 	//int socketSEED = conectarAUnServidor(configuracion->IP_SEEDS, configuracion->PUERTO_SEEDS);

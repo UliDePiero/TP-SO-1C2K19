@@ -44,7 +44,7 @@ int main()
 	int socketMEMORIA = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
 
 	free(configuracion);
-
+	getchar();
 	desconectarseDe(socketMemoria);
 }
 

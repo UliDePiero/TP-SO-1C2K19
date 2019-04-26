@@ -43,7 +43,7 @@ char* logFile;
 //Estructura para datos del archivo de configuracion
 typedef struct {
 	//char PUERTO[10];
-	int PUERTO;
+	int PUERTO_ESCUCHA;
 	char PUNTO_MONTAJE[30];
 	int RETARDO;
 	int TAMANIO_VALUE;
@@ -51,7 +51,7 @@ typedef struct {
 } ConfiguracionLFS;
 /*
 PUERTO_ESCUCHA=5003
-PUNTO_MONTAJE="/mnt/LISSANDRA_FS/"
+PUNTO_MONTAJE=/mnt/LISSANDRA_FS/
 RETARDO=500
 TAMANIO_VALUE=4
 TIEMPO_DUMP=5000
