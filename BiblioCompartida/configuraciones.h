@@ -34,6 +34,7 @@
 #include <commons/collections/dictionary.h>
 #include <commons/config.h>
 #include <readline/readline.h>
+#include <pthread.h>
 
 ///----------------STRUCTS-----------------///
 
