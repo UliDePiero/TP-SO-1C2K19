@@ -27,10 +27,17 @@ typedef enum {
 	/* Mensajes comunes */
 	DESCONEXION,
 	NO_SE_OBTIENE_RESPUESTA,
-	NADA
+	NADA,
+	SELECT,
+	INSERT,
+	CREATE,
+	DESCRIBE,
+	DROP,
+	JOURNAL,
+	ADD,
+	RUN,
+	METRICS
 } tMensaje;
-
-
 
 /*
  * Aca se definen los payloads que se van a mandar en los paquetes

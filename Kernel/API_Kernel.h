@@ -24,10 +24,9 @@
 #include <sockets.h>
 #include <configuraciones.h>
 #include <commons/string.h>
+#include <parser.h>
 
 int api_kernel(void);
-void leerLinea(char* linea);
-int comandoValido(int inputs, char** comando);
-void informarComandoInvalido();
+int ejecutarInstruccion(char * instruccion);
 
 #endif /* API_KERNEL_H_ */
