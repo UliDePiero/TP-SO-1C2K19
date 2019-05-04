@@ -6,57 +6,57 @@
  */
 #include "API_Kernel.h"
 
-//void API_Kernel(void){
-main(){
+void API_Kernel(void){
+//int main(){
 	char* linea;
 	char* linea2;
 
+	linea = readline(">");
+	linea2 = malloc(strlen(linea)+1);
+	strcpy(linea2, linea);
+
+	while(strncmp("EXIT", linea, 5)){
+		switch(parser(linea)){
+			case SELECT:
+				ejecutarSelect(linea2);
+				break;
+			case INSERT:
+				ejecutarInsert(linea2);
+				break;
+			case CREATE:
+				ejecutarCreate(linea2);
+				break;
+			case DESCRIBE:
+				ejecutarDescribe(linea2);
+				break;
+			case DROP:
+				ejecutarDrop(linea2);
+				break;
+			case JOURNAL:
+				ejecutarJournal(linea2);
+				break;
+			case ADD:
+				ejecutarAdd(linea2);
+				break;
+			case RUN:
+				ejecutarRun(linea2);
+				break;
+			case -1:
+				informarComandoInvalido();
+				break;
+			default:
+				//printf("Es un comentario o fin de linea \n");
+				break;
+		}
+		free(linea2);
 		linea = readline(">");
 		linea2 = malloc(strlen(linea)+1);
 		strcpy(linea2, linea);
-
-		while(strncmp("EXIT", linea, 5)){
-			switch(parser(linea)){
-				case SELECT:
-					ejecutarSelect(linea2);
-					break;
-				case INSERT:
-					ejecutarInsert(linea2);
-					break;
-				case CREATE:
-					ejecutarCreate(linea2);
-					break;
-				case DESCRIBE:
-					ejecutarDescribe(linea2);
-					break;
-				case DROP:
-					ejecutarDrop(linea2);
-					break;
-				case JOURNAL:
-					ejecutarJournal(linea2);
-					break;
-				case ADD:
-					//ejecutarAdd(linea2);
-					break;
-				case RUN:
-					ejecutarRun(linea2);
-					break;
-				case -1:
-					informarComandoInvalido();
-					break;
-				default:
-					//printf("Es un comentario o fin de linea \n");
-					break;
-			}
-			free(linea2);
-			linea = readline(">");
-			linea2 = malloc(strlen(linea)+1);
-			strcpy(linea2, linea);
-		}
-		free(linea2);
-		free(linea);
+	}
+	free(linea2);
+	free(linea);
 }
-int ejecutarInstruccion(char * instruccion){
+/*int ejecutarInstruccion(char * instruccion){
 	int opcion = 0;
 	opcion = parser (instruccion);
 	//opcion = leerlinea (instruccion); PROBAR CON ESTA OTRA OPCION
@@ -91,7 +91,8 @@ int ejecutarInstruccion(char * instruccion){
 			break;
 	}
 	return opcion;
-}
+}*/
+
 void ejecutarSelect(char* instruccion){
 	puts("select ejecutado");
 	char** comando ;
@@ -129,18 +130,18 @@ void ejecutarDrop(char* instruccion){
 }
 void ejecutarJournal(char* instruccion){
 	puts("journal ejecutado");
-	//char** comando ;
-	//comando = string_n_split(instruccion, 2, " ");
-	//if(comandoValido(1, comando))
+	char** comando ;
+	comando = string_n_split(instruccion, 1, " ");
+	if(comandoValido(1, comando))
 		puts("comando valido");
 }
-/*void ejecutarAdd(char* instruccion){
+void ejecutarAdd(char* instruccion){
 	puts("add ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 2, " ");
 	if(comandoValido(2, comando))
 		puts("comando valido");
-}*/
+}
 void ejecutarRun(char* instruccion){
 	puts("run ejecutado");
 	char** comando ;

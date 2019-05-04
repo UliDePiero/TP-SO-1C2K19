@@ -26,6 +26,11 @@
 #include <parser.h>
 
 void API_Memoria();
-int ejecutarInstruccion(char * instruccion);
+void ejecutarSelect(char*);
+void ejecutarInsert(char*);
+void ejecutarCreate(char*);
+void ejecutarDescribe(char*);
+void ejecutarDrop(char*);
+void ejecutarJournal(char*);
 
 #endif /* API_MEMORIA_H_ */

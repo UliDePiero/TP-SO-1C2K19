@@ -31,7 +31,14 @@ char* linea;
 #define PATH_SCRIPT "LQL.script" //para hacer pruebas
 
 void API_Kernel(void);
-int ejecutarInstruccion(char * instruccion);
+//int ejecutarInstruccion(char * instruccion);
+void ejecutarSelect(char* instruccion);
+void ejecutarInsert(char* instruccion);
+void ejecutarCreate(char* instruccion);
+void ejecutarDescribe(char* instruccion);
+void ejecutarDrop(char* instruccion);
+void ejecutarJournal(char* instruccion);
 void ejecutarAdd(char* instruccion);
 void ejecutarRun(char* instruccion);
+
 #endif /* API_KERNEL_H_ */
