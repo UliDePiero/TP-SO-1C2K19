@@ -4,7 +4,7 @@
  *  Created on: 12 abr. 2019
  *      Author: utnso
  */
-
+#include "API_LFS.h"
 
 int ejecutarInstruccion(char * instruccion){
 	int opcion = 0;

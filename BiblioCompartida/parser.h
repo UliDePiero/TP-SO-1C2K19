@@ -16,7 +16,8 @@ int parserEspacio(char * instruccion, int i, char * buffer);
 //Genera un String hasta que encuentra el fin de linea
 void parserFinDeLinea(char * instruccion, int i, char * buffer);
 //Devuelve la instruccion a parsear. Retorna -1 en error o comando invalido
-void leerLinea(char* linea);
+//void leerLinea(char* linea);
+int leerLinea(char* linea);
 int comandoValido(int inputs, char** comando);
 void informarComandoInvalido();
 

@@ -4,6 +4,7 @@
  *  Created on: 27 abr. 2019
  *      Author: utnso
  */
+#include "parser.h"
 
 void parserFinDeLinea(char * instruccion, int i, char * buffer){
 	int j=0;
