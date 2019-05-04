@@ -8,6 +8,10 @@
 #ifndef PARSER_H_
 #define PARSER_H_
 #include "protocolo.h"
+#include <commons/string.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 //Devuelve la instruccion a parsear. Si retorna 0 es un comentario. Si retorna -1 es fin de archivo
 int parser(char * instruccion);
@@ -17,8 +21,13 @@ int parserEspacio(char * instruccion, int i, char * buffer);
 void parserFinDeLinea(char * instruccion, int i, char * buffer);
 //Devuelve la instruccion a parsear. Retorna -1 en error o comando invalido
 //void leerLinea(char* linea);
-int leerLinea(char* linea);
+//int leerLinea(char* linea);
+
+
+int leerlineas(char* linea, int tipo);
+//Retorna si el comando es valido
 int comandoValido(int inputs, char** comando);
+//Informa que el comando ingresado no es valido
 void informarComandoInvalido();
 
 #endif /* PARSER_H_ */
