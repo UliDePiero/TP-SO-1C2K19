@@ -31,7 +31,7 @@ void configurar(ConfiguracionKernel* configuracion) {
 
 	archivoConfigDestruir(archivoConfig);
 }
-int main()
+int plani()
 {
 	logger = log_create(logFile, "Planificador",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionKernel));

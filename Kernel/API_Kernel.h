@@ -8,7 +8,6 @@
 #ifndef API_KERNEL_H_
 #define API_KERNEL_H_
 
-
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <stdio.h>
@@ -26,7 +25,13 @@
 #include <commons/string.h>
 #include <parser.h>
 
-int api_kernel(void);
-int ejecutarInstruccion(char * instruccion);
+FILE *script;
+char stringLQL[100];
+char* linea;
+#define PATH_SCRIPT "LQL.script" //para hacer pruebas
 
+void API_Kernel(void);
+int ejecutarInstruccion(char * instruccion);
+void ejecutarAdd(char* instruccion);
+void ejecutarRun(char* instruccion);
 #endif /* API_KERNEL_H_ */

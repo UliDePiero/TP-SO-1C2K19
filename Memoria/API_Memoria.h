@@ -25,6 +25,7 @@
 #include <commons/string.h>
 #include <parser.h>
 
+void API_Memoria();
 int ejecutarInstruccion(char * instruccion);
 
 #endif /* API_MEMORIA_H_ */

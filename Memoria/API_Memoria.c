@@ -6,6 +6,19 @@
  */
 #include "API_Memoria.h"
 
+void API_Memoria(){
+	char* linea;
+
+	linea = readline(">");
+
+	while(strncmp("EXIT", linea, 5)){
+		ejecutarInstruccion(linea);
+		//free(linea);
+		linea = readline(">");
+
+	}
+	//free(linea);
+}
 int ejecutarInstruccion(char * instruccion){
 	int opcion = 0;
 	opcion = parser (instruccion);
