@@ -25,6 +25,12 @@
 #include <commons/string.h>
 #include <parser.h>
 
+void API_LFS();
 int ejecutarInstruccion(char * instruccion);
+void ejecutarSelect(char*);
+void ejecutarInsert(char*);
+void ejecutarCreate(char*);
+void ejecutarDescribe(char*);
+void ejecutarDrop(char*);
 
 #endif /* API_LFS_H_ */

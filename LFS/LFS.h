@@ -34,6 +34,7 @@ int socketActivo;
 
 pthread_t hiloCompactador;
 pthread_t hiloFileSystem;
+pthread_t hiloAPI;
 
 t_log* logger;
 char* logFile;

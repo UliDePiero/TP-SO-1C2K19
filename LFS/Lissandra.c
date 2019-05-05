@@ -48,6 +48,15 @@ int main()
 	socketEscucha = crearSocketEscucha(configuracion->PUERTO_ESCUCHA, logger);
 
 	free(configuracion);
+
+	//crearHiloIndependiente(&hiloCompactador,(void*)compactacion, NULL, "LFS");
+	pthread_create(&hiloCompactador, NULL, (void*)compactacion, NULL);
+	pthread_join(hiloCompactador, NULL);
+	//pthread_create(&hiloFileSystem, NULL, (void*)fileSystem, NULL);
+	//pthread_join(hiloFileSystem, NULL);
+	crearHiloIndependiente(&hiloFileSystem,(void*)fileSystem, NULL, "LFS");
+	crearHiloIndependiente(&hiloAPI,(void*)API_LFS, NULL, "LFS");
+
 	//ESTO TIENE QUE IR EN UN HILO APARTE PARA QUE QUEDE EN LOOP
 	FD_SET(socketEscucha, &setSocketsOrquestador);
 	maxSock = socketEscucha;
@@ -66,13 +75,6 @@ int main()
 		}
 
 	}
-	pthread_create(&hiloCompactador, NULL, (void*)compactacion, NULL);
-	pthread_create(&hiloFileSystem, NULL, (void*)fileSystem, NULL);
-	//crearHiloIndependiente(&hiloCompactador,(void*)compactacion, NULL, "LFS");
-	//crearHiloIndependiente(&hiloFileSystem,(void*)fileSystem, NULL, "LFS");
-
-	pthread_join(hiloCompactador, NULL);
-	pthread_join(hiloFileSystem, NULL);
 
 	desconectarseDe(socketActivo);
 	desconectarseDe(socketEscucha);

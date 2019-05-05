@@ -60,6 +60,11 @@ int main()
 	socketEscucha = crearSocketEscucha(configuracion->PUERTO, logger);
 
 	free(configuracion);
+
+	crearHiloIndependiente(&hiloAPI,(void*)API_Memoria, NULL, "Memoria");
+	pthread_create(&hiloJournal, NULL, (void*)journalization, NULL);
+	pthread_join(hiloJournal, NULL);
+
 	//ESTO TIENE QUE IR EN UN HILO APARTE PARA QUE QUEDE EN LOOP
 	FD_SET(socketEscucha, &setSocketsOrquestador);
 	maxSock = socketEscucha;
@@ -84,7 +89,10 @@ int main()
 	//int socketLFS = conectarAUnServidor(configuracion->IP_FS, configuracion->PUERTO_FS);
 	//int socketSEED = conectarAUnServidor(configuracion->IP_SEEDS, configuracion->PUERTO_SEEDS);
 	int socketLFS = connectToServer(configuracion->IP_FS, configuracion->PUERTO_FS, logger);
-	int socketSEED = connectToServer(configuracion->IP_SEEDS, configuracion->PUERTO_SEEDS, logger);
+	for(int seed=0;seed<16;seed++){
+		if (configuracion->PUERTO_SEEDS[seed] == 0) break;
+		int socketSEED = connectToServer(configuracion->IP_SEEDS[seed], configuracion->PUERTO_SEEDS[seed], logger);
+	}
 
 	free(configuracion);
 

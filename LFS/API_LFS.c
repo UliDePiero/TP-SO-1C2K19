@@ -11,10 +11,10 @@ void API_LFS(){
 	char* linea2;
 
 	linea = readline(">");
-	linea2 = malloc(strlen(linea)+1);
-	strcpy(linea2, linea);
 
 	while(strncmp("EXIT", linea, 5)){
+		linea2 = malloc(strlen(linea)+1);
+		strcpy(linea2, linea);
 		switch(parser(linea)){
 			case SELECT:
 				ejecutarSelect(linea2);
@@ -40,13 +40,10 @@ void API_LFS(){
 		}
 		free(linea2);
 		linea = readline(">");
-		linea2 = malloc(strlen(linea)+1);
-		strcpy(linea2, linea);
 	}
-	free(linea2);
 	free(linea);
 }
-int ejecutarInstruccion(char * instruccion){
+/*int ejecutarInstruccion(char * instruccion){
 	int opcion = 0;
 	opcion = parser(instruccion);
 	switch(opcion){
@@ -71,7 +68,7 @@ int ejecutarInstruccion(char * instruccion){
 			break;
 	}
 	return opcion;
-}
+}*/
 void ejecutarSelect(char* instruccion){
 	puts("select ejecutado");
 	char** comando ;

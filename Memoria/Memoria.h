@@ -37,6 +37,9 @@ int	socketSEED;
 t_log* logger;
 char* logFile;
 
+pthread_t hiloAPI;
+pthread_t hiloJournal;
+
 ///---------------------ESTRUCTURA DE CONFIGURACION DE LFS-------------------------
 
 //Estructura para datos del archivo de configuracion
@@ -48,7 +51,7 @@ typedef struct {
 	int PUERTO_FS;
 	char IP_SEEDS[16][20]; //Verificar
 	//char PUERTO_SEEDS[16][10]; //Verificar
-	int PUERTO_SEEDS[16];//Verificar
+	int PUERTO_SEEDS[16]={0};//Verificar
 	int RETARDO_MEM;
 	int RETARDO_FS;
 	int TAM_MEM;

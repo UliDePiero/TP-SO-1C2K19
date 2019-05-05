@@ -12,10 +12,10 @@ void API_Kernel(void){
 	char* linea2;
 
 	linea = readline(">");
-	linea2 = malloc(strlen(linea)+1);
-	strcpy(linea2, linea);
 
 	while(strncmp("EXIT", linea, 5)){
+		linea2 = malloc(strlen(linea)+1);
+		strcpy(linea2, linea);
 		switch(parser(linea)){
 			case SELECT:
 				ejecutarSelect(linea2);
@@ -50,10 +50,7 @@ void API_Kernel(void){
 		}
 		free(linea2);
 		linea = readline(">");
-		linea2 = malloc(strlen(linea)+1);
-		strcpy(linea2, linea);
 	}
-	free(linea2);
 	free(linea);
 }
 /*int ejecutarInstruccion(char * instruccion){
@@ -145,6 +142,10 @@ void ejecutarAdd(char* instruccion){
 void ejecutarRun(char* instruccion){
 	puts("run ejecutado");
 	char** comando ;
+	FILE *script;
+	char stringLQL[100];
+	char *bufferLQL;
+
 	comando = string_n_split(instruccion, 2, " ");
 	if(comandoValido(2, comando)){
 		puts("comando valido");
@@ -155,7 +156,39 @@ void ejecutarRun(char* instruccion){
 			  return;
 		}
 		while(fgets(stringLQL, 100, script)){
-			printf("%s\n",comando[1]);
+			printf("%s\n",stringLQL);
+			bufferLQL = malloc(strlen(stringLQL)+1);
+			strcpy(bufferLQL, stringLQL);
+			switch(parser(stringLQL)){
+					case SELECT:
+						ejecutarSelect(bufferLQL);
+						break;
+					case INSERT:
+						ejecutarInsert(bufferLQL);
+						break;
+					case CREATE:
+						ejecutarCreate(bufferLQL);
+						break;
+					case DESCRIBE:
+						ejecutarDescribe(bufferLQL);
+						break;
+					case DROP:
+						ejecutarDrop(bufferLQL);
+						break;
+					case JOURNAL:
+						ejecutarJournal(bufferLQL);
+						break;
+					case ADD:
+						ejecutarAdd(bufferLQL);
+						break;
+					case -1:
+						informarComandoInvalido();
+						break;
+					default:
+						//printf("Es un comentario o fin de linea \n");
+						break;
+				}
+			free(bufferLQL);
 		}
 		fclose(script);
 	}

@@ -32,6 +32,8 @@ int socketMemoria;
 t_log* logger;
 char* logFile;
 
+pthread_t hiloAPI;
+
 ///---------------------ESTRUCTURA DE CONFIGURACION DE LFS-------------------------
 
 //Estructura para datos del archivo de configuracion

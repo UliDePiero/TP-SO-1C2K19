@@ -46,6 +46,7 @@ int main()
 
 	free(configuracion);
 	getchar();
+	crearHiloIndependiente(&hiloAPI,(void*)API_Kernel, NULL, "Kernel");
 	desconectarseDe(socketMemoria);
 }
 

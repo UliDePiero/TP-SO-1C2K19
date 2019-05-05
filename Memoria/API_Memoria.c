@@ -12,9 +12,10 @@ void API_Memoria(){
 	char* linea2;
 
 	linea = readline(">");
-	linea2 = malloc(strlen(linea)+1);
-	strcpy(linea2, linea);
+
 	while(strncmp("EXIT", linea, 5)){
+		linea2 = malloc(strlen(linea)+1);
+		strcpy(linea2, linea);
 		switch(parser(linea)){
 			case SELECT:
 				ejecutarSelect(linea2);
@@ -43,10 +44,7 @@ void API_Memoria(){
 		}
 		free(linea2);
 		linea = readline(">");
-		linea2 = malloc(strlen(linea)+1);
-		strcpy(linea2, linea);
 	}
-	free(linea2);
 	free(linea);
 }
 void ejecutarSelect(char* instruccion){

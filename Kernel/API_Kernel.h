@@ -25,9 +25,6 @@
 #include <commons/string.h>
 #include <parser.h>
 
-FILE *script;
-char stringLQL[100];
-char* linea;
 #define PATH_SCRIPT "LQL.script" //para hacer pruebas
 
 void API_Kernel(void);
