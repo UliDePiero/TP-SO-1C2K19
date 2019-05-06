@@ -305,8 +305,20 @@ int desconectarseDe(int iSocket)
 void crearHiloIndependiente(pthread_t* hilo, void *(*funcion) (void *), void *__restrict argumento, char* proceso) {
 
 	pthread_create(hilo, NULL, (void*) funcion, (void*) argumento);
-	printf("Creado el hilo %lu para el %s", *hilo, proceso);
+	printf("\nCreado el hilo %lu para el %s \n", *hilo, proceso);
 	pthread_detach((int) hilo);
+
+}
+void crearHilo(pthread_t* hilo, void *(*funcion) (void *), void *__restrict argumento, char* proceso) {
+
+	pthread_create(hilo, NULL, (void*) funcion, (void*) argumento);
+	printf("\nCreado el hilo %lu para el %s \n", *hilo, proceso);
+
+}
+void joinearHilo(pthread_t hilo, void **retorno, char* proceso) {
+
+	pthread_join(hilo,retorno);
+	printf("\nHilo %lu finalizado para el %s \n", hilo, proceso);
 
 }
 //---------------------------------------------

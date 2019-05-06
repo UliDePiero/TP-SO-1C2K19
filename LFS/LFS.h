@@ -62,5 +62,6 @@ ConfiguracionLFS* configuracion;
 
 void compactacion();
 void fileSystem();
+void API_LFS();
 
 #endif /* LFS_H_ */

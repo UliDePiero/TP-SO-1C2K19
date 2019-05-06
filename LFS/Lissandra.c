@@ -50,10 +50,9 @@ int main()
 	free(configuracion);
 
 	//crearHiloIndependiente(&hiloCompactador,(void*)compactacion, NULL, "LFS");
-	pthread_create(&hiloCompactador, NULL, (void*)compactacion, NULL);
-	pthread_join(hiloCompactador, NULL);
-	//pthread_create(&hiloFileSystem, NULL, (void*)fileSystem, NULL);
-	//pthread_join(hiloFileSystem, NULL);
+	//pthread_create(&hiloCompactador, NULL, (void*)compactacion, NULL);
+	//pthread_join(hiloCompactador, NULL);
+
 	crearHiloIndependiente(&hiloFileSystem,(void*)fileSystem, NULL, "LFS");
 	crearHiloIndependiente(&hiloAPI,(void*)API_LFS, NULL, "LFS");
 

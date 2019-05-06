@@ -49,9 +49,12 @@ typedef struct {
 	char IP_FS[20];
 	//char PUERTO_FS[10];
 	int PUERTO_FS;
-	char IP_SEEDS[16][20]; //Verificar
+
+	//char IP_SEEDS[16][20]; //Verificar
+	char** IP_SEEDS;
 	//char PUERTO_SEEDS[16][10]; //Verificar
-	int PUERTO_SEEDS[16]={0};//Verificar
+	int PUERTO_SEEDS[16]; //Verificar
+
 	int RETARDO_MEM;
 	int RETARDO_FS;
 	int TAM_MEM;
@@ -76,5 +79,6 @@ MEMORY_NUMBER=1
 ConfiguracionMemoria* configuracion;
 
 void journalization();
+void API_Memoria();
 
 #endif /* MEMORIA_H_ */

@@ -45,8 +45,9 @@ int main()
 	int socketMEMORIA = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
 
 	free(configuracion);
-	getchar();
-	crearHiloIndependiente(&hiloAPI,(void*)API_Kernel, NULL, "Kernel");
+	//crearHiloIndependiente(&hiloAPI,(void*)API_Kernel, NULL, "Kernel");
+	crearHilo(&hiloAPI,(void*)API_Kernel, NULL, "Kernel");
+	joinearHilo(hiloAPI,NULL,"Kernel");
 	desconectarseDe(socketMemoria);
 }
 

@@ -24,6 +24,7 @@
 #include <commons/log.h>
 #include <arpa/inet.h>
 #include <sockets.h>
+#include <pthread.h>
 #include <configuraciones.h>
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
@@ -58,5 +59,6 @@ SLEEP_EJECUCION=5000
 ConfiguracionKernel* configuracion;
 
 void planificacion();
+void API_Kernel();
 
 #endif /* PLANIFICADOR_H_ */

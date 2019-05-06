@@ -29,9 +29,14 @@ void configurar(ConfiguracionMemoria* configuracion) {
 	strcpy(configuracion->IP_FS, archivoConfigSacarStringDe(archivoConfig, "IP_FS"));
 	//strcpy(configuracion->PUERTO_FS, archivoConfigSacarStringDe(archivoConfig, "PUERTO_FS"));
 	configuracion->PUERTO_FS = archivoConfigSacarIntDe(archivoConfig, "PUERTO_FS");
-
+/*
 	memcpy(configuracion->IP_SEEDS, archivoConfigSacarArrayDe(archivoConfig, "IP_SEEDS"), sizeof (configuracion->IP_SEEDS));
 	memcpy(configuracion->PUERTO_SEEDS, archivoConfigSacarArrayDe(archivoConfig, "PUERTO_SEEDS"), sizeof (configuracion->PUERTO_SEEDS));
+*/
+	configuracion->IP_SEEDS = archivoConfigSacarArrayDe(archivoConfig, "IP_SEEDS");
+
+	char** vectorStringPuertos = archivoConfigSacarArrayDe(archivoConfig, "PUERTO_SEEDS");
+	for(int i=0;vectorStringPuertos[i]!=NULL;i++) configuracion->PUERTO_SEEDS[i] = atoi(vectorStringPuertos[i]);
 
 	configuracion->RETARDO_MEM = archivoConfigSacarIntDe(archivoConfig, "RETARDO_MEM");
 	configuracion->RETARDO_FS = archivoConfigSacarIntDe(archivoConfig, "RETARDO_FS");
@@ -46,6 +51,7 @@ int main()
 {
 	logger = log_create(logFile, "Memoria",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionMemoria));
+	for(int i=0;i<16;i++) configuracion->PUERTO_SEEDS[i]=0;
 	configurar(configuracion);
 
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
@@ -62,8 +68,8 @@ int main()
 	free(configuracion);
 
 	crearHiloIndependiente(&hiloAPI,(void*)API_Memoria, NULL, "Memoria");
-	pthread_create(&hiloJournal, NULL, (void*)journalization, NULL);
-	pthread_join(hiloJournal, NULL);
+	//pthread_create(&hiloJournal, NULL, (void*)journalization, NULL);
+	//pthread_join(hiloJournal, NULL);
 
 	//ESTO TIENE QUE IR EN UN HILO APARTE PARA QUE QUEDE EN LOOP
 	FD_SET(socketEscucha, &setSocketsOrquestador);
