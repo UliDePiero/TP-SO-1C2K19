@@ -48,18 +48,21 @@ void API_Memoria(){
 	free(linea);
 }
 void ejecutarSelect(char* instruccion){
-	puts("select ejecutado");
 	char** comando ;
+	RegistroMemoria* registro;
 	comando = string_n_split(instruccion, 3, " ");
-	if(comandoValido(3, comando))
-		puts("comando valido");
+	if(comandoValido(3, comando)){
+		registro = selectMemoria(comando[1], atoi(comando[2]));
+		printf("value: %s\n", registro->value);
+	}
 }
 void ejecutarInsert(char* instruccion){
-	puts("insert ejecutado");
 	char** comando ;
-	comando = string_n_split(instruccion, 4, " ");
+	comando = string_n_split(instruccion, 5, " ");
 	if(comandoValido(4, comando))
-		puts("comando valido");
+		insertMemoria(comando[1], atoi(comando[2]), comando[3], (int)time(NULL));
+	else
+		insertMemoria(comando[1], atoi(comando[2]), comando[3], atoi(comando[4]));
 }
 void ejecutarCreate(char* instruccion){
 	puts("create ejecutado");

@@ -78,6 +78,35 @@ MEMORY_NUMBER=1
 //Estructura para guardar la configuracion del proceso
 ConfiguracionMemoria* configuracion;
 
+int maxValueSize; //Obtener de LISS en el handshake
+typedef struct {
+	int timestamp;
+	uint16_t key;
+	char* value;
+} RegistroMemoria;
+typedef struct{
+	int modificado;
+	RegistroMemoria* registro;
+} Pagina;
+typedef struct{
+	char* tabla;
+	Pagina* pagina;
+} Segmento;
+
+Segmento* tablaDeSegmentos;
+Pagina* TablaDePaginas;
+RegistroMemoria* memoriaPrincipal;
+
+Segmento* segmentoCrear(char*, Pagina*);
+void segmentoDestruir(Segmento*);
+Pagina* paginaCrear(int modificado, RegistroMemoria* registro);
+void paginaDestruir(Pagina*);
+void memoriaPrincipalDestruir();
+void levantarMemoria();
+
+void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp);
+RegistroMemoria* selectMemoria(char* tabla, uint16_t key);
+
 void journalization();
 void API_Memoria();
 

@@ -24,6 +24,7 @@
 #include <configuraciones.h>
 #include <commons/string.h>
 #include <parser.h>
+#include "Memoria.h"
 
 void API_Memoria();
 void ejecutarSelect(char*);

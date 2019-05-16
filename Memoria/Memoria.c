@@ -144,3 +144,43 @@ int main()
 
 
 
+
+void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
+	memoriaPrincipal->key = key;
+	memoriaPrincipal->value = value;
+	memoriaPrincipal->timestamp = timestamp;
+}
+RegistroMemoria* selectMemoria(char* tabla, uint16_t key){
+	return memoriaPrincipal;
+}
+
+void levantarMemoria(){
+	memoriaPrincipal = (RegistroMemoria*) malloc(configuracion->TAM_MEM % sizeof(RegistroMemoria));
+}
+Segmento* segmentoCrear(char* tabla, Pagina* pagina){
+	Segmento* segmento = (Segmento*)malloc(sizeof(Segmento));
+	strcpy(segmento->tabla, tabla);
+	segmento->pagina = pagina;
+	return segmento;
+}
+void segmentoDestruir(Segmento* segmento){
+	free(segmento->tabla);
+	free(segmento->pagina);
+	free(segmento);
+}
+Pagina* paginaCrear(int modificado, RegistroMemoria* registro){
+	Pagina* pagina = (Pagina*)malloc(sizeof(Pagina));
+	pagina->modificado = modificado;
+	pagina->registro = registro;
+	return pagina;
+}
+void paginaDestruir(Pagina* pagina){
+	free(pagina->registro);
+	free(pagina);
+}
+void memoriaPrincipalDestruir(){
+	for(int i = 0; i < configuracion->TAM_MEM % sizeof(RegistroMemoria); i++){
+		free(memoriaPrincipal[i].value);
+	}
+	free(memoriaPrincipal);
+}
