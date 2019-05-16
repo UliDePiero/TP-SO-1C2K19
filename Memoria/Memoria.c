@@ -53,6 +53,7 @@ int main()
 	configuracion = malloc(sizeof(ConfiguracionMemoria));
 	for(int i=0;i<16;i++) configuracion->PUERTO_SEEDS[i]=0;
 	configurar(configuracion);
+	levantarMemoria();
 
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
 	//servidor
@@ -65,7 +66,7 @@ int main()
 
 	socketEscucha = crearSocketEscucha(configuracion->PUERTO, logger);
 
-	free(configuracion);
+	//free(configuracion);
 
 	crearHiloIndependiente(&hiloAPI,(void*)API_Memoria, NULL, "Memoria");
 	//pthread_create(&hiloJournal, NULL, (void*)journalization, NULL);
@@ -157,15 +158,12 @@ RegistroMemoria* selectMemoria(char* tabla, uint16_t key){
 
 void levantarMemoria(){
 	maxValueSize = 20; //ESTO TIENE QUE VENIR DE LFS
-	unsigned cantidadRegistros = configuracion->TAM_MEM % (sizeof(RegistroMemoria) + sizeof(maxValueSize));
+	unsigned cantidadRegistros = configuracion->TAM_MEM % (sizeof(RegistroMemoria) + sizeof(maxValueSize+1));
 	memoriaPrincipal = (RegistroMemoria*) malloc(cantidadRegistros * sizeof(RegistroMemoria));
-	for(int i = 0; i < cantidadRegistros; i++){
-		memoriaPrincipal[i].value = (char*)malloc(sizeof(maxValueSize));
-	}
 }
 Segmento* segmentoCrear(char* tabla, Pagina* pagina){
 	Segmento* segmento = (Segmento*)malloc(sizeof(Segmento));
-	strcpy(segmento->tabla, tabla);
+	segmento->tabla = tabla;
 	segmento->pagina = pagina;
 	return segmento;
 }
