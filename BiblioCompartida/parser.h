@@ -15,6 +15,7 @@
 
 //Devuelve la instruccion a parsear. Si retorna 0 es un comentario. Si retorna -1 es fin de archivo
 int parser(char * instruccion);
+int parserSinTrim(char * instruccion);
 //Genera un String hasta que encuentra un espacio, devuelve la posicion hasta donde escribio el String
 int parserEspacio(char * instruccion, int i, char * buffer);
 //Genera un String hasta que encuentra el fin de linea

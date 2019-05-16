@@ -84,6 +84,34 @@ int main()
 		if (socketActivo != -1) {
 
 			switch (tipoMensaje) {
+				case SELECT:
+					printf("\nRecibi SELECT\n");
+					//hilo con parametro SELECT
+					break;
+				case INSERT:
+					printf("\nRecibi INSERT\n");
+					//hilo con parametro INSERT
+					break;
+				case CREATE:
+					printf("\nRecibi CREATE\n");
+					//hilo con parametro CREATE
+					break;
+				case DESCRIBE:
+					printf("\nRecibi DESCRIBE\n");
+					//hilo con parametro DESCRIBE
+					break;
+				case DROP:
+					printf("\nRecibi DROP\n");
+					//hilo con parametro DROP
+					break;
+				case JOURNAL:
+					printf("\nRecibi JOURNAL\n");
+					//hilo con parametro JOURNAL
+					break;
+
+				default:
+					printf("Tipo de mensaje desconocido \n");
+					break;
 
 			}
 		}

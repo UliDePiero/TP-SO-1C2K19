@@ -24,6 +24,7 @@
 #include <configuraciones.h>
 #include <commons/string.h>
 #include <parser.h>
+#include "Planificador.h"
 
 #define PATH_SCRIPT "LQL.script" //para hacer pruebas
 

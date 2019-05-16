@@ -78,6 +78,27 @@ int parser(char* linea){
 		return 0;
 	return -1;
 }
+int parserSinTrim(char* linea){
+	if(!strncmp("SELECT ", linea, 7))
+		return SELECT;
+	if(!strncmp("INSERT ", linea, 7))
+		return INSERT;
+	if(!strncmp("CREATE ", linea, 7))
+		return CREATE;
+	if(!strncmp("DESCRIBE ", linea, 9))
+		return DESCRIBE;
+	if(!strncmp("DROP ", linea, 5))
+		return DROP;
+	if(!strncmp("JOURNAL", linea, 7))
+		return JOURNAL;
+	if(!strncmp("RUN ", linea, 4))
+		return RUN;
+	if(!strncmp("METRICS ", linea, 8))
+		return METRICS;
+	if(string_is_empty(linea))
+		return 0;
+	return -1;
+}
 int leerLinea(char* linea){
 	char** comando;
 

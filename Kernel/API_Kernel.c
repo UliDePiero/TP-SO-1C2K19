@@ -45,7 +45,7 @@ void API_Kernel(void){
 				informarComandoInvalido();
 				break;
 			default:
-				//printf("Es un comentario o fin de linea \n");
+				printf("Ingrese un comando \n");
 				break;
 		}
 		free(linea2);
@@ -53,98 +53,112 @@ void API_Kernel(void){
 	}
 	free(linea);
 }
-/*int ejecutarInstruccion(char * instruccion){
-	int opcion = 0;
-	opcion = parser (instruccion);
-	//opcion = leerlinea (instruccion); PROBAR CON ESTA OTRA OPCION
-	switch(opcion){
-		case SELECT:
-			ejecutarSelect(instruccion);
-			break;
-		case INSERT:
-			ejecutarInsert(instruccion);
-			break;
-		case CREATE:
-			ejecutarCreate(instruccion);
-			break;
-		case DESCRIBE:
-			ejecutarDescribe(instruccion);
-			break;
-		case DROP:
-			ejecutarDrop(instruccion);
-			break;
-		case JOURNAL:
-			ejecutarJournal(instruccion);
-			break;
-		case ADD:
-			//ejecutarAdd(instruccion);
-			break;
-		case RUN:
-			ejecutarRun(instruccion);
-			break;
-
-		default:
-			//printf("Es un comentario o fin de linea \n");
-			break;
-	}
-	return opcion;
-}*/
 
 void ejecutarSelect(char* instruccion){
 	puts("select ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 3, " ");
-	if(comandoValido(3, comando))
+	if(comandoValido(3, comando)){
 		puts("comando valido");
+		tPaquete* mensaje = malloc(sizeof(tPaquete));
+		mensaje->type = SELECT;
+		strcpy(mensaje->payload,instruccion);
+		mensaje->length = sizeof(mensaje->payload);
+		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando SELECT desde Kernel.");
+		liberarPaquete(mensaje);
+	}
+
 }
 void ejecutarInsert(char* instruccion){
 	puts("insert ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 4, " ");
-	if(comandoValido(4, comando))
+	if(comandoValido(4, comando)){
 		puts("comando valido");
+		tPaquete* mensaje = malloc(sizeof(tPaquete));
+		mensaje->type = INSERT;
+		strcpy(mensaje->payload,instruccion);
+		mensaje->length = sizeof(mensaje->payload);
+		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando INSERT desde Kernel.");
+		liberarPaquete(mensaje);
+	}
 }
 void ejecutarCreate(char* instruccion){
 	puts("create ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 5, " ");
-	if(comandoValido(5, comando))
+	if(comandoValido(5, comando)){
 		puts("comando valido");
+		tPaquete* mensaje = malloc(sizeof(tPaquete));
+		mensaje->type = CREATE;
+		strcpy(mensaje->payload,instruccion);
+		mensaje->length = sizeof(mensaje->payload);
+		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando CREATE desde Kernel.");
+		liberarPaquete(mensaje);
+	}
 }
 void ejecutarDescribe(char* instruccion){
 	puts("describe ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 2, " ");
-	if(comandoValido(2, comando))
+	if(comandoValido(2, comando)){
 		puts("comando valido");
+		tPaquete* mensaje = malloc(sizeof(tPaquete));
+		mensaje->type = DESCRIBE;
+		strcpy(mensaje->payload,instruccion);
+		mensaje->length = sizeof(mensaje->payload);
+		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DESCRIBE desde Kernel.");
+		liberarPaquete(mensaje);
+
+	}
 }
 void ejecutarDrop(char* instruccion){
 	puts("drop ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 2, " ");
-	if(comandoValido(2, comando))
+	if(comandoValido(2, comando)){
 		puts("comando valido");
+		tPaquete* mensaje = malloc(sizeof(tPaquete));
+		mensaje->type = DROP;
+		strcpy(mensaje->payload,instruccion);
+		mensaje->length = sizeof(mensaje->payload);
+		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DROP desde Kernel.");
+		liberarPaquete(mensaje);
+	}
 }
 void ejecutarJournal(char* instruccion){
 	puts("journal ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 1, " ");
-	if(comandoValido(1, comando))
+	if(comandoValido(1, comando)){
 		puts("comando valido");
+		tPaquete* mensaje = malloc(sizeof(tPaquete));
+		mensaje->type = JOURNAL;
+		strcpy(mensaje->payload,instruccion);
+		mensaje->length = sizeof(mensaje->payload);
+		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando JOURNAL desde Kernel.");
+		liberarPaquete(mensaje);
+	}
 }
 void ejecutarAdd(char* instruccion){
 	puts("add ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 2, " ");
-	if(comandoValido(2, comando))
+	if(comandoValido(2, comando)){
 		puts("comando valido");
+		tPaquete* mensaje = malloc(sizeof(tPaquete));
+		mensaje->type = ADD;
+		strcpy(mensaje->payload,instruccion);
+		mensaje->length = sizeof(mensaje->payload);
+		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando ADD desde Kernel.");
+		liberarPaquete(mensaje);
+	}
 }
 void ejecutarRun(char* instruccion){
 	puts("run ejecutado");
 	char** comando ;
 	FILE *script;
-	char stringLQL[100];
-	char *bufferLQL;
+	char *stringLQL;
 
 	comando = string_n_split(instruccion, 2, " ");
 	if(comandoValido(2, comando)){
@@ -155,41 +169,40 @@ void ejecutarRun(char* instruccion){
 			  perror("Error al abrir el script.");
 			  return;
 		}
-		while(fgets(stringLQL, 100, script)){
-			printf("%s\n",stringLQL);
-			bufferLQL = malloc(strlen(stringLQL)+1);
-			strcpy(bufferLQL, stringLQL);
-			switch(parser(stringLQL)){
+		stringLQL = (char*)malloc(100);
+		while(fgets(stringLQL, 100, script)!=NULL){
+			printf("\n%s\n",stringLQL);
+			switch(parserSinTrim(stringLQL)){
 					case SELECT:
-						ejecutarSelect(bufferLQL);
+						ejecutarSelect(stringLQL);
 						break;
 					case INSERT:
-						ejecutarInsert(bufferLQL);
+						ejecutarInsert(stringLQL);
 						break;
 					case CREATE:
-						ejecutarCreate(bufferLQL);
+						ejecutarCreate(stringLQL);
 						break;
 					case DESCRIBE:
-						ejecutarDescribe(bufferLQL);
+						ejecutarDescribe(stringLQL);
 						break;
 					case DROP:
-						ejecutarDrop(bufferLQL);
+						ejecutarDrop(stringLQL);
 						break;
 					case JOURNAL:
-						ejecutarJournal(bufferLQL);
+						ejecutarJournal(stringLQL);
 						break;
 					case ADD:
-						ejecutarAdd(bufferLQL);
+						ejecutarAdd(stringLQL);
 						break;
 					case -1:
 						informarComandoInvalido();
 						break;
 					default:
-						//printf("Es un comentario o fin de linea \n");
+						printf("Es un comentario o fin de linea \n");
 						break;
 				}
-			free(bufferLQL);
 		}
+		free(stringLQL);
 		fclose(script);
 	}
 }

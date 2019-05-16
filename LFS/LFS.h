@@ -59,6 +59,18 @@ TIEMPO_DUMP=5000
 */
 //Estructura para guardar la configuracion del proceso
 ConfiguracionLFS* configuracion;
+struct Metadata{
+   //char consistencia[5]; //opción 1
+   int consistencia; //opción 2 //SC, HC, EC en protocolo.h
+   int particiones;
+   int tiempoCompactacion;
+} Metadata;
+//Estructura para guardar la Metadata
+struct RegistroTabla{
+   int timestamp;
+   uint16_t key;
+   int value; // Siempre verificar que no sobrepase el tamaño indicado por archivo de configuración
+} RegistroTabla;
 
 void compactacion();
 void fileSystem();

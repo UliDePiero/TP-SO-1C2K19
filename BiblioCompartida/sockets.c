@@ -113,6 +113,14 @@ int recibirPaquete(int socketReceptor, tMensaje* tipoMensaje, char** psPayload, 
 	return bytesRecibidos + bytesRecibidosHeader;
 }
 
+void liberarPaquete(tPaquete* mensaje){
+	if(mensaje != NULL){
+		/*if(mensaje->payload != NULL){
+			free(mensaje->payload);
+		}*/
+		free(mensaje);
+	}
+}
 
 /*
  * @NAME: getConnection

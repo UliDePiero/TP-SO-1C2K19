@@ -36,7 +36,10 @@ typedef enum {
 	JOURNAL,
 	ADD,
 	RUN,
-	METRICS
+	METRICS,
+	SC,
+	HC,
+	EC
 } tMensaje;
 
 /*
