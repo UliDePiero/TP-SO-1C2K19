@@ -124,9 +124,9 @@ int main()
 	//int socketSEED = conectarAUnServidor(configuracion->IP_SEEDS, configuracion->PUERTO_SEEDS);
 	int socketLFS = connectToServer(configuracion->IP_FS, configuracion->PUERTO_FS, logger);
 	int seed=0;
-        while(configuracion->PUERTO_SEEDS[seed] != 0 && seed<16){
-		int socketSEED[seed] = connectToServer(configuracion->IP_SEEDS[seed], configuracion->PUERTO_SEEDS[seed], logger);
-                seed++;
+	while(configuracion->PUERTO_SEEDS[seed] != 0 && seed<16){
+		socketSEED[seed] = connectToServer(configuracion->IP_SEEDS[seed], configuracion->PUERTO_SEEDS[seed], logger);
+    	seed++;
 	}
 
 	free(configuracion);
@@ -134,7 +134,12 @@ int main()
 	desconectarseDe(socketActivo);
 	desconectarseDe(socketEscucha);
 	desconectarseDe(socketLFS);
-	desconectarseDe(socketSEED);
+	seed=0;
+	while(configuracion->PUERTO_SEEDS[seed] != 0 && seed<16){
+		desconectarseDe(socketSEED[seed]);
+	    seed++;
+	}
+
 }
 
 
