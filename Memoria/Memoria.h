@@ -10,7 +10,8 @@
 
 
 //Ruta del archivo de configuraciones
-#define RUTA_CONFIG "Memoria.config"
+//#define RUTA_CONFIG "./Memoria.config" // Para correr desde Eclipse
+#define RUTA_CONFIG "../Memoria.config" // Para correr desde Consola
 #define BACKLOG 5 //Creo que se pueden conectar solo 2 clientes pero hay que verificar
 
 #include <stdio.h>

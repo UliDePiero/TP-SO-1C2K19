@@ -10,7 +10,8 @@
 
 
 //Ruta del archivo de configuraciones
-#define RUTA_CONFIG "Kernel.config"
+//#define RUTA_CONFIG "./Kernel.config" // Para correr desde Eclipse
+#define RUTA_CONFIG "../Kernel.config" // Para correr desde Consola
 
 #include <stdio.h>
 

@@ -9,7 +9,8 @@
 #define LFS_H_
 
 //Ruta del archivo de configuraciones
-#define RUTA_CONFIG "LFS.config"
+//#define RUTA_CONFIG "./LFS.config" // Para correr desde Eclipse
+#define RUTA_CONFIG "../LFS.config" // Para correr desde Consola
 #define BACKLOG 16
 
 #include <stdio.h>
