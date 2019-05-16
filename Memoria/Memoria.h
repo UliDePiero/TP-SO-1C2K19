@@ -32,7 +32,7 @@ int socketEscucha;
 int maxSock;
 int socketActivo;
 int	socketLFS;
-int	socketSEED;
+int	socketSEED[16];
 
 t_log* logger;
 char* logFile;
