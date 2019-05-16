@@ -130,6 +130,7 @@ int main()
 	}
 
 	free(configuracion);
+	memoriaPrincipalDestruir();
 
 	desconectarseDe(socketActivo);
 	desconectarseDe(socketEscucha);
@@ -155,7 +156,12 @@ RegistroMemoria* selectMemoria(char* tabla, uint16_t key){
 }
 
 void levantarMemoria(){
-	memoriaPrincipal = (RegistroMemoria*) malloc(configuracion->TAM_MEM % sizeof(RegistroMemoria));
+	maxValueSize = 20; //ESTO TIENE QUE VENIR DE LFS
+	unsigned cantidadRegistros = configuracion->TAM_MEM % (sizeof(RegistroMemoria) + sizeof(maxValueSize));
+	memoriaPrincipal = (RegistroMemoria*) malloc(cantidadRegistros * sizeof(RegistroMemoria));
+	for(int i = 0; i < cantidadRegistros; i++){
+		memoriaPrincipal[i].value = (char*)malloc(sizeof(maxValueSize));
+	}
 }
 Segmento* segmentoCrear(char* tabla, Pagina* pagina){
 	Segmento* segmento = (Segmento*)malloc(sizeof(Segmento));
