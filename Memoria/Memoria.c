@@ -56,6 +56,16 @@ int main()
 	levantarMemoria();
 
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
+	//ESTE PUEDE QUEDAR EN EL HILO PRINCIPAL
+	// cliente
+	//int socketLFS = conectarAUnServidor(configuracion->IP_FS, configuracion->PUERTO_FS);
+	//int socketSEED = conectarAUnServidor(configuracion->IP_SEEDS, configuracion->PUERTO_SEEDS);
+	int socketLFS = connectToServer(configuracion->IP_FS, configuracion->PUERTO_FS, logger);
+	int seed=0;
+	while(configuracion->PUERTO_SEEDS[seed] != 0 && seed<16){
+		socketSEED[seed] = connectToServer(configuracion->IP_SEEDS[seed], configuracion->PUERTO_SEEDS[seed], logger);
+		seed++;
+	}
 	//servidor
 	//socketEscucha= levantarServidorIPautomatica(configuracion->PUERTO, BACKLOG); //BACKLOG es la cantidad de clientes que pueden conectarse a este servidor
 	//socketActivo = aceptarComunicaciones(socketEscucha);
@@ -117,17 +127,6 @@ int main()
 			}
 		}
 
-	}
-
-	//ESTE PUEDE QUEDAR EN EL HILO PRINCIPAL
-	// cliente
-	//int socketLFS = conectarAUnServidor(configuracion->IP_FS, configuracion->PUERTO_FS);
-	//int socketSEED = conectarAUnServidor(configuracion->IP_SEEDS, configuracion->PUERTO_SEEDS);
-	int socketLFS = connectToServer(configuracion->IP_FS, configuracion->PUERTO_FS, logger);
-	int seed=0;
-	while(configuracion->PUERTO_SEEDS[seed] != 0 && seed<16){
-		socketSEED[seed] = connectToServer(configuracion->IP_SEEDS[seed], configuracion->PUERTO_SEEDS[seed], logger);
-    	seed++;
 	}
 
 	free(configuracion);
@@ -206,7 +205,7 @@ void levantarMemoria(){
 	cantidadRegistros = configuracion->TAM_MEM % tamanioRealDeUnRegistro;
 	memoriaPrincipal = (RegistroMemoria**) malloc(cantidadRegistros * tamanioRealDeUnRegistro);
 }
-Segmento* segmentoCrear(char* tabla, Pagina* tablaDePaginas){
+Segmento* segmentoCrear(char* tabla, Pagina** tablaDePaginas){
 	Segmento* segmento = (Segmento*)malloc(sizeof(Segmento));
 	segmento->tabla = tabla;
 	segmento->tablaDePaginas = tablaDePaginas;

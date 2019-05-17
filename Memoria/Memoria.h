@@ -100,7 +100,7 @@ RegistroMemoria** memoriaPrincipal;
 int tamanioRealDeUnRegistro;
 unsigned cantidadRegistros;
 
-Segmento* segmentoCrear(char*, Pagina*);
+Segmento* segmentoCrear(char*, Pagina**);
 void segmentoDestruir(Segmento*);
 Pagina* paginaCrear(int modificado, RegistroMemoria* registro);
 void paginaDestruir(Pagina*);
