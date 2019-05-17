@@ -10,8 +10,8 @@
 
 
 //Ruta del archivo de configuraciones
-//#define RUTA_CONFIG "./Memoria.config" // Para correr desde Eclipse
-#define RUTA_CONFIG "../Memoria.config" // Para correr desde Consola
+#define RUTA_CONFIG "./Memoria.config" // Para correr desde Eclipse
+//#define RUTA_CONFIG "../Memoria.config" // Para correr desde Consola
 #define BACKLOG 5 //Creo que se pueden conectar solo 2 clientes pero hay que verificar
 
 #include <stdio.h>
@@ -91,12 +91,14 @@ typedef struct{
 } Pagina;
 typedef struct{
 	char* tabla;
-	Pagina* pagina;
+	Pagina** tablaDePaginas;
 } Segmento;
 
-Segmento* tablaDeSegmentos;
-Pagina* TablaDePaginas;
-RegistroMemoria* memoriaPrincipal;
+Segmento** tablaDeSegmentos;
+Pagina** tablaDePaginas;
+RegistroMemoria** memoriaPrincipal;
+int tamanioRealDeUnRegistro;
+unsigned cantidadRegistros;
 
 Segmento* segmentoCrear(char*, Pagina*);
 void segmentoDestruir(Segmento*);
