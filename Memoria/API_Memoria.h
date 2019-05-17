@@ -25,6 +25,7 @@
 #include <commons/string.h>
 #include <parser.h>
 #include "Memoria.h"
+#include <time.h>
 
 void API_Memoria();
 void ejecutarSelect(char*);

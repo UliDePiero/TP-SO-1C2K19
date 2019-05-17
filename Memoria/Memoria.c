@@ -97,27 +97,27 @@ int main()
 			switch (tipoMensaje) {
 				case SELECT:
 					printf("\nRecibi SELECT\n");
-					//hilo con parametro SELECT
+					//funcion SELECT
 					break;
 				case INSERT:
 					printf("\nRecibi INSERT\n");
-					//hilo con parametro INSERT
+					//funcion INSERT
 					break;
 				case CREATE:
 					printf("\nRecibi CREATE\n");
-					//hilo con parametro CREATE
+					//funcion CREATE
 					break;
 				case DESCRIBE:
 					printf("\nRecibi DESCRIBE\n");
-					//hilo con parametro DESCRIBE
+					//funcion DESCRIBE
 					break;
 				case DROP:
 					printf("\nRecibi DROP\n");
-					//hilo con parametro DROP
+					//funcion DROP
 					break;
 				case JOURNAL:
 					printf("\nRecibi JOURNAL\n");
-					//hilo con parametro JOURNAL
+					//funcion JOURNAL
 					break;
 
 				default:
@@ -189,7 +189,7 @@ RegistroMemoria* selectMemoria(char* tabla, uint16_t key){
 			tablaDeSegmentos[registro]->tablaDePaginas[pagina]->registro->timestamp = timestamp;
 			*/
 
-			return NULL; //CAMBIAR CUANDO ESTE HECHO LO DE ARRIBA
+			return NULL; //CAMBIAR CUANDO ESTE HECHO LO DE ARRIBA algo asi: return tablaDeSegmentos[registro]->tablaDePaginas[pagina]->registro->value;
 		}
 	}
 	else{

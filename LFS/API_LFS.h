@@ -24,6 +24,8 @@
 #include <configuraciones.h>
 #include <commons/string.h>
 #include <parser.h>
+#include <time.h>
+#include "LFS.h"
 
 void API_LFS();
 int ejecutarInstruccion(char * instruccion);

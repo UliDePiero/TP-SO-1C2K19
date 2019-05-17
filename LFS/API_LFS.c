@@ -43,45 +43,25 @@ void API_LFS(){
 	}
 	free(linea);
 }
-/*int ejecutarInstruccion(char * instruccion){
-	int opcion = 0;
-	opcion = parser(instruccion);
-	switch(opcion){
-		case SELECT:
-			ejecutarSelect(instruccion);
-			break;
-		case INSERT:
-			ejecutarInsert(instruccion);
-			break;
-		case CREATE:
-			ejecutarCreate(instruccion);
-			break;
-		case DESCRIBE:
-			ejecutarDescribe(instruccion);
-			break;
-		case DROP:
-			ejecutarDrop(instruccion);
-			break;
 
-		default:
-			//printf("Es un comentario o fin de linea \n");
-			break;
-	}
-	return opcion;
-}*/
 void ejecutarSelect(char* instruccion){
 	puts("select ejecutado");
 	char** comando ;
+	RegistroLFS* registro;
 	comando = string_n_split(instruccion, 3, " ");
-	if(comandoValido(3, comando))
-		puts("comando valido");
+	if(comandoValido(3, comando)){
+		registro = selectLFS(comando[1], atoi(comando[2]));
+		printf("value: %s\n", registro->value);
+	}
 }
 void ejecutarInsert(char* instruccion){
 	puts("insert ejecutado");
 	char** comando ;
-	comando = string_n_split(instruccion, 4, " ");
+	comando = string_n_split(instruccion, 5, " ");
 	if(comandoValido(4, comando))
-		puts("comando valido");
+		insertLFS(comando[1], atoi(comando[2]), comando[3], (int)time(NULL));
+	else
+		insertLFS(comando[1], atoi(comando[2]), comando[3], atoi(comando[4]));
 }
 void ejecutarCreate(char* instruccion){
 	puts("create ejecutado");

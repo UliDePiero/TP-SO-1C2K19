@@ -58,11 +58,9 @@ void ejecutarSelect(char* instruccion){
 }
 void ejecutarInsert(char* instruccion){
 	char** comando ;
-	comando = string_n_split(instruccion, 5, " ");
+	comando = string_n_split(instruccion, 4, " ");
 	if(comandoValido(4, comando))
 		insertMemoria(comando[1], atoi(comando[2]), comando[3], (int)time(NULL));
-	else
-		insertMemoria(comando[1], atoi(comando[2]), comando[3], atoi(comando[4]));
 }
 void ejecutarCreate(char* instruccion){
 	puts("create ejecutado");
