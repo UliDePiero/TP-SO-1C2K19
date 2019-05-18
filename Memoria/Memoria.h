@@ -90,23 +90,28 @@ typedef struct{
 	RegistroMemoria* registro;
 } Pagina;
 typedef struct{
-	char* tabla;
+	char tabla[20];
 	Pagina** tablaDePaginas;
 } Segmento;
 
 Segmento** tablaDeSegmentos;
-Pagina** tablaDePaginas;
-RegistroMemoria** memoriaPrincipal;
+//Pagina** tablaDePaginas;
+Pagina** memoriaPrincipal;
 int tamanioRealDeUnRegistro;
-unsigned cantidadRegistros;
+int tamanioRealDeUnaPagina;
+unsigned int cantidadDePaginas;
+unsigned int cantidadDeSegmentos;
 
 Segmento* segmentoCrear(char*, Pagina**);
 void segmentoDestruir(Segmento*);
 Pagina* paginaCrear(int modificado, RegistroMemoria* registro);
 void paginaDestruir(Pagina*);
+RegistroMemoria* registroCrear(int timeStamp, uint16_t key, char* value, int nPagina);
 void memoriaPrincipalDestruir();
 void levantarMemoria();
-
+void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nPagina, int nSegmento);
+void asignarRegistroASegmentoTablaNueva(char* tabla, uint16_t key, char* value, int timestamp, int nPagina, int nSegmento);
+void asignarRegistroASegmentoTablaExistente(uint16_t key, char* value, int timestamp, int nPagina);
 void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp);
 RegistroMemoria* selectMemoria(char* tabla, uint16_t key);
 

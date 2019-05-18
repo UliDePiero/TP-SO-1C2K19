@@ -81,7 +81,7 @@ int main()
 }
 
 void insertLFS(char* nombreTabla, uint16_t key, int value, int timestamp){
-	int numeroTabla = 0, pagina = 0;
+	int numeroTabla = 0;
 	MetadataLFS* metadataTabla;
 	while( strcmp(tablasLFS[numeroTabla]->nombreTabla, nombreTabla) != 0 && tablasLFS[numeroTabla]!=NULL) numeroTabla++;
 	if(tablasLFS[numeroTabla] == NULL)
@@ -103,7 +103,7 @@ void insertLFS(char* nombreTabla, uint16_t key, int value, int timestamp){
 	}
 }
 RegistroLFS* selectLFS(char* nombreTabla, uint16_t key){
-	int numeroTabla = 0, pagina = 0;
+	int numeroTabla = 0;
 	MetadataLFS* metadataTabla;
 	while( strcmp(tablasLFS[numeroTabla]->nombreTabla, nombreTabla) != 0 && tablasLFS[numeroTabla]!=NULL) numeroTabla++;
 	if(tablasLFS[numeroTabla]!=NULL){
