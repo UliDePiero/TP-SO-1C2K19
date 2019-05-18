@@ -110,7 +110,6 @@ RegistroMemoria* registroCrear(int timeStamp, uint16_t key, char* value, int nPa
 void memoriaPrincipalDestruir();
 void levantarMemoria();
 void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nPagina, int nSegmento);
-void asignarRegistroASegmentoTablaNueva(char* tabla, uint16_t key, char* value, int timestamp, int nPagina, int nSegmento);
 void asignarRegistroASegmentoTablaExistente(uint16_t key, char* value, int timestamp, int nPagina);
 void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp);
 RegistroMemoria* selectMemoria(char* tabla, uint16_t key);

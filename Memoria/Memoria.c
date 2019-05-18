@@ -156,12 +156,8 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
 			while(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro->key != key && tablaDeSegmentos[segmento]->tablaDePaginas[pagina] != NULL ) pagina++;
 			if(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro->key == key)
 				tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro->timestamp = timestamp;
-			else{
-				if(pagina<=cantidadDePaginas)
-					asignarRegistroASegmentoTablaExistente(key, value, timestamp, pagina);
-				else
-					asignarRegistroASegmentoTablaNueva(tabla, key, value, timestamp, pagina, segmento);
-			}
+			else
+				asignarRegistroASegmentoTablaExistente(key, value, timestamp, pagina);
 		}
 		else{
 			asignarRegistroANuevoSegmento(tabla, key, value, timestamp, pagina, segmento);
@@ -171,7 +167,6 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
 		memoriaPrincipal->value = value;
 		memoriaPrincipal->timestamp = timestamp;
 		*/
-
 	}
 }
 //FALTA en select Que pasa si esta la memoria FULL + journal
@@ -253,15 +248,6 @@ void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int t
 	strcpy(tablaDeSegmentos[0]->tabla, tabla);
 	tablaDeSegmentos[nSegmento]->tablaDePaginas = tablaDePaginasDelSegmento;
 	tablaDeSegmentos[nSegmento] = segmento;
-}
-void asignarRegistroASegmentoTablaNueva(char* tabla, uint16_t key, char* value, int timestamp, int nPagina, int nSegmento){
-	RegistroMemoria* registroDelSegmento = registroCrear(timestamp, key, value, nPagina);
-	Pagina* paginaDelSegmento = paginaCrear(0, registroDelSegmento);
-	memoriaPrincipal[nPagina]->registro = registroDelSegmento;
-	memoriaPrincipal[nPagina] = paginaDelSegmento;
-	Pagina** tablaDePaginasDelSegmento = &paginaDelSegmento;
-	strcpy(tablaDeSegmentos[0]->tabla, tabla);
-	tablaDeSegmentos[nSegmento]->tablaDePaginas = tablaDePaginasDelSegmento;
 }
 void asignarRegistroASegmentoTablaExistente(uint16_t key, char* value, int timestamp, int nPagina){
 	RegistroMemoria* registroDelSegmento = registroCrear(timestamp, key, value, nPagina);
