@@ -66,8 +66,14 @@ void ejecutarCreate(char* instruccion){
 	puts("create ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 5, " ");
-	if(comandoValido(5, comando))
-		puts("comando valido");
+	if(comandoValido(5, comando)){
+		tPaquete* mensaje = malloc(sizeof(tPaquete));
+		mensaje->type = CREATE;
+		strcpy(mensaje->payload,instruccion);
+		mensaje->length = sizeof(mensaje->payload);
+		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando CREATE desde Memoria.");
+		liberarPaquete(mensaje);
+	}
 }
 void ejecutarDescribe(char* instruccion){
 	puts("describe ejecutado");

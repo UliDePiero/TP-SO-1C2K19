@@ -70,6 +70,14 @@ int main()
 		if (socketActivo != -1) {
 
 			switch (tipoMensaje) {
+							case CREATE:
+								printf("\nRecibi CREATE\n");
+								//funcion CREATE
+								break;
+
+							default:
+								printf("Tipo de mensaje desconocido \n");
+								break;
 
 			}
 		}

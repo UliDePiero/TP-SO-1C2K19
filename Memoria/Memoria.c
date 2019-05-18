@@ -144,7 +144,7 @@ int main()
 
 
 
-//FALTA en insert Que pasa si esta la memoria FULL + journal
+//FALTA en insert Que pasa si esta la memoria FULL + journal, para esto faltaria averiguar cantidad de paginas por segmento
 void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
 	int pagina = 0, segmento = 0;
 	if(cantidadDeSegmentos == 0){
@@ -157,7 +157,7 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
 			if(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro->key == key)
 				tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro->timestamp = timestamp;
 			else
-				asignarRegistroASegmentoTablaExistente(key, value, timestamp, pagina);
+				asignarRegistroASegmentoExistente(key, value, timestamp, pagina);
 		}
 		else{
 			asignarRegistroANuevoSegmento(tabla, key, value, timestamp, pagina, segmento);
@@ -249,7 +249,7 @@ void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int t
 	tablaDeSegmentos[nSegmento]->tablaDePaginas = tablaDePaginasDelSegmento;
 	tablaDeSegmentos[nSegmento] = segmento;
 }
-void asignarRegistroASegmentoTablaExistente(uint16_t key, char* value, int timestamp, int nPagina){
+void asignarRegistroASegmentoExistente(uint16_t key, char* value, int timestamp, int nPagina){
 	RegistroMemoria* registroDelSegmento = registroCrear(timestamp, key, value, nPagina);
 	Pagina* paginaDelSegmento = paginaCrear(0, registroDelSegmento);
 	memoriaPrincipal[nPagina]->registro = registroDelSegmento;
