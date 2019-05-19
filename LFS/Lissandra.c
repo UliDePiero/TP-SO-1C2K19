@@ -155,8 +155,8 @@ void createLFS(char* nombreTabla, int consistencia, int particiones, long tiempo
 			sprintf(nombreParticion, "/%d.bin", i);
 			strcat(particionPath, nombreParticion);
 			nuevoArchivo = fopen(particionPath, "w+");
-			//fprintf(nuevoArchivo, "SIZE=%d\n", text);
-			//fprintf(nuevoArchivo, "BLOCKS=%s\n", text);
+			fprintf(nuevoArchivo, "SIZE=%d\n", 0);
+			fprintf(nuevoArchivo, "BLOCKS=[]\n");
 			fclose(nuevoArchivo);
 		}
 

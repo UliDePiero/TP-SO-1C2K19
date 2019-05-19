@@ -10,9 +10,9 @@
 
 //Ruta del archivo de configuraciones
 #define RUTA_CONFIG "./LFS.config" // Para correr desde Eclipse
-#define RUTA_TABLAS "./Tablas/" // Para correr desde Eclipse
+#define RUTA_TABLAS "./Tables/" // Para correr desde Eclipse
 //#define RUTA_CONFIG "../LFS.config" // Para correr desde Consola
-//#define RUTA_TABLAS "../Tablas/" // Para correr desde Consola
+//#define RUTA_TABLAS "../Tables/" // Para correr desde Consola
 #define BACKLOG 16
 
 #include <stdio.h>
