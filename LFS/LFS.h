@@ -10,7 +10,9 @@
 
 //Ruta del archivo de configuraciones
 #define RUTA_CONFIG "./LFS.config" // Para correr desde Eclipse
+#define RUTA_TABLAS "./Tablas/" // Para correr desde Eclipse
 //#define RUTA_CONFIG "../LFS.config" // Para correr desde Consola
+//#define RUTA_TABLAS "../Tablas/" // Para correr desde Consola
 #define BACKLOG 16
 
 #include <stdio.h>
@@ -76,18 +78,25 @@ typedef struct{
 typedef struct{
 	char* nombreTabla;
 	MetadataLFS* metadata;
-	RegistroLFS** registro;
+	t_list* registro;
 } Tabla;
 //Estructura para guardar las Tablas
 
-Tabla** tablasLFS;
+t_list *tablasLFS;
 //SE TIENE QUE RELLENAR CON fileSystem();
 
 void compactacion();
 void fileSystem();
 void API_LFS();
 
+Tabla* crearTabla(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion);
+void tablaDestruir(Tabla* tabla);
+Tabla* tablaEncontrar(char* nombre);
+RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, int value);
+void RegistroLFSDestruir(RegistroLFS* registro);
+
 void insertLFS(char* nombreTabla, uint16_t key, int value, int timestamp);
 RegistroLFS* selectLFS(char* nombreTabla, uint16_t key);
+void createLFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion);
 
 #endif /* LFS_H_ */

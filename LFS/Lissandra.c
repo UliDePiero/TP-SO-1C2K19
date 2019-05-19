@@ -30,6 +30,7 @@ void configurar(ConfiguracionLFS* configuracion) {
 }
 int main()
 {
+	tablasLFS = list_create();
 	logger = log_create(logFile, "LFS",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionLFS));
 	configurar(configuracion);
@@ -86,16 +87,16 @@ int main()
 
 	desconectarseDe(socketActivo);
 	desconectarseDe(socketEscucha);
+	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
 }
 
 void insertLFS(char* nombreTabla, uint16_t key, int value, int timestamp){
 	int numeroTabla = 0;
 	MetadataLFS* metadataTabla;
-	while( strcmp(tablasLFS[numeroTabla]->nombreTabla, nombreTabla) != 0 && tablasLFS[numeroTabla]!=NULL) numeroTabla++;
-	if(tablasLFS[numeroTabla] == NULL)
+	if(tablaEncontrar(nombreTabla)!=NULL)
 		perror("No se encontro la tabla solicitada.");
 	else{
-		metadataTabla = tablasLFS[numeroTabla]->metadata;
+		//metadataTabla = tablasLFS[numeroTabla]->metadata;
 		//Verificar si existe en memoria una lista de datos a dumpear. De no existir, alocar dicha memoria.
 		//Insertar en la memoria temporal del punto anterior una nueva entrada que contenga los datos enviados en la request.
 		/*
@@ -113,9 +114,8 @@ void insertLFS(char* nombreTabla, uint16_t key, int value, int timestamp){
 RegistroLFS* selectLFS(char* nombreTabla, uint16_t key){
 	int numeroTabla = 0;
 	MetadataLFS* metadataTabla;
-	while( strcmp(tablasLFS[numeroTabla]->nombreTabla, nombreTabla) != 0 && tablasLFS[numeroTabla]!=NULL) numeroTabla++;
-	if(tablasLFS[numeroTabla]!=NULL){
-		metadataTabla = tablasLFS[numeroTabla]->metadata;
+	if(tablaEncontrar(nombreTabla)!=NULL){
+		//metadataTabla = tablasLFS[numeroTabla]->metadata;
 		//Calcular cual es la partición que contiene dicho KEY.
 		//Escanear la partición objetivo, todos los archivos temporales y la memoria temporal de dicha tabla (si existe) buscando la key deseada.
 		//Encontradas las entradas para dicha Key, se retorna el valor con el Timestamp más grande.
@@ -125,4 +125,80 @@ RegistroLFS* selectLFS(char* nombreTabla, uint16_t key){
 		perror("No se encontro la tabla solicitada.");
 		return NULL;
 	}
+}
+void createLFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion){
+	if(tablaEncontrar(nombreTabla)!=NULL){
+		//Loguear error
+		perror("Ya existe una tabla con ese nombre.");
+		return;
+	}
+	else{
+		char path[] = RUTA_TABLAS;
+		strcat(path, nombreTabla);
+		mkdir(path, 0777);
+
+		char *particionPath = malloc(100);
+		char *nombreParticion = malloc(6);
+		strcpy(particionPath, path);
+		strcat(particionPath, "/Metadata");
+		mkdir(particionPath, 0777);
+		strcat(particionPath, "/Metadata.bin");
+		FILE *nuevoArchivo = fopen(particionPath, "w+");
+		//fprintf(nuevoArchivo, "BLOCK_SIZE=%d\n", text);
+		//fprintf(nuevoArchivo, "BLOCKS=%d\n", text);
+		fprintf(nuevoArchivo, "MAGIC_NUMBER=LISSANDRA\n");
+		fclose(nuevoArchivo);
+		strcat(particionPath, "/Metadata/Bitmap.bin");
+		nuevoArchivo = fopen(particionPath, "w+");
+		fclose(nuevoArchivo);
+
+		for(int i = 0; i<particiones; i++){
+			strcpy(particionPath, path);
+			sprintf(nombreParticion, "/%d.bin", i);
+			strcat(particionPath, nombreParticion);
+			nuevoArchivo = fopen(particionPath, "w+");
+			//fprintf(nuevoArchivo, "SIZE=%d\n", text);
+			//fprintf(nuevoArchivo, "BLOCKS=%s\n", text);
+			fclose(nuevoArchivo);
+		}
+
+		free(particionPath);
+		free(nombreParticion);
+		list_add(tablasLFS, crearTabla(nombreTabla, consistencia, particiones, tiempoCompactacion));
+	}
+}
+
+//Funciones de estructuras
+Tabla* crearTabla(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion){
+	Tabla *nuevaTabla = malloc(sizeof(Tabla));
+	nuevaTabla->nombreTabla = nombreTabla;
+	MetadataLFS *metadata = malloc(sizeof(MetadataLFS));
+	metadata->consistencia = consistencia;
+	metadata->particiones = particiones;
+	metadata->tiempoCompactacion = tiempoCompactacion;
+	nuevaTabla->metadata = metadata;
+	nuevaTabla->registro = list_create();
+
+	return nuevaTabla;
+}
+void tablaDestruir(Tabla* tabla){
+	free(tabla->metadata);
+	list_destroy_and_destroy_elements(tabla->registro, (void*) RegistroLFSDestruir);
+	free(tabla);
+}
+RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, int value){
+	RegistroLFS *registro = malloc(sizeof(RegistroLFS));
+	registro->key = key;
+	registro->timestamp = timestamp;
+	registro->value = value;
+	return registro;
+}
+void RegistroLFSDestruir(RegistroLFS* registro){
+	free(registro);
+}
+Tabla* tablaEncontrar(char* nombre){
+	int _is_the_one(Tabla *t) {
+		return string_equals_ignore_case(t->nombreTabla, nombre);
+	}
+	return list_find(tablasLFS, (void*) _is_the_one);
 }
