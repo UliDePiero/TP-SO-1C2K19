@@ -141,12 +141,10 @@ void createLFS(char* nombreTabla, int consistencia, int particiones, long tiempo
 		char *nombreParticion = malloc(6);
 		strcpy(particionPath, path);
 		strcat(particionPath, "/Metadata");
-		mkdir(particionPath, 0777);
-		strcat(particionPath, "/Metadata.bin");
 		FILE *nuevoArchivo = fopen(particionPath, "w+");
-		//fprintf(nuevoArchivo, "BLOCK_SIZE=%d\n", text);
-		//fprintf(nuevoArchivo, "BLOCKS=%d\n", text);
-		fprintf(nuevoArchivo, "MAGIC_NUMBER=LISSANDRA\n");
+		fprintf(nuevoArchivo, "CONSISTENCY=%d\n", consistencia);
+		fprintf(nuevoArchivo, "PARTITIONS=%d\n", particiones);
+		fprintf(nuevoArchivo, "COMPACTION_TIME=LISSANDRA\n");
 		fclose(nuevoArchivo);
 		strcat(particionPath, "/Metadata/Bitmap.bin");
 		nuevoArchivo = fopen(particionPath, "w+");
