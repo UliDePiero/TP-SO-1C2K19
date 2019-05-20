@@ -29,6 +29,8 @@
 #include <sockets.h>
 #include <configuraciones.h>
 
+#include <inttypes.h>
+
 ///---------------------VARIABLES A UTILIZAR-------------------------
 
 int socketEscucha;

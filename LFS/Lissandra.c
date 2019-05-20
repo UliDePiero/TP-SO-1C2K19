@@ -35,6 +35,10 @@ int main()
 	configuracion = malloc(sizeof(ConfiguracionLFS));
 	configurar(configuracion);
 
+
+	//levantar FS
+
+
 	//servidor
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
 
@@ -90,13 +94,111 @@ int main()
 	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
 }
 
+
+//--------------------------------------------------------//
+
+
+//----------------- FUNCIONES AUXILIARES -----------------//
+
+void str_to_uint16(const char *str, uint16_t *res){
+  char *end;
+  errno = 0;
+  intmax_t val = strtoimax(str, &end, 10);
+  /*if (errno == ERANGE || val < 0 || val > UINT16_MAX || end == str || *end != '\0')
+    return false;*/
+  *res = (uint16_t) val;
+  //return true;
+}
+
+// inline function to swap two numbers
+void swap(char *x, char *y) {
+	char t = *x; *x = *y; *y = t;
+}
+
+// function to reverse buffer[i..j]
+char* reverse(char *buffer, int i, int j)
+{
+	while (i < j)
+		swap(&buffer[i++], &buffer[j--]);
+
+	return buffer;
+}
+
+// Iterative function to implement itoa() function in C
+char* itoa(int value, char* buffer, int base)
+{
+	// invalid input
+	if (base < 2 || base > 32)
+		return buffer;
+
+	// consider absolute value of number
+	int n = abs(value);
+
+	int i = 0;
+	while (n)
+	{
+		int r = n % base;
+
+		if (r >= 10)
+			buffer[i++] = 65 + (r - 10);
+		else
+			buffer[i++] = 48 + r;
+
+		n = n / base;
+	}
+
+	// if number is 0
+	if (i == 0)
+		buffer[i++] = '0';
+
+	// If base is 10 and value is negative, the resulting string
+	// is preceded with a minus sign (-)
+	// With any other base, value is always considered unsigned
+	if (value < 0 && base == 10)
+		buffer[i++] = '-';
+
+	buffer[i] = '\0'; // null terminate string
+
+	// reverse the string and return it
+	return reverse(buffer, 0, i - 1);
+}
+
+
+//---------------------------------------------------------//
+
+
+//--------------------------------------------------------//
+
+
+
+
+
 void insertLFS(char* nombreTabla, uint16_t key, int value, int timestamp){
-	int numeroTabla = 0;
-	MetadataLFS* metadataTabla;
-	if(tablaEncontrar(nombreTabla)!=NULL)
+	//int numeroTabla = 0;
+	//MetadataLFS* metadataTabla;
+	char* strParticion = NULL;
+	char* direccion = NULL;
+	char* registro = NULL;
+	char* buffer = NULL;
+	Tabla* tablaEncontrada = tablaEncontrar(nombreTabla);
+	if(tablaEncontrada!=NULL)
 		perror("No se encontro la tabla solicitada.");
 	else{
 		//metadataTabla = tablasLFS[numeroTabla]->metadata;
+		//INSERT EN UN ARCHIVO .BIN DIRECTO (NO SE CONTEMPLA DUMPS NI TEMPORALES)
+		strParticion = itoa(key % tablaEncontrada->metadata->particiones, strParticion, 10);
+		strcpy (direccion,"/Tables/");
+		strcat (direccion,nombreTabla);
+		strcat (direccion,"/");
+		strcat (direccion,strParticion);
+		strcat (direccion, ".bin");
+		FILE* particion = fopen(direccion, "w");
+		strcpy (registro,itoa(timestamp, buffer, 10));
+		strcat (registro,";");
+		strcat (registro,itoa(key, buffer, 10));
+		strcat (registro,";");
+		strcat (registro, itoa(value, buffer, 10));
+		fwrite(registro , 1 , sizeof(registro) , particion);
 		//Verificar si existe en memoria una lista de datos a dumpear. De no existir, alocar dicha memoria.
 		//Insertar en la memoria temporal del punto anterior una nueva entrada que contenga los datos enviados en la request.
 		/*
@@ -111,15 +213,46 @@ void insertLFS(char* nombreTabla, uint16_t key, int value, int timestamp){
 		 */
 	}
 }
+
 RegistroLFS* selectLFS(char* nombreTabla, uint16_t key){
-	int numeroTabla = 0;
-	MetadataLFS* metadataTabla;
-	if(tablaEncontrar(nombreTabla)!=NULL){
-		//metadataTabla = tablasLFS[numeroTabla]->metadata;
+	//int numeroTabla = 0;
+	//MetadataLFS* metadataTabla;
+	Tabla* tablaEncontrada = tablaEncontrar(nombreTabla);
+	char* strParticion = NULL;
+	RegistroLFS* registroEncontrado = NULL;
+	char* direccion = NULL;
+	//if(tablaEncontrar(nombreTabla)!=NULL){
+	if(tablaEncontrada != NULL){
+		//metadataTabla = tablaEncontrada->metadata;
 		//Calcular cual es la partición que contiene dicho KEY.
+		strParticion = itoa(key % tablaEncontrada->metadata->particiones, strParticion, 10);
 		//Escanear la partición objetivo, todos los archivos temporales y la memoria temporal de dicha tabla (si existe) buscando la key deseada.
+		//Faltaría buscar en archivos temporales y memtable
+		strcpy (direccion,"/Tables/");
+		strcat (direccion,nombreTabla);
+		strcat (direccion,"/");
+		strcat (direccion,strParticion);
+		strcat (direccion, ".bin");
+		FILE* particion = fopen(direccion, "r");
+		while (!feof(particion)){
+			char* buffer = NULL;
+			RegistroLFS* registro = NULL;
+			fread(buffer, 100, 1, particion);//Modificar el valor fijo de la cantidad de caracteres a leer
+			registro->timestamp = atoi(strtok(buffer, ";"));
+			str_to_uint16(strtok(NULL, ";"), &registro->key);
+			registro->value = atoi(strtok(NULL, ";"));
+			if (registro->key == key){
+				if (registroEncontrado == NULL)
+					registroEncontrado = registro;
+				else{
+					if (registro->timestamp > registroEncontrado->timestamp)
+						registroEncontrado = registro;
+				}
+			}
+		}
+		return registroEncontrado;
 		//Encontradas las entradas para dicha Key, se retorna el valor con el Timestamp más grande.
-		return NULL; //CAMBIAR RETURN
+		//return NULL; //CAMBIAR RETURN
 	}
 	else{
 		perror("No se encontro la tabla solicitada.");
