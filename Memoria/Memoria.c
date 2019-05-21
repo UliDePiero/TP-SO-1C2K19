@@ -218,8 +218,9 @@ Segmento* segmentoCrear(char* tabla, Pagina** tablaDePaginas){
 	return segmento;
 }
 void segmentoDestruir(Segmento* segmento){
-	free(segmento->tabla);
 	free(segmento->tablaDePaginas);
+	for(int i=0; i < segmento->cantidadDePaginas; i++)
+		free(segmento->tablaDePaginas[i]);
 	free(segmento);
 }
 Pagina* paginaCrear(int modificado, RegistroMemoria* registro){
@@ -247,7 +248,7 @@ void registroDestruir(RegistroMemoria* registro){
 	free(registro);
 }
 void memoriaPrincipalDestruir(){
-	for(int j=0; j<cantidadDeSegmentos; j++)
+	for(int j=0; j < cantidadDeSegmentos; j++)
 		segmentoDestruir(tablaDeSegmentos[j]);
 	for(int i = 0; i < cantidadDeRegistros; i++){
 		registroDestruir(memoriaPrincipal[i]);
