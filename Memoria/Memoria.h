@@ -91,26 +91,30 @@ typedef struct{
 } Pagina;
 typedef struct{
 	char tabla[20];
+	int cantidadDePaginas;
 	Pagina** tablaDePaginas;
 } Segmento;
 
 Segmento** tablaDeSegmentos;
 //Pagina** tablaDePaginas;
-Pagina** memoriaPrincipal;
+RegistroMemoria** memoriaPrincipal;
 int tamanioRealDeUnRegistro;
 int tamanioRealDeUnaPagina;
-unsigned int cantidadDePaginas;
+unsigned int cantidadDeRegistros;
 unsigned int cantidadDeSegmentos;
 
 Segmento* segmentoCrear(char*, Pagina**);
 void segmentoDestruir(Segmento*);
 Pagina* paginaCrear(int modificado, RegistroMemoria* registro);
 void paginaDestruir(Pagina*);
-RegistroMemoria* registroCrear(int timeStamp, uint16_t key, char* value, int nPagina);
+RegistroMemoria* registroCrear(int timeStamp, uint16_t key, char* value, int nRegistro);
+void registroDestruir(RegistroMemoria* registro);
 void memoriaPrincipalDestruir();
 void levantarMemoria();
-void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nPagina, int nSegmento);
-void asignarRegistroASegmentoExistente(uint16_t key, char* value, int timestamp, int nPagina);
+void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nSegmento, int nRegistro);
+void asignarRegistroASegmentoExistente(uint16_t key, char* value, int timestamp, int nSegmento, int nPagina, int nRegistro);
+int buscarRegistroDisponible();
+int ejecutarLRU();
 void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp);
 RegistroMemoria* selectMemoria(char* tabla, uint16_t key);
 
