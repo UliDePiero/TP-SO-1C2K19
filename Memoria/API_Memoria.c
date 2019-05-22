@@ -53,7 +53,7 @@ void ejecutarSelect(char* instruccion){
 	comando = string_n_split(instruccion, 3, " ");
 	if(comandoValido(3, comando)){
 		registro = selectMemoria(comando[1], atoi(comando[2]));
-		printf("value: %s\n", registro->value);
+		if(registro != NULL) printf("value: %s\n", registro->value);
 	}
 }
 void ejecutarInsert(char* instruccion){
