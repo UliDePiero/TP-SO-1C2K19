@@ -185,10 +185,10 @@ RegistroMemoria* selectMemoria(char* tabla, uint16_t key){
 		if(strcmp(tablaDeSegmentos[segmento]->tabla, tabla) == 0) break;
 	}
 	if(segmento<cantidadDeSegmentos){
-		for(pagina=0; tablaDeSegmentos[segmento]->cantidadDePaginas<pagina ; pagina++){
+		for(pagina=0; pagina<tablaDeSegmentos[segmento]->cantidadDePaginas ; pagina++){
 			if(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro->key == key) break;
 		}
-		if(tablaDeSegmentos[segmento]->tablaDePaginas[pagina] != NULL)
+		if(pagina<tablaDeSegmentos[segmento]->cantidadDePaginas)
 			return tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro;
 		else{
 			/*
@@ -210,6 +210,7 @@ RegistroMemoria* selectMemoria(char* tabla, uint16_t key){
 }
 
 void levantarMemoria(){
+	int i;
 	tablaDeSegmentos = malloc(1);
 	maxValueSize = 20; //ESTO TIENE QUE VENIR DE LFS
 	//tamanioRealDeUnRegistro = sizeof(RegistroMemoria) + maxValueSize+1; //por que el +1 ???
@@ -217,7 +218,7 @@ void levantarMemoria(){
 	tamanioRealDeUnaPagina = tamanioRealDeUnRegistro + sizeof(Pagina);
 	cantidadDeRegistros = configuracion->TAM_MEM / tamanioRealDeUnRegistro;
 	memoriaPrincipal = (RegistroMemoria**) malloc(cantidadDeRegistros*sizeof(RegistroMemoria*));
-	for(int i=0; i < cantidadDeRegistros; i++){
+	for(i=0; i < cantidadDeRegistros; i++){
 		//memoriaPrincipal[i] = (RegistroMemoria*) malloc(tamanioRealDeUnRegistro); //opcion 1
 		memoriaPrincipal[i] = (RegistroMemoria*) malloc(sizeof(RegistroMemoria)); //opcion 2
 		memoriaPrincipal[i]->value = (char*) malloc(maxValueSize*sizeof(char));
