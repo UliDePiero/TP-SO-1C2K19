@@ -120,5 +120,11 @@ RegistroMemoria* selectMemoria(char* tabla, uint16_t key);
 
 void journalization();
 void API_Memoria();
+void ejecutarSelect(char*);
+void ejecutarInsert(char*);
+void ejecutarCreate(char*);
+void ejecutarDescribe(char*);
+void ejecutarDrop(char*);
+void ejecutarJournal(char*);
 
 #endif /* MEMORIA_H_ */

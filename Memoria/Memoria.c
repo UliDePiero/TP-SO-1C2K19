@@ -96,28 +96,37 @@ int main()
 
 			switch (tipoMensaje) {
 				case SELECT:
-					printf("\nRecibi SELECT\n");
+					printf("\nRecibi %s\n",sPayload);
 					//funcion SELECT
+					ejecutarSelect(sPayload);
 					break;
 				case INSERT:
-					printf("\nRecibi INSERT\n");
+					printf("\nRecibi %s\n",sPayload);
 					//funcion INSERT
+					ejecutarInsert(sPayload);
 					break;
 				case CREATE:
-					printf("\nRecibi CREATE\n");
+					printf("\nRecibi %s\n",sPayload);
 					//funcion CREATE
+					ejecutarCreate(sPayload);
 					break;
 				case DESCRIBE:
-					printf("\nRecibi DESCRIBE\n");
+					printf("\nRecibi %s\n",sPayload);
 					//funcion DESCRIBE
+					ejecutarDescribe(sPayload);
 					break;
 				case DROP:
-					printf("\nRecibi DROP\n");
+					printf("\nRecibi %s\n",sPayload);
 					//funcion DROP
+					ejecutarDrop(sPayload);
 					break;
 				case JOURNAL:
-					printf("\nRecibi JOURNAL\n");
+					printf("\nRecibi %s\n",sPayload);
 					//funcion JOURNAL
+					ejecutarJournal(sPayload);
+					break;
+				case DESCONEXION:
+					printf("\nSe desconecto un cliente\n");
 					break;
 
 				default:
