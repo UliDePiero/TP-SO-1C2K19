@@ -35,6 +35,20 @@ t_log* logger;
 char* logFile;
 
 pthread_t hiloAPI;
+pthread_t hiloPlanificacion;
+
+//Colas de procesos
+t_queue *New;
+t_queue *Ready;
+t_queue *Exec;
+t_queue *Exit;
+t_list *ListaLQL;
+sem_t semContadorLQL;
+sem_t semMultiprocesamiento;
+sem_t semEjecutarLQL;
+
+int LQLEnEjecucion;
+int IDLQL; //autoincremental
 
 ///---------------------ESTRUCTURA DE CONFIGURACION DE LFS-------------------------
 
@@ -59,7 +73,17 @@ SLEEP_EJECUCION=5000
 //Estructura para guardar la configuracion del proceso
 ConfiguracionKernel* configuracion;
 
-void planificacion();
+typedef struct {
+	int ID;
+	char Instruccion[100];
+	char PC[20];
+	char TablaArchivosAbiertos[10];
+	int FlagIncializado;
+} EstructuraLQL;
+EstructuraLQL* LQL;
 void API_Kernel();
+void planificacion();
+void cargarNuevoLQL(char* ScriptLQL);
+void moverLQL(t_queue *colaOrigen, t_queue *colaDestino);
 
 #endif /* PLANIFICADOR_H_ */

@@ -13,6 +13,7 @@
 #include <sys/time.h>
 #include <signal.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 #include "log.h"
 #include "protocolo.h"

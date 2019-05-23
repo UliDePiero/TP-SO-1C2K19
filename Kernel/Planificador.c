@@ -37,6 +37,15 @@ int main()
 	logger = log_create(logFile, "Planificador",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionKernel));
 	configurar(configuracion);
+	New = queue_create(); //queue_push(New, nuevoCliente);
+	Ready = queue_create();
+	Exec = queue_create();
+	Exit = queue_create();
+	ListaLQL = list_create();
+	IDLQL = 0;
+	sem_init(&semContadorLQL,0,0);
+	sem_init(&semMultiprocesamiento,0,configuracion->MULTIPROCESAMIENTO);
+	sem_init(&semEjecutarLQL,0,0);
 
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
 
@@ -46,10 +55,39 @@ int main()
 	free(configuracion);
 	//crearHiloIndependiente(&hiloAPI,(void*)API_Kernel, NULL, "Kernel");
 	crearHilo(&hiloAPI,(void*)API_Kernel, NULL, "Kernel");
+	crearHiloIndependiente(&hiloPlanificacion, (void*)planificacion, NULL, "Kernel");
+
 	joinearHilo(hiloAPI,NULL,"Kernel");
 	desconectarseDe(socketMemoria);
 }
-
-
+void planificacion(){
+	while(1){
+		sem_wait(&semMultiprocesamiento);
+		sem_wait(&semContadorLQL);
+		moverLQL(Ready,Exec);
+		LQLEnEjecucion++;
+		LQL = queue_peek(Exec);
+		LQL->FlagIncializado = 1;
+		LQL = queue_pop(Exec);
+		sem_post(&semEjecutarLQL);
+	}
+}
+void cargarNuevoLQL(char* ScriptLQL) {
+	EstructuraLQL* NuevoLQL = malloc(sizeof(EstructuraLQL)); //FALTA FREE
+	queue_push(New, NuevoLQL);
+	NuevoLQL->FlagIncializado = 0;
+	NuevoLQL->ID = IDLQL++;
+	strcpy(NuevoLQL->Instruccion, ScriptLQL);
+	//list_add(ListaLQL, NuevoLQL); //creo que no es necesaria
+	queue_push(Ready, NuevoLQL);
+	sem_post(&semContadorLQL);
+}
+void moverLQL(t_queue *colaOrigen, t_queue *colaDestino){
+	/*
+	EstructuraLQL* LQL;
+	EstructuraLQL* LQL_Elegido = list_find(ListaLQL, (void*) (LQL->ID == ID)); //puede romper duramente
+	*/
+	queue_push(colaDestino, queue_pop(colaOrigen));
+}
 
 

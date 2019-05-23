@@ -18,25 +18,46 @@ void API_Kernel(void){
 		strcpy(linea2, linea);
 		switch(parser(linea)){
 			case SELECT:
+				cargarNuevoLQL(linea2);
+				sem_wait(&semEjecutarLQL);
 				ejecutarSelect(linea2);
+				sem_post(&semMultiprocesamiento);
 				break;
 			case INSERT:
+				cargarNuevoLQL(linea2);
+				sem_wait(&semEjecutarLQL);
 				ejecutarInsert(linea2);
+				sem_post(&semMultiprocesamiento);
 				break;
 			case CREATE:
+				cargarNuevoLQL(linea2);
+				sem_wait(&semEjecutarLQL);
 				ejecutarCreate(linea2);
+				sem_post(&semMultiprocesamiento);
 				break;
 			case DESCRIBE:
+				cargarNuevoLQL(linea2);
+				sem_wait(&semEjecutarLQL);
 				ejecutarDescribe(linea2);
+				sem_post(&semMultiprocesamiento);
 				break;
 			case DROP:
+				cargarNuevoLQL(linea2);
+				sem_wait(&semEjecutarLQL);
 				ejecutarDrop(linea2);
+				sem_post(&semMultiprocesamiento);
 				break;
 			case JOURNAL:
+				cargarNuevoLQL(linea2);
+				sem_wait(&semEjecutarLQL);
 				ejecutarJournal(linea2);
+				sem_post(&semMultiprocesamiento);
 				break;
 			case ADD:
+				cargarNuevoLQL(linea2);
+				sem_wait(&semEjecutarLQL);
 				ejecutarAdd(linea2);
+				sem_post(&semMultiprocesamiento);
 				break;
 			case RUN:
 				ejecutarRun(linea2);
@@ -159,6 +180,7 @@ void ejecutarRun(char* instruccion){
 	char** comando ;
 	FILE *script;
 	char *stringLQL;
+	int quantum = configuracion->QUANTUM;
 
 	comando = string_n_split(instruccion, 2, " ");
 	if(comandoValido(2, comando)){
@@ -171,36 +193,60 @@ void ejecutarRun(char* instruccion){
 		}
 		stringLQL = (char*)malloc(100);
 		while(fgets(stringLQL, 100, script)!=NULL){
-			printf("\n%s\n",stringLQL);
-			switch(parserSinTrim(stringLQL)){
-					case SELECT:
-						ejecutarSelect(stringLQL);
-						break;
-					case INSERT:
-						ejecutarInsert(stringLQL);
-						break;
-					case CREATE:
-						ejecutarCreate(stringLQL);
-						break;
-					case DESCRIBE:
-						ejecutarDescribe(stringLQL);
-						break;
-					case DROP:
-						ejecutarDrop(stringLQL);
-						break;
-					case JOURNAL:
-						ejecutarJournal(stringLQL);
-						break;
-					case ADD:
-						ejecutarAdd(stringLQL);
-						break;
-					case -1:
-						informarComandoInvalido();
-						break;
-					default:
-						printf("Es un comentario o fin de linea \n");
-						break;
-				}
+			if(quantum>0){
+				quantum--;
+				printf("\n%s\n",stringLQL);
+				switch(parserSinTrim(stringLQL)){
+						case SELECT:
+							cargarNuevoLQL(stringLQL);
+							sem_wait(&semEjecutarLQL);
+							ejecutarSelect(stringLQL);
+							sem_post(&semMultiprocesamiento);
+							break;
+						case INSERT:
+							cargarNuevoLQL(stringLQL);
+							sem_wait(&semEjecutarLQL);
+							ejecutarInsert(stringLQL);
+							sem_post(&semMultiprocesamiento);
+							break;
+						case CREATE:
+							cargarNuevoLQL(stringLQL);
+							sem_wait(&semEjecutarLQL);
+							ejecutarCreate(stringLQL);
+							sem_post(&semMultiprocesamiento);
+							break;
+						case DESCRIBE:
+							cargarNuevoLQL(stringLQL);
+							sem_wait(&semEjecutarLQL);
+							ejecutarDescribe(stringLQL);
+							sem_post(&semMultiprocesamiento);
+							break;
+						case DROP:
+							cargarNuevoLQL(stringLQL);
+							sem_wait(&semEjecutarLQL);
+							ejecutarDrop(stringLQL);
+							sem_post(&semMultiprocesamiento);
+							break;
+						case JOURNAL:
+							cargarNuevoLQL(stringLQL);
+							sem_wait(&semEjecutarLQL);
+							ejecutarJournal(stringLQL);
+							sem_post(&semMultiprocesamiento);
+							break;
+						case ADD:
+							cargarNuevoLQL(stringLQL);
+							sem_wait(&semEjecutarLQL);
+							ejecutarAdd(stringLQL);
+							sem_post(&semMultiprocesamiento);
+							break;
+						case -1:
+							informarComandoInvalido();
+							break;
+						default:
+							printf("Es un comentario o fin de linea \n");
+							break;
+					}
+			}
 		}
 		free(stringLQL);
 		fclose(script);
