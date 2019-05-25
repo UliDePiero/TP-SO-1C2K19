@@ -191,5 +191,5 @@ int comandoValido(int inputs, char** comando){
 	return valido;
 }
 void informarComandoInvalido(){
-	puts("ERROR: Comando no valido");
+	perror("ERROR: Comando no valido");
 }

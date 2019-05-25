@@ -77,8 +77,9 @@ ConfiguracionKernel* configuracion;
 typedef struct {
 	int ID;
 	char Instruccion[100];
-	char PC[20];
-	char TablaArchivosAbiertos[10];
+	int requestEjecutadas;
+	//char PC[20];
+	//char TablaArchivosAbiertos[10];
 	int FlagIncializado;
 } EstructuraLQL;
 EstructuraLQL* LQL;
@@ -86,5 +87,6 @@ void API_Kernel();
 void planificacion();
 void cargarNuevoLQL(char* ScriptLQL);
 void moverLQL(t_queue *colaOrigen, t_queue *colaDestino);
+void actualizarRequestEjecutadas();
 
 #endif /* PLANIFICADOR_H_ */

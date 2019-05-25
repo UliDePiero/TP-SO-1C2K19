@@ -37,6 +37,6 @@ void ejecutarDescribe(char* instruccion);
 void ejecutarDrop(char* instruccion);
 void ejecutarJournal(char* instruccion);
 void ejecutarAdd(char* instruccion);
-void ejecutarRun(char* instruccion);
+int ejecutarRun(char* instruccion, int requestEjecutadas);
 
 #endif /* API_KERNEL_H_ */

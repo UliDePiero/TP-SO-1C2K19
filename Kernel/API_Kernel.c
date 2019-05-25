@@ -7,9 +7,9 @@
 #include "API_Kernel.h"
 
 void API_Kernel(void){
-//int main(){
 	char* linea;
 	char* linea2;
+	int retornoRUN;
 
 	linea = readline(">");
 
@@ -21,46 +21,62 @@ void API_Kernel(void){
 				cargarNuevoLQL(linea2);
 				sem_wait(&semEjecutarLQL);
 				ejecutarSelect(linea2);
+				moverLQL(Exec,Exit);
 				sem_post(&semMultiprocesamiento);
 				break;
 			case INSERT:
 				cargarNuevoLQL(linea2);
 				sem_wait(&semEjecutarLQL);
 				ejecutarInsert(linea2);
+				moverLQL(Exec,Exit);
 				sem_post(&semMultiprocesamiento);
 				break;
 			case CREATE:
 				cargarNuevoLQL(linea2);
 				sem_wait(&semEjecutarLQL);
 				ejecutarCreate(linea2);
+				moverLQL(Exec,Exit);
 				sem_post(&semMultiprocesamiento);
 				break;
 			case DESCRIBE:
 				cargarNuevoLQL(linea2);
 				sem_wait(&semEjecutarLQL);
 				ejecutarDescribe(linea2);
+				moverLQL(Exec,Exit);
 				sem_post(&semMultiprocesamiento);
 				break;
 			case DROP:
 				cargarNuevoLQL(linea2);
 				sem_wait(&semEjecutarLQL);
 				ejecutarDrop(linea2);
+				moverLQL(Exec,Exit);
 				sem_post(&semMultiprocesamiento);
 				break;
 			case JOURNAL:
 				cargarNuevoLQL(linea2);
 				sem_wait(&semEjecutarLQL);
 				ejecutarJournal(linea2);
+				moverLQL(Exec,Exit);
 				sem_post(&semMultiprocesamiento);
 				break;
 			case ADD:
 				cargarNuevoLQL(linea2);
 				sem_wait(&semEjecutarLQL);
 				ejecutarAdd(linea2);
+				moverLQL(Exec,Exit);
 				sem_post(&semMultiprocesamiento);
 				break;
 			case RUN:
-				ejecutarRun(linea2);
+				cargarNuevoLQL(linea2);
+				sem_wait(&semEjecutarLQL);
+				retornoRUN = ejecutarRun(linea2, 0);
+				if(retornoRUN == -1){
+					actualizarRequestEjecutadas();
+					moverLQL(Exec,Ready);
+				}
+				else
+					moverLQL(Exec,Exit);
+				sem_post(&semMultiprocesamiento);
 				break;
 			case -1:
 				informarComandoInvalido();
@@ -175,7 +191,7 @@ void ejecutarAdd(char* instruccion){
 		liberarPaquete(mensaje);
 	}
 }
-void ejecutarRun(char* instruccion){
+int ejecutarRun(char* instruccion, int requestEjecutadas){
 	puts("run ejecutado");
 	char** comando ;
 	FILE *script;
@@ -189,66 +205,92 @@ void ejecutarRun(char* instruccion){
 		//script = fopen(PATH_SCRIPT,"r"); //para hacer pruebas
 		if(script == NULL) {
 			  perror("Error al abrir el script.");
-			  return;
+			  return -2;
 		}
 		stringLQL = (char*)malloc(100);
+		for(int i=0; i<requestEjecutadas; i++)
+			fgets(stringLQL, 100, script);
 		while(fgets(stringLQL, 100, script)!=NULL){
+			quantum--;
 			if(quantum>0){
-				quantum--;
 				printf("\n%s\n",stringLQL);
 				switch(parserSinTrim(stringLQL)){
 						case SELECT:
-							cargarNuevoLQL(stringLQL);
+							/*cargarNuevoLQL(stringLQL);
 							sem_wait(&semEjecutarLQL);
 							ejecutarSelect(stringLQL);
-							sem_post(&semMultiprocesamiento);
+							moverLQL(Exec,Exit);
+							sem_post(&semMultiprocesamiento);*/
+							ejecutarSelect(stringLQL);
 							break;
 						case INSERT:
-							cargarNuevoLQL(stringLQL);
+							/*cargarNuevoLQL(stringLQL);
 							sem_wait(&semEjecutarLQL);
 							ejecutarInsert(stringLQL);
-							sem_post(&semMultiprocesamiento);
+							moverLQL(Exec,Exit);
+							sem_post(&semMultiprocesamiento);*/
+							ejecutarInsert(stringLQL);
 							break;
 						case CREATE:
-							cargarNuevoLQL(stringLQL);
+							/*cargarNuevoLQL(stringLQL);
 							sem_wait(&semEjecutarLQL);
 							ejecutarCreate(stringLQL);
-							sem_post(&semMultiprocesamiento);
+							moverLQL(Exec,Exit);
+							sem_post(&semMultiprocesamiento);*/
+							ejecutarCreate(stringLQL);
 							break;
 						case DESCRIBE:
-							cargarNuevoLQL(stringLQL);
+							/*cargarNuevoLQL(stringLQL);
 							sem_wait(&semEjecutarLQL);
 							ejecutarDescribe(stringLQL);
-							sem_post(&semMultiprocesamiento);
+							moverLQL(Exec,Exit);
+							sem_post(&semMultiprocesamiento);*/
+							ejecutarDescribe(stringLQL);
 							break;
 						case DROP:
-							cargarNuevoLQL(stringLQL);
+							/*cargarNuevoLQL(stringLQL);
 							sem_wait(&semEjecutarLQL);
 							ejecutarDrop(stringLQL);
-							sem_post(&semMultiprocesamiento);
+							moverLQL(Exec,Exit);
+							sem_post(&semMultiprocesamiento);*/
+							ejecutarDrop(stringLQL);
 							break;
 						case JOURNAL:
-							cargarNuevoLQL(stringLQL);
+							/*cargarNuevoLQL(stringLQL);
 							sem_wait(&semEjecutarLQL);
 							ejecutarJournal(stringLQL);
-							sem_post(&semMultiprocesamiento);
+							moverLQL(Exec,Exit);
+							sem_post(&semMultiprocesamiento);*/
+							ejecutarJournal(stringLQL);
 							break;
 						case ADD:
-							cargarNuevoLQL(stringLQL);
+							/*cargarNuevoLQL(stringLQL);
 							sem_wait(&semEjecutarLQL);
 							ejecutarAdd(stringLQL);
-							sem_post(&semMultiprocesamiento);
+							moverLQL(Exec,Exit);
+							sem_post(&semMultiprocesamiento);*/
+							ejecutarAdd(stringLQL);
 							break;
 						case -1:
 							informarComandoInvalido();
-							break;
+							free(stringLQL);
+							fclose(script);
+							return -2;
+							break;//creo que es innecesario pero por las dudas lo dejo
 						default:
-							printf("Es un comentario o fin de linea \n");
+							printf("Fin de linea \n");
 							break;
 					}
+			}
+			else{
+				free(stringLQL);
+				fclose(script);
+				return quantum;
 			}
 		}
 		free(stringLQL);
 		fclose(script);
+		return quantum;
 	}
+	return -2;
 }

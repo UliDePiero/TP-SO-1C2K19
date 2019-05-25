@@ -41,13 +41,13 @@ void cambiosConfigKernel() {
 		archivoConfigDestruir(archivoConfig);
 	}
 }
-//int planificador()
+
 int main()
 {
 	logger = log_create(logFile, "Planificador",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionKernel));
 	configurar(configuracion);
-	New = queue_create(); //queue_push(New, nuevoCliente);
+	New = queue_create();
 	Ready = queue_create();
 	Exec = queue_create();
 	Exit = queue_create();
@@ -71,14 +71,26 @@ int main()
 	desconectarseDe(socketMemoria);
 }
 void planificacion(){
+	int retornoRUN;
 	while(1){
 		sem_wait(&semMultiprocesamiento);
 		sem_wait(&semContadorLQL);
 		moverLQL(Ready,Exec);
 		LQLEnEjecucion++;
 		LQL = queue_peek(Exec);
-		LQL->FlagIncializado = 1;
-		LQL = queue_pop(Exec);
+		if(LQL->FlagIncializado == 0)
+			LQL->FlagIncializado = 1;
+		else{
+			sem_wait(&semEjecutarLQL);
+			retornoRUN = ejecutarRun(LQL->Instruccion, LQL->requestEjecutadas);
+			if(retornoRUN == -1){
+				actualizarRequestEjecutadas();
+				moverLQL(Exec,Ready);
+			}
+			else
+				moverLQL(Exec,Exit);
+			sem_post(&semMultiprocesamiento);
+		}
 		sem_post(&semEjecutarLQL);
 	}
 }
@@ -86,6 +98,7 @@ void cargarNuevoLQL(char* ScriptLQL) {
 	EstructuraLQL* NuevoLQL = malloc(sizeof(EstructuraLQL)); //FALTA FREE
 	queue_push(New, NuevoLQL);
 	NuevoLQL->FlagIncializado = 0;
+	NuevoLQL->requestEjecutadas = 0;
 	NuevoLQL->ID = IDLQL++;
 	strcpy(NuevoLQL->Instruccion, ScriptLQL);
 	//list_add(ListaLQL, NuevoLQL); //creo que no es necesaria
@@ -98,6 +111,10 @@ void moverLQL(t_queue *colaOrigen, t_queue *colaDestino){
 	EstructuraLQL* LQL_Elegido = list_find(ListaLQL, (void*) (LQL->ID == ID)); //puede romper duramente
 	*/
 	queue_push(colaDestino, queue_pop(colaOrigen));
+}
+void actualizarRequestEjecutadas(){
+	LQL = queue_peek(Exec);
+	LQL->requestEjecutadas += configuracion->QUANTUM;
 }
 
 
