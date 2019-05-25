@@ -47,6 +47,18 @@ void configurar(ConfiguracionMemoria* configuracion) {
 
 	archivoConfigDestruir(archivoConfig);
 }
+
+void cambiosConfigMemoria() {
+	if (configModificado()) {
+		t_config* archivoConfig = config_create(RUTA_CONFIG);
+		configuracion->RETARDO_MEM = archivoConfigSacarIntDe(archivoConfig, "RETARDO_MEM");
+		configuracion->RETARDO_FS = archivoConfigSacarIntDe(archivoConfig, "RETARDO_FS");
+		configuracion->RETARDO_JOURNAL = archivoConfigSacarIntDe(archivoConfig, "RETARDO_JOURNAL");
+		configuracion->RETARDO_GOSSIPING = archivoConfigSacarIntDe(archivoConfig, "RETARDO_GOSSIPING");
+		archivoConfigDestruir(archivoConfig);
+	}
+}
+
 int main()
 {
 	logger = log_create(logFile, "Memoria",true, LOG_LEVEL_INFO);

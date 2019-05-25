@@ -28,6 +28,16 @@ void configurar(ConfiguracionLFS* configuracion) {
 
 	archivoConfigDestruir(archivoConfig);
 }
+
+void cambiosConfigLFS(){
+	if(configModificado()){
+		t_config* archivoConfig = config_create(RUTA_CONFIG);
+		configuracion->RETARDO = archivoConfigSacarIntDe(archivoConfig, "RETARDO");
+		configuracion->TIEMPO_DUMP = archivoConfigSacarIntDe(archivoConfig, "TIEMPO_DUMP");
+		archivoConfigDestruir(archivoConfig);
+	}
+}
+
 int main()
 {
 	tablasLFS = list_create();

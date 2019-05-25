@@ -28,6 +28,7 @@
 #include <arpa/inet.h>
 #include <sockets.h>
 #include <configuraciones.h>
+#include <inotify.h>
 
 #include <inttypes.h>
 

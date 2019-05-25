@@ -27,6 +27,7 @@
 #include <arpa/inet.h>
 #include <sockets.h>
 #include <configuraciones.h>
+#include <inotify.h>
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
 int socketEscucha;

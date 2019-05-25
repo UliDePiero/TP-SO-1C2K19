@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include <sys/inotify.h>
 
-/* --------------------    Definición de Estructuras    -------------------- */
+/* --------------------    Definición de Var. Globales    -------------------- */
 
 // El tamaño de un evento es igual al tamaño de la estructura de inotify
 // más el tamaño máximo de nombre de archivo que nosotros soportemos,
@@ -29,8 +29,9 @@
 // Puedo manejar hasta 1024 eventos simultáneos.
 #define BUF_LEN     ( 1024 * EVENT_SIZE )
 
-/* --------------------    Definición de Var. Globales    -------------------- */
 
 /* --------------------    Definición de Funciones    -------------------- */
+
+int configModificado(void);
 
 #endif /* INOTIFY_H_ */

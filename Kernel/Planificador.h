@@ -27,6 +27,7 @@
 #include <sockets.h>
 #include <pthread.h>
 #include <configuraciones.h>
+#include <inotify.h>
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
 int socketMemoria;

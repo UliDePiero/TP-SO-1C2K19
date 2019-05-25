@@ -7,7 +7,8 @@
 
 #include "inotify.h"
 
-void inotifyConfig(){
+int configModificado(){
+	int modificado = 0;
 	char buffer[BUF_LEN];
 
 	// Al inicializar inotify, éste nos devuelve un descriptor de archivo
@@ -47,7 +48,7 @@ void inotifyConfig(){
 			// sea un archivo o un directorio
 			if (event->mask & IN_MODIFY) {
 				printf("The file %s was modified.\n", event->name);
-				// ACTUALIZAR CONFIG DEL PROCESO CORRESPONDIENTE
+				modificado = 1;
 			}
 		}
 		offset += sizeof (struct inotify_event) + event->len;
@@ -56,4 +57,6 @@ void inotifyConfig(){
 	// Para finalizar, eliminamos el monitor y cerramos el descriptor de archivo
 	inotify_rm_watch(file_descriptor, watch_descriptor);
 	close(file_descriptor);
+
+	return modificado;
 }

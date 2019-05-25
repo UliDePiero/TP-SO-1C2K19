@@ -31,6 +31,16 @@ void configurar(ConfiguracionKernel* configuracion) {
 
 	archivoConfigDestruir(archivoConfig);
 }
+
+void cambiosConfigKernel() {
+	if (configModificado()) {
+		t_config* archivoConfig = config_create(RUTA_CONFIG);
+		configuracion->QUANTUM = archivoConfigSacarIntDe(archivoConfig, "QUANTUM");
+		configuracion->METADATA_REFRESH = archivoConfigSacarIntDe(archivoConfig, "METADATA_REFRESH");
+		configuracion->SLEEP_EJECUCION = archivoConfigSacarIntDe(archivoConfig, "SLEEP_EJECUCION");
+		archivoConfigDestruir(archivoConfig);
+	}
+}
 //int planificador()
 int main()
 {
