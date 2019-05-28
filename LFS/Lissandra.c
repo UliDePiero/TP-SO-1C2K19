@@ -46,7 +46,7 @@ int main()
 	configurar(configuracion);
 
 
-	//levantar FS
+	levantarFileSystem();
 
 
 	//servidor
@@ -270,43 +270,7 @@ RegistroLFS* selectLFS(char* nombreTabla, uint16_t key){
 	}
 }
 void createLFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion){
-	if(tablaEncontrar(nombreTabla)!=NULL){
-		//Loguear error
-		perror("Ya existe una tabla con ese nombre.");
-		return;
-	}
-	else{
-		char path[] = RUTA_TABLAS;
-		strcat(path, nombreTabla);
-		mkdir(path, 0777);
-
-		char *particionPath = malloc(100);
-		char *nombreParticion = malloc(6);
-		strcpy(particionPath, path);
-		strcat(particionPath, "/Metadata");
-		FILE *nuevoArchivo = fopen(particionPath, "w+");
-		fprintf(nuevoArchivo, "CONSISTENCY=%d\n", consistencia);
-		fprintf(nuevoArchivo, "PARTITIONS=%d\n", particiones);
-		fprintf(nuevoArchivo, "COMPACTION_TIME=LISSANDRA\n");
-		fclose(nuevoArchivo);
-		strcat(particionPath, "/Metadata/Bitmap.bin");
-		nuevoArchivo = fopen(particionPath, "w+");
-		fclose(nuevoArchivo);
-
-		for(int i = 0; i<particiones; i++){
-			strcpy(particionPath, path);
-			sprintf(nombreParticion, "/%d.bin", i);
-			strcat(particionPath, nombreParticion);
-			nuevoArchivo = fopen(particionPath, "w+");
-			fprintf(nuevoArchivo, "SIZE=%d\n", 0);
-			fprintf(nuevoArchivo, "BLOCKS=[]\n");
-			fclose(nuevoArchivo);
-		}
-
-		free(particionPath);
-		free(nombreParticion);
-		list_add(tablasLFS, crearTabla(nombreTabla, consistencia, particiones, tiempoCompactacion));
-	}
+	createFS(nombreTabla, consistencia, particiones, tiempoCompactacion);
 }
 
 //Funciones de estructuras

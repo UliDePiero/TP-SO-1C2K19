@@ -9,10 +9,8 @@
 #define LFS_H_
 
 //Ruta del archivo de configuraciones
-#define RUTA_CONFIG "./LFS.config" // Para correr desde Eclipse
-#define RUTA_TABLAS "./Tables/" // Para correr desde Eclipse
-//#define RUTA_CONFIG "../LFS.config" // Para correr desde Consola
-//#define RUTA_TABLAS "../Tables/" // Para correr desde Consola
+//#define RUTA_CONFIG "./LFS.config" // Para correr desde Eclipse
+#define RUTA_CONFIG "../LFS.config" // Para correr desde Consola
 #define BACKLOG 16
 
 #include <stdio.h>
@@ -29,7 +27,7 @@
 #include <sockets.h>
 #include <configuraciones.h>
 #include <inotify.h>
-
+#include "FileSystem.h"
 #include <inttypes.h>
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
@@ -51,7 +49,7 @@ char* logFile;
 typedef struct {
 	//char PUERTO[10];
 	int PUERTO_ESCUCHA;
-	char PUNTO_MONTAJE[30];
+	char PUNTO_MONTAJE[100];
 	int RETARDO;
 	int TAMANIO_VALUE;
 	int TIEMPO_DUMP;
