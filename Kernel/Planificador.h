@@ -83,6 +83,22 @@ typedef struct {
 	int FlagIncializado;
 } EstructuraLQL;
 EstructuraLQL* LQL;
+
+// Listas de memorias asignadas a cada criterio de consistencia:
+t_list* memoriaSC; // Listado de Memorias asignadas al criterio SC (Cantidad = 0 o 1)
+t_list* memoriasSHC; // Listado de Memorias asignadas al criterio SHC (Cantidad = 0 o >0)
+t_list* memoriasEC; // Listado de Memorias asignadas al criterio EC (Cantidad = 0 o >0)
+
+// Estructura para guardar las memorias que pertenecen al pool, datos de conexión y criterios asignados
+typedef struct {
+	int IDMemoria; // ID o Número de Memoria (Viene dado por el Archivo de Configuración de Memoria)
+	char* IPMemoria; // IP de la Memoria
+	int puertoMemoria; // Puerto de la Memoria
+	unsigned char criterioSC; // Vale 1 si la Memoria está asignada al criterio SC, sino 0
+	unsigned char criterioSHC; // Vale 1 si la Memoria está asignada al criterio SHC, sino 0
+	unsigned char criterioEC; // Vale 1 si la Memoria está asignada al criterio EC, sino 0
+} TablaGossip;
+
 void API_Kernel();
 void planificacion();
 void cargarNuevoLQL(char* ScriptLQL);
