@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <commons/config.h>
 #include <commons/log.h>
+#include <commons/bitarray.h>
 #include <arpa/inet.h>
 #include <sockets.h>
 #include <configuraciones.h>
@@ -28,6 +29,10 @@
 #include <time.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/mman.h>
 
 
 typedef struct {
@@ -36,19 +41,29 @@ typedef struct {
    char *magicNumber;
 } Metadata;
 
-typedef struct {
-   int tamanio;
-   char *bloques; 	/*Yo propongo guardarlo como un string “[bloque1,bloque2,...]” para no
-   	   	   	   	   	  limitar la cantidad de bloques que se puedan poner, total hay una función
-					  que transforma un string de este tipo en un array*/
-   //Verificar
-} ArchivoNoMetadata;
 
 Metadata* metadata;
-ArchivoNoMetadata* archivoNoMetadata;
+t_bitarray *bitmap;
 
 void levantarFileSystem();
 void destruirFileSystem();
+
+void obtenerMetadata(char* pathMetadata);
+void obtenerBitmap(char* pathMetadata);
+void obtenerTablas(char* puntoMontaje);
+
+int bytesArchivoPath(char* path);
+size_t bytesArchivo(int Archivo);
+
+//Funciones de bitmap
+void crearBitmap(char* pathBitmap);
+int bloquesLibres();
+void limpiarBitmap();
+void setBloqueOcupado(int index);
+void setBloqueLibre(int index);
+void guardarBitmap();
+int proximoBloqueLibre();
+void mostrarBitmap();
 
 void createFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion);
 
