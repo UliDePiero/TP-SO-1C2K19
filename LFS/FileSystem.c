@@ -89,17 +89,31 @@ int main7(){
 int main9(){
 	configuracion = malloc(sizeof(ConfiguracionLFS));
 	configurar(configuracion);
-
 	levantarFileSystem();
-	bitarray_set_bit(bitmap, 5191);
+
+	/*bitarray_set_bit(bitmap, 5191);
 	bitarray_set_bit(bitmap, 5189);
 	bitarray_set_bit(bitmap, 5185);
 	bitarray_set_bit(bitmap, 1);
-	//limpiarBitmap();
+	limpiarBitmap();
 	mostrarBitmap();
-	destruirFileSystem();
+	guardarBitmap();*/
 
-	//free(configuracion);
+	/*createFS("A", 1, 5, 123);
+	createFS("A", 1, 5, 123);
+	createFS("B", 1, 2, 123);
+	createFS("C", 1, 3, 123);*/
+
+	//mostrarTablas();
+
+	/*insertFS("A", 1, 1, 1);
+	insertFS("A", 2, 2, 2);
+	insertFS("A", 5, 5, 5);
+	insertFS("A", 98, 98, 98);
+	mostrarRegistros("A");*/
+
+	destruirFileSystem();
+	free(configuracion);
 	puts("fin");
 }
 
@@ -174,7 +188,7 @@ void obtenerTablas(char* puntoMontaje){
 				char *tablaMetadataPath = string_from_format("%s/Metadata", tablaPath);
 				t_config* archivoConfig = archivoConfigCrear(tablaMetadataPath, camposMetadatas);
 				int particiones = archivoConfigSacarIntDe(archivoConfig, "PARTITIONS");
-				int tiempoComp = archivoConfigSacarIntDe(archivoConfig, "COMPACTION_TIME"); //TODO: giardar la consistencia como string
+				int tiempoComp = archivoConfigSacarIntDe(archivoConfig, "COMPACTION_TIME"); //TODO: guardar la consistencia como string
 				list_add(tablasLFS, crearTabla(dir->d_name, archivoConfigSacarIntDe(archivoConfig, "CONSISTENCY"), particiones, tiempoComp));
 				free(tablaPath);
 				free(tablaMetadataPath);
@@ -209,6 +223,34 @@ size_t bytesArchivo(FILE* Archivo){
 	fstat(Archivo, &st);
 	return st.st_size;
 }
+int cantidadBloques(char** bloquesArray){
+	int cantidad = 0;
+	for(int i = 0; i<metadata->cantidadBloques; i++){
+		if(bloquesArray[i])
+			cantidad++;
+		else
+			break;
+	}
+	return cantidad;
+}
+char* encontrarRegistroParticion(char* pathParticion, uint16_t key){
+	char* value;
+	char* camposMetadatas[] = {
+							   "SIZE",
+							   "BLOCKS"
+							 };
+	t_config* particionData = archivoConfigCrear(pathParticion, camposMetadatas);
+	int bloques = cantidadBloques(archivoConfigSacarArrayDe(particionData, "BLOCKS"));
+	free(particionData);
+	int nroBloque = metadata->tamanioBloque;
+	for(int i = 0; i<bloques; i++){
+		//TODO: recorrer los bloques y encontrar el value
+		//FILE* bloque =
+	}
+
+	return value;
+}
+
 //Funciones de bitmap
 void crearBitmap(char* pathBitmap){
 	char data[1] = { 0b00000000 };
@@ -245,12 +287,14 @@ void setBloqueLibre(int index){
 	guardarBitmap();
 }
 void guardarBitmap(){
-	//TODO: checkear
 	char *puntoMontaje= string_from_format("%s", configuracion->PUNTO_MONTAJE);
 	char *bitmapFile = string_from_format("%s/Metadata/Bitmap.bin", puntoMontaje);
+	int Bytes = metadata->cantidadBloques/8;
+	if(metadata->cantidadBloques%8 != 0)
+		Bytes++;
 
 	FILE *bitmapArchivo = fopen(bitmapFile, "w+b");
-	fwrite(bitmap->bitarray, bitmap->size, 1, bitmapArchivo);
+	fwrite(bitmap->bitarray, Bytes, 1, bitmapArchivo);
 
 	fclose(bitmapArchivo);
 	free(puntoMontaje);
@@ -274,14 +318,13 @@ void mostrarBitmap(){
 }
 
 
-///
+//Comandos
 void createFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion){
 	if(tablaEncontrar(nombreTabla)!=NULL){
 		//Loguear error
-		perror("Ya existe una tabla con ese nombre.");
+		perror("Ya existe una tabla con ese nombre");
 		return;
-	}
-	else{
+	} else {
 		char *pathTabla = string_from_format("%s/Tables/%s", configuracion->PUNTO_MONTAJE, nombreTabla);
 		mkdir(pathTabla, 0777);
 
@@ -294,19 +337,83 @@ void createFS(char* nombreTabla, int consistencia, int particiones, long tiempoC
 		fclose(nuevoArchivo);
 		free(metadataPath);
 
-		//TODO: ASIGNAR UN BLOQUE A CADA PARTICION
 		//Creo las particiones
 		char *particionPath;
+		int bloqueLibre;
 		for(int i = 0; i<particiones; i++){
+			bloqueLibre = proximoBloqueLibre();
+			bitarray_set_bit(bitmap, bloqueLibre);
 			particionPath = string_from_format("%s/%d.bin", pathTabla, i);
 			nuevoArchivo = fopen(particionPath, "w+");
 			fprintf(nuevoArchivo, "SIZE=%d\n", 0);
-			fprintf(nuevoArchivo, "BLOCKS=[]\n");
+			fprintf(nuevoArchivo, "BLOCKS=[%d]\n", bloqueLibre);
+
 			fclose(nuevoArchivo);
 			free(particionPath);
 		}
+		guardarBitmap();
 		free(pathTabla);
 
 		list_add(tablasLFS, crearTabla(nombreTabla, consistencia, particiones, tiempoCompactacion));
 	}
+}
+void insertFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
+	/*
+	//int numeroTabla = 0;
+	//MetadataLFS* metadataTabla;
+	char* strParticion = NULL;
+	char* direccion = NULL;
+	char* registro = NULL;
+	char* buffer = NULL;
+	Tabla* tablaEncontrada = tablaEncontrar(nombreTabla);
+	if(tablaEncontrada!=NULL)
+		perror("No se encontro la tabla solicitada.");
+	else{
+		//metadataTabla = tablasLFS[numeroTabla]->metadata;
+		//INSERT EN UN ARCHIVO .BIN DIRECTO (NO SE CONTEMPLA DUMPS NI TEMPORALES)
+		strParticion = itoa(key % tablaEncontrada->metadata->particiones, strParticion, 10);
+		strcpy (direccion,"/Tables/");
+		strcat (direccion,nombreTabla);
+		strcat (direccion,"/");
+		strcat (direccion,strParticion);
+		strcat (direccion, ".bin");
+		FILE* particion = fopen(direccion, "w");
+		strcpy (registro,itoa(timestamp, buffer, 10));
+		strcat (registro,";");
+		strcat (registro,itoa(key, buffer, 10));
+		strcat (registro,";");
+		strcat (registro, itoa(value, buffer, 10));
+		fwrite(registro , 1 , sizeof(registro) , particion);
+		//Verificar si existe en memoria una lista de datos a dumpear. De no existir, alocar dicha memoria.
+		//Insertar en la memoria temporal del punto anterior una nueva entrada que contenga los datos enviados en la request.
+		/*
+		De esta manera, cada insert se realizará siempre sobre la porción de memoria temporal asignada a dicha tabla sin importarle
+		si dentro de la misma ya existe la key. Esto es así, ya que al momento de obtener la misma se retornará el que tenga un Timestamp más
+		reciente mientras que el proceso de Compactación (explicado en el Anexo I), posterior al proceso de dump, será el que se encargue
+		de unificar dichas Keys dentro del archivo original.
+		*/
+		/*
+		 Todo dato dentro de un archivo será persistido con el formato:
+		 [TIMESTAMP];[KEY];[VALUE]
+
+	}*/
+
+}
+char* selectFS(char* tabla, int particiones, uint16_t key){
+	char* pathTabla = string_from_format("%sTables/%s", configuracion->PUNTO_MONTAJE, tabla);
+	for(int i = 0; i<particiones; i++){
+		char* pathParticion = string_from_format("/%d.bin", i);
+		char* value = encontrarRegistroParticion(pathParticion, key);
+		free(pathParticion);
+
+		if(value){
+			break;
+		}
+
+		//TODO: recorrer las particiones y encontrar el value
+
+	}
+
+	return NULL;
+	free(pathTabla);
 }

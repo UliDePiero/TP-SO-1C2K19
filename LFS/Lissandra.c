@@ -182,49 +182,29 @@ char* itoa(int value, char* buffer, int base)
 
 
 
-
-void insertLFS(char* nombreTabla, uint16_t key, int value, int timestamp){
-	//int numeroTabla = 0;
-	//MetadataLFS* metadataTabla;
-	char* strParticion = NULL;
-	char* direccion = NULL;
-	char* registro = NULL;
-	char* buffer = NULL;
-	Tabla* tablaEncontrada = tablaEncontrar(nombreTabla);
-	if(tablaEncontrada!=NULL)
-		perror("No se encontro la tabla solicitada.");
-	else{
-		//metadataTabla = tablasLFS[numeroTabla]->metadata;
-		//INSERT EN UN ARCHIVO .BIN DIRECTO (NO SE CONTEMPLA DUMPS NI TEMPORALES)
-		strParticion = itoa(key % tablaEncontrada->metadata->particiones, strParticion, 10);
-		strcpy (direccion,"/Tables/");
-		strcat (direccion,nombreTabla);
-		strcat (direccion,"/");
-		strcat (direccion,strParticion);
-		strcat (direccion, ".bin");
-		FILE* particion = fopen(direccion, "w");
-		strcpy (registro,itoa(timestamp, buffer, 10));
-		strcat (registro,";");
-		strcat (registro,itoa(key, buffer, 10));
-		strcat (registro,";");
-		strcat (registro, itoa(value, buffer, 10));
-		fwrite(registro , 1 , sizeof(registro) , particion);
-		//Verificar si existe en memoria una lista de datos a dumpear. De no existir, alocar dicha memoria.
-		//Insertar en la memoria temporal del punto anterior una nueva entrada que contenga los datos enviados en la request.
-		/*
-		De esta manera, cada insert se realizará siempre sobre la porción de memoria temporal asignada a dicha tabla sin importarle
-		si dentro de la misma ya existe la key. Esto es así, ya que al momento de obtener la misma se retornará el que tenga un Timestamp más
-		reciente mientras que el proceso de Compactación (explicado en el Anexo I), posterior al proceso de dump, será el que se encargue
-		de unificar dichas Keys dentro del archivo original.
-		*/
-		/*
-		 Todo dato dentro de un archivo será persistido con el formato:
-		 [TIMESTAMP];[KEY];[VALUE]
-		 */
-	}
+void createLFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion){
+	createFS(nombreTabla, consistencia, particiones, tiempoCompactacion);
 }
+void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
+	if(sizeof(value) > configuracion->TAMANIO_VALUE){
+		perror("Tamaño del value mayor que el permitido");
+		return;
+	}
+	Tabla* t = tablaEncontrar(nombreTabla);
+	if(!t){
+		perror("Tabla no encontrada");
+		return;
+	}
 
-RegistroLFS* selectLFS(char* nombreTabla, uint16_t key){
+	//TODO: Verificar si existe en memoria una lista de datos a dumpear. De no existir, alocar dicha memoria.
+
+	if(timestamp == 0)
+		timestamp = (int)time(NULL);
+
+	list_add(tablaEncontrar(nombreTabla)->registro, RegistroLFSCrear(key, timestamp, value));
+}
+char* selectLFS(char* nombreTabla, uint16_t key){
+	/*
 	//int numeroTabla = 0;
 	//MetadataLFS* metadataTabla;
 	Tabla* tablaEncontrada = tablaEncontrar(nombreTabla);
@@ -267,10 +247,19 @@ RegistroLFS* selectLFS(char* nombreTabla, uint16_t key){
 	else{
 		perror("No se encontro la tabla solicitada.");
 		return NULL;
+	}*/
+
+	Tabla* tabla = tablaEncontrar(nombreTabla);
+	if(!tabla){
+		perror("Tabla no encontrada");
+		return NULL;
 	}
-}
-void createLFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion){
-	createFS(nombreTabla, consistencia, particiones, tiempoCompactacion);
+
+	RegistroLFS* registro = registroEncontrar(tabla, key);
+	if(registro)
+		return registro->value;
+	else
+		return selectFS(tabla->nombreTabla, tabla->metadata->particiones, key);
 }
 
 //Funciones de estructuras
@@ -291,7 +280,20 @@ void tablaDestruir(Tabla* tabla){
 	list_destroy_and_destroy_elements(tabla->registro, (void*) RegistroLFSDestruir);
 	free(tabla);
 }
-RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, int value){
+void mostrarTablas(){
+	Tabla *t;
+	for(int i = 0; i<tablasLFS->elements_count; i++){
+		t = list_get(tablasLFS, i);
+		printf("tabla: %s particiones=%d\n", t->nombreTabla, t->metadata->particiones);
+	}
+}
+Tabla* tablaEncontrar(char* nombre){
+	int _is_the_one(Tabla *t) {
+		return string_equals_ignore_case(t->nombreTabla, nombre);
+	}
+	return list_find(tablasLFS, (void*) _is_the_one);
+}
+RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, char* value){
 	RegistroLFS *registro = malloc(sizeof(RegistroLFS));
 	registro->key = key;
 	registro->timestamp = timestamp;
@@ -301,9 +303,23 @@ RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, int value){
 void RegistroLFSDestruir(RegistroLFS* registro){
 	free(registro);
 }
-Tabla* tablaEncontrar(char* nombre){
-	int _is_the_one(Tabla *t) {
-		return string_equals_ignore_case(t->nombreTabla, nombre);
+RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key){
+	//RETORNA NULL SI EL REGISTRO NO EXISTE EN LA MEMTABLE
+	RegistroLFS* registro;
+	if(tabla->registro->elements_count > 0){
+		for(int i = 0; i < tabla->registro->elements_count; i++){
+			RegistroLFS* registroEncontrado = list_get(tabla->registro, i);
+			if(registroEncontrado->key == key && (!registro || registroEncontrado->timestamp > registro->timestamp))
+				registro = registroEncontrado;
+		}
 	}
-	return list_find(tablasLFS, (void*) _is_the_one);
+
+	return registro;
+}
+void mostrarRegistros(char* nombre){
+	Tabla* tabla = tablaEncontrar(nombre);
+	for(int i = 0; i < tabla->registro->elements_count; i++){
+		RegistroLFS* registro = list_get(tabla->registro, i);
+		printf("key: %hd timestamp: %d value: %s\n", registro->key, registro->timestamp, registro->value);
+	}
 }

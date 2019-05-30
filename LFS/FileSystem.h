@@ -9,21 +9,7 @@
 #define FILESYSTEM_H_
 
 #include "LFS.h"
-#include <readline/readline.h>
-#include <readline/history.h>
-#include <stdio.h>
-#include <openssl/md5.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <commons/config.h>
-#include <commons/log.h>
 #include <commons/bitarray.h>
-#include <arpa/inet.h>
-#include <sockets.h>
-#include <configuraciones.h>
 #include <commons/string.h>
 #include <parser.h>
 #include <time.h>
@@ -54,7 +40,8 @@ void obtenerTablas(char* puntoMontaje);
 
 int bytesArchivoPath(char* path);
 size_t bytesArchivo(FILE* Archivo);
-
+int cantidadBloques(char** bloquesArray);
+char* encontrarRegistroParticion(char* pathParticion, uint16_t key);
 //Funciones de bitmap
 void crearBitmap(char* pathBitmap);
 int bloquesLibres();
@@ -66,5 +53,7 @@ int proximoBloqueLibre();
 void mostrarBitmap();
 
 void createFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion);
+void insertFS(char* nombreTabla, uint16_t key, char* value, int timestamp);
+char* selectFS(char* tabla, int particiones, uint16_t key);
 
 #endif /* FILESYSTEM_H_ */

@@ -13,8 +13,8 @@
 //#define RUTA_CONFIG "../LFS.config" // Para correr desde Consola
 #define BACKLOG 16
 
+#include "FileSystem.h"
 #include <stdio.h>
-
 #include <openssl/md5.h>
 #include <string.h>
 #include <stdlib.h>
@@ -27,7 +27,6 @@
 #include <sockets.h>
 #include <configuraciones.h>
 #include <inotify.h>
-#include "FileSystem.h"
 #include <inttypes.h>
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
@@ -73,7 +72,7 @@ typedef struct{
 typedef struct{
    int timestamp;
    uint16_t key;
-   int value; // Siempre verificar que no sobrepase el tamaño indicado por archivo de configuración
+   char* value; // Siempre verificar que no sobrepase el tamaño indicado por archivo de configuración
 } RegistroLFS;
 //Estructura para guardar los Registros
 typedef struct{
@@ -93,11 +92,15 @@ void API_LFS();
 Tabla* crearTabla(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion);
 void tablaDestruir(Tabla* tabla);
 Tabla* tablaEncontrar(char* nombre);
-RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, int value);
+void mostrarTablas();
+RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, char* value);
 void RegistroLFSDestruir(RegistroLFS* registro);
+RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key);
+void mostrarRegistros(char* nombre);
 
-void insertLFS(char* nombreTabla, uint16_t key, int value, int timestamp);
-RegistroLFS* selectLFS(char* nombreTabla, uint16_t key);
+
 void createLFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion);
+void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp);
+char* selectLFS(char* nombreTabla, uint16_t key);
 
 #endif /* LFS_H_ */

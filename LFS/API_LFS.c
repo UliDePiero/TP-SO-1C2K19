@@ -59,9 +59,9 @@ void ejecutarInsert(char* instruccion){
 	char** comando ;
 	comando = string_n_split(instruccion, 5, " ");
 	if(comandoValido(4, comando))
-		insertLFS(comando[1], atoi(comando[2]), atoi(comando[3]), (int)time(NULL));
+		insertLFS(comando[1], atoi(comando[2]), comando[3], (int)time(NULL));
 	else
-		insertLFS(comando[1], atoi(comando[2]), atoi(comando[3]), atoi(comando[4]));
+		insertLFS(comando[1], atoi(comando[2]), comando[3], atoi(comando[4]));
 }
 void ejecutarCreate(char* instruccion){
 	puts("create ejecutado");
