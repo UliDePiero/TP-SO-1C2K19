@@ -99,6 +99,9 @@ typedef struct {
 	unsigned char criterioEC; // Vale 1 si la Memoria está asignada al criterio EC, sino 0
 } TablaGossip;
 
+TablaGossip* nodoMemoria;
+t_list* listaGossiping;
+
 void API_Kernel();
 void planificacion();
 void cargarNuevoLQL(char* ScriptLQL);

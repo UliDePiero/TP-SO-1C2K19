@@ -117,4 +117,60 @@ void actualizarRequestEjecutadas(){
 	LQL->requestEjecutadas += configuracion->QUANTUM;
 }
 
+void crearListasDeCriteriosMemorias() {
+	memoriaSC = list_create();
+	memoriasSHC = list_create();
+	memoriasEC = list_create();
+}
 
+TablaGossip* buscarNodoMemoria(int nroMemoria) {
+	TablaGossip* nodoBuscado = malloc(sizeof(TablaGossip));
+	t_link_element* nodoActual = listaGossiping->head;
+
+	for (int i = 0; i < listaGossiping->elements_count; i++) {
+		nodoBuscado = nodoActual->data; // Como entró al ciclo sé que nodoActual no es NULL
+
+		if (nodoBuscado->IDMemoria == nroMemoria)
+			return nodoBuscado; // Si encuentra memoria con ID igual a nroMemoria, retorna dicho nodo
+		nodoActual = nodoActual->next;
+	}
+
+	return NULL; // Llegó al final de la lista y no encontró ninguna memoria con ID igual a nroMemoria
+}
+
+void asociarACriterioSC(int nroMemoria) {
+	if (memoriaSC->elements_count == 0) {
+		list_add(memoriaSC, (void*)nroMemoria); // Asignar la memoria al criterio
+		// Agregar el criterio en la Tabla de Gossip de la memoria:
+		nodoMemoria = buscarNodoMemoria(nroMemoria); // Buscar nodo correspondiente a la memoria en cuestión
+		nodoMemoria->criterioSC = 1; // Como la memoria está asignada al criterio SC, ponemos este campo en 1
+		printf("Se asignó la memoria %d al criterio SC \n", nroMemoria);
+	} else {
+		// Si ya hay una memoria asignada al criterio SC, informarlo y no hacer nada más
+		printf("Ya existe una memoria asignada al criterio SC \n");
+	}
+}
+
+void desasociarDeCriterioSC(int nroMemoria) {
+	if (memoriaSC->elements_count == 1) {
+		list_remove(memoriaSC, 0); // Desasignar memoria del criterio (Como es una sola, va a estar en la primer posición de la lista)
+		// Eliminar el criterio en la Tabla de Gossip de la memoria:
+		nodoMemoria = buscarNodoMemoria(nroMemoria); // Buscar nodo correspondiente a la memoria en cuestión
+		nodoMemoria->criterioSC = 0; // Como la memoria ya no está asignada al criterio SC, ponemos este campo en 0
+		printf("Se desasoció la memoria %d del criterio SC \n", nroMemoria);
+	} else {
+		// Si no existe memoria asignada al criterio, informarlo y no hacer nada más
+		printf("No existe ninguna memoria asignada al criterio SC \n");
+	}
+}
+
+TablaGossip* elegirMemoriaCriterioSC() {
+	if (memoriaSC->elements_count == 1) {
+		int nroMemoria = (int)memoriaSC->head->data; // Buscar número de memoria en lista de memoriaSC
+		TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
+		return memoriaElegida;
+	} else {
+		printf("No existe ninguna memoria asignada al criterio SC \n");
+	}
+	return NULL;
+}
