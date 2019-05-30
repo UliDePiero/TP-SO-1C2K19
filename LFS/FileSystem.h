@@ -41,8 +41,8 @@ typedef struct {
    char *magicNumber;
 } Metadata;
 
-
-Metadata* metadata;
+char *bitarray;
+Metadata *metadata;
 t_bitarray *bitmap;
 
 void levantarFileSystem();
@@ -53,7 +53,7 @@ void obtenerBitmap(char* pathMetadata);
 void obtenerTablas(char* puntoMontaje);
 
 int bytesArchivoPath(char* path);
-size_t bytesArchivo(int Archivo);
+size_t bytesArchivo(FILE* Archivo);
 
 //Funciones de bitmap
 void crearBitmap(char* pathBitmap);

@@ -36,11 +36,13 @@ void fileSystem(){
 }
 void destruirFileSystem(){
 	//free(metadata->magicNumber);
+	free(bitarray);
 	free(metadata);
 	bitarray_destroy(bitmap);
 	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
 }
 
+//TODO: testear todas las cosas
 //MAINS DE TESTS
 int main3(){
 	configuracion = malloc(sizeof(ConfiguracionLFS));
@@ -89,9 +91,10 @@ int main9(){
 	configurar(configuracion);
 
 	levantarFileSystem();
-	//bitarray_set_bit(bitmap, 5191);
-	//bitarray_set_bit(bitmap, 5189);
-	//bitarray_set_bit(bitmap, 5185);
+	bitarray_set_bit(bitmap, 5191);
+	bitarray_set_bit(bitmap, 5189);
+	bitarray_set_bit(bitmap, 5185);
+	bitarray_set_bit(bitmap, 1);
 	//limpiarBitmap();
 	mostrarBitmap();
 	destruirFileSystem();
@@ -135,32 +138,18 @@ void obtenerBitmap(char* pathMetadata){
 	if( access( bitmapFile, F_OK ) == -1 ){
 		crearBitmap(bitmapFile);
 	}
-	/*size_t sizeArchivo = bytesArchivo(bitmapFile);
-	char *bitmapDatos = malloc(sizeArchivo);
+	FILE *bitmapArchivo = fopen(bitmapFile, "r+b");
+	size_t sizeArchivo = bytesArchivo(bitmapArchivo);
+	bitarray = malloc(sizeArchivo);
 	int Bytes = metadata->cantidadBloques/8;
 	if(metadata->cantidadBloques%8 != 0)
 		Bytes++;
-	FILE*  Archivo = fopen(bitmapFile, "r+b");
 
-	fread(bitmapDatos, 1, Bytes, Archivo);
-	bitmap = bitarray_create_with_mode(bitmapDatos, metadata->cantidadBloques, MSB_FIRST);
-	free(bitmapDatos);
-	fclose(Archivo);*/
-	/*int  Archivo = open(bitmapFile, O_RDWR | O_CREAT | S_IRUSR | S_IWUSR);
-	char* bitmapCOSAS;
-	bitmapCOSAS = mmap(NULL, 649, PROT_READ | PROT_WRITE, MAP_SHARED, Archivo, 0);
-	bitmap = bitarray_create_with_mode(bitmapCOSAS, sizeof(bitmapCOSAS), LSB_FIRST);
-	free(bitmapCOSAS);*/
 
-	struct stat st;
-	int Archivo = open(bitmapFile, O_RDWR);
+	fread(bitarray, 1, Bytes, bitmapArchivo);
+	fclose(bitmapArchivo);
 
-	fstat(Archivo, &st);
-	size_t size = st.st_size;
-	//fprintf(stderr, "size=%zu\n", size);
-	int *ptr = mmap(0, size, PROT_READ|PROT_EXEC, MAP_SHARED, Archivo, 0);
-
-	bitmap = bitarray_create_with_mode(ptr, size, LSB_FIRST);
+	bitmap = bitarray_create_with_mode(bitarray, metadata->cantidadBloques, MSB_FIRST);
 
 	free(bitmapFile);
 }
@@ -214,7 +203,7 @@ int bytesArchivoPath(char* path){
 	return fileInfo.st_size;
 	close(fd);
 }
-size_t bytesArchivo(int Archivo){
+size_t bytesArchivo(FILE* Archivo){
 	//El archivo debe estar abierto con open()
 	struct stat st;
 	fstat(Archivo, &st);
