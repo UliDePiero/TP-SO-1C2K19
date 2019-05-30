@@ -399,20 +399,18 @@ void insertFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 	}*/
 
 }
-char* selectFS(char* tabla, int particiones, uint16_t key){
+char* selectFS(char* tabla, int particion, uint16_t key){
 	char* pathTabla = string_from_format("%sTables/%s", configuracion->PUNTO_MONTAJE, tabla);
-	for(int i = 0; i<particiones; i++){
-		char* pathParticion = string_from_format("/%d.bin", i);
-		char* value = encontrarRegistroParticion(pathParticion, key);
-		free(pathParticion);
+	char* pathParticion = string_from_format("/%d.bin", particion);
+	//TODO: habria que recorrer los temporales tambien
+	char* value = encontrarRegistroParticion(pathParticion, key);
+	free(pathParticion);
 
-		if(value){
-			break;
-		}
-
-		//TODO: recorrer las particiones y encontrar el value
-
+	if(value){
+		//break;
 	}
+
+	//TODO: recorrer la particion y encontrar el value
 
 	return NULL;
 	free(pathTabla);

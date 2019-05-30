@@ -196,8 +196,6 @@ void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 		return;
 	}
 
-	//TODO: Verificar si existe en memoria una lista de datos a dumpear. De no existir, alocar dicha memoria.
-
 	if(timestamp == 0)
 		timestamp = (int)time(NULL);
 
@@ -258,8 +256,9 @@ char* selectLFS(char* nombreTabla, uint16_t key){
 	RegistroLFS* registro = registroEncontrar(tabla, key);
 	if(registro)
 		return registro->value;
-	else
-		return selectFS(tabla->nombreTabla, tabla->metadata->particiones, key);
+	else{
+		return selectFS(tabla->nombreTabla, key%tabla->metadata->particiones, key);
+	}
 }
 
 //Funciones de estructuras

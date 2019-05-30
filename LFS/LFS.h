@@ -82,8 +82,7 @@ typedef struct{
 } Tabla;
 //Estructura para guardar las Tablas
 
-t_list *tablasLFS;
-//SE TIENE QUE RELLENAR CON fileSystem();
+t_list *tablasLFS; //La memtable
 
 void compactacion();
 void fileSystem();
