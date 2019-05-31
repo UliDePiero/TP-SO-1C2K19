@@ -39,7 +39,7 @@ void destruirFileSystem(){
 	free(bitarray);
 	free(metadata);
 	bitarray_destroy(bitmap);
-	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
+	//list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
 }
 
 //TODO: testear todas las cosas
@@ -69,6 +69,7 @@ int main3(){
 
 	//destruirFileSystem();
 	puts("destruyo");
+	return 0;
 }
 int main7(){
 	configuracion = malloc(sizeof(ConfiguracionLFS));
@@ -85,6 +86,7 @@ int main7(){
 	bitarray_destroy(bitmap);
 	free(configuracion);
 	puts("FIN");
+	return 0;
 }
 int main9(){
 	configuracion = malloc(sizeof(ConfiguracionLFS));
@@ -115,6 +117,7 @@ int main9(){
 	destruirFileSystem();
 	free(configuracion);
 	puts("fin");
+	return 0;
 }
 
 void obtenerMetadata(char* pathMetadata){
@@ -188,8 +191,8 @@ void obtenerTablas(char* puntoMontaje){
 				char *tablaMetadataPath = string_from_format("%s/Metadata", tablaPath);
 				t_config* archivoConfig = archivoConfigCrear(tablaMetadataPath, camposMetadatas);
 				int particiones = archivoConfigSacarIntDe(archivoConfig, "PARTITIONS");
-				int tiempoComp = archivoConfigSacarIntDe(archivoConfig, "COMPACTION_TIME"); //TODO: guardar la consistencia como string
-				list_add(tablasLFS, crearTabla(dir->d_name, archivoConfigSacarIntDe(archivoConfig, "CONSISTENCY"), particiones, tiempoComp));
+				int tiempoComp = archivoConfigSacarIntDe(archivoConfig, "COMPACTION_TIME");
+				list_add(tablasLFS, crearTabla(dir->d_name, archivoConfigSacarStringDe(archivoConfig, "CONSISTENCY"), particiones, tiempoComp));
 				free(tablaPath);
 				free(tablaMetadataPath);
 				archivoConfigDestruir(archivoConfig);
@@ -234,7 +237,8 @@ int cantidadBloques(char** bloquesArray){
 	return cantidad;
 }
 char* encontrarRegistroParticion(char* pathParticion, uint16_t key){
-	char* value;
+	char* value = malloc(configuracion->TAMANIO_VALUE+1);
+	int timestamp = 0;
 	char* camposMetadatas[] = {
 							   "SIZE",
 							   "BLOCKS"
@@ -242,14 +246,28 @@ char* encontrarRegistroParticion(char* pathParticion, uint16_t key){
 	t_config* particionData = archivoConfigCrear(pathParticion, camposMetadatas);
 	int bloques = cantidadBloques(archivoConfigSacarArrayDe(particionData, "BLOCKS"));
 	free(particionData);
-	int nroBloque = metadata->tamanioBloque;
+	char* bloque = malloc(metadata->tamanioBloque+1);
+	char* pathBloque;
+
 	for(int i = 0; i<bloques; i++){
 		//TODO: recorrer los bloques y encontrar el value
-		//FILE* bloque =
+		pathBloque = string_from_format("%sBloques/%d.bin", configuracion->PUNTO_MONTAJE, i);
+		FILE* archivo = fopen("file.txt", "r+");
+		free(pathBloque);
+		fread(bloque, metadata->tamanioBloque+1, 1, archivo);
+		fclose(archivo);
 	}
 
+	free(bloque);
 	return value;
 }
+int proximoPuntoYComa(char* array){
+	for(int i = 0; i<sizeof(array); i++)
+		if(array[0] == ';')
+			return i;
+	return -1;
+}
+
 
 //Funciones de bitmap
 void crearBitmap(char* pathBitmap){
@@ -319,43 +337,46 @@ void mostrarBitmap(){
 
 
 //Comandos
-void createFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion){
+void createFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
+	if(strcmp(consistencia, "SC") && strcmp(consistencia, "SHC") && strcmp(consistencia, "EC")){
+		perror("Consistencia invalida");
+		return;
+	}
 	if(tablaEncontrar(nombreTabla)!=NULL){
 		//Loguear error
 		perror("Ya existe una tabla con ese nombre");
 		return;
-	} else {
-		char *pathTabla = string_from_format("%s/Tables/%s", configuracion->PUNTO_MONTAJE, nombreTabla);
-		mkdir(pathTabla, 0777);
-
-		//Creo la metadata
-		char *metadataPath = string_from_format("%s/Metadata", pathTabla);
-		FILE *nuevoArchivo = fopen(metadataPath, "w+");
-		fprintf(nuevoArchivo, "CONSISTENCY=%d\n", consistencia);
-		fprintf(nuevoArchivo, "PARTITIONS=%d\n", particiones);
-		fprintf(nuevoArchivo, "COMPACTION_TIME=%ld\n", tiempoCompactacion);
-		fclose(nuevoArchivo);
-		free(metadataPath);
-
-		//Creo las particiones
-		char *particionPath;
-		int bloqueLibre;
-		for(int i = 0; i<particiones; i++){
-			bloqueLibre = proximoBloqueLibre();
-			bitarray_set_bit(bitmap, bloqueLibre);
-			particionPath = string_from_format("%s/%d.bin", pathTabla, i);
-			nuevoArchivo = fopen(particionPath, "w+");
-			fprintf(nuevoArchivo, "SIZE=%d\n", 0);
-			fprintf(nuevoArchivo, "BLOCKS=[%d]\n", bloqueLibre);
-
-			fclose(nuevoArchivo);
-			free(particionPath);
-		}
-		guardarBitmap();
-		free(pathTabla);
-
-		list_add(tablasLFS, crearTabla(nombreTabla, consistencia, particiones, tiempoCompactacion));
 	}
+	char *pathTabla = string_from_format("%s/Tables/%s", configuracion->PUNTO_MONTAJE, nombreTabla);
+	mkdir(pathTabla, 0777);
+
+	//Creo la metadata
+	char *metadataPath = string_from_format("%s/Metadata", pathTabla);
+	FILE *nuevoArchivo = fopen(metadataPath, "w+");
+	fprintf(nuevoArchivo, "CONSISTENCY=%s\n", consistencia);
+	fprintf(nuevoArchivo, "PARTITIONS=%d\n", particiones);
+	fprintf(nuevoArchivo, "COMPACTION_TIME=%ld\n", tiempoCompactacion);
+	fclose(nuevoArchivo);
+	free(metadataPath);
+
+	//Creo las particiones
+	char *particionPath;
+	int bloqueLibre;
+	for(int i = 0; i<particiones; i++){
+		bloqueLibre = proximoBloqueLibre();
+		bitarray_set_bit(bitmap, bloqueLibre);
+		particionPath = string_from_format("%s/%d.bin", pathTabla, i);
+		nuevoArchivo = fopen(particionPath, "w+");
+		fprintf(nuevoArchivo, "SIZE=%d\n", 0);
+		fprintf(nuevoArchivo, "BLOCKS=[%d]\n", bloqueLibre);
+
+		fclose(nuevoArchivo);
+		free(particionPath);
+	}
+	guardarBitmap();
+	free(pathTabla);
+
+	list_add(tablasLFS, crearTabla(nombreTabla, consistencia, particiones, tiempoCompactacion));
 }
 void insertFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 	/*
@@ -397,7 +418,6 @@ void insertFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 		 [TIMESTAMP];[KEY];[VALUE]
 
 	}*/
-
 }
 char* selectFS(char* tabla, int particion, uint16_t key){
 	char* pathTabla = string_from_format("%sTables/%s", configuracion->PUNTO_MONTAJE, tabla);

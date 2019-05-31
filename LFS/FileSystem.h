@@ -9,8 +9,6 @@
 #define FILESYSTEM_H_
 
 #include "LFS.h"
-#include <commons/bitarray.h>
-#include <commons/string.h>
 #include <parser.h>
 #include <time.h>
 #include <sys/types.h>
@@ -20,16 +18,6 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-
-typedef struct {
-   int tamanioBloque;
-   int cantidadBloques;
-   char *magicNumber;
-} Metadata;
-
-char *bitarray;
-Metadata *metadata;
-t_bitarray *bitmap;
 
 void levantarFileSystem();
 void destruirFileSystem();
@@ -52,7 +40,7 @@ void guardarBitmap();
 int proximoBloqueLibre();
 void mostrarBitmap();
 
-void createFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion);
+void createFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
 void insertFS(char* nombreTabla, uint16_t key, char* value, int timestamp);
 char* selectFS(char* tabla, int particiones, uint16_t key);
 

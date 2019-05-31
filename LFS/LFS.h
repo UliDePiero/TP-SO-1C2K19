@@ -14,6 +14,8 @@
 #define BACKLOG 16
 
 #include "FileSystem.h"
+#include <commons/bitarray.h>
+#include <commons/string.h>
 #include <stdio.h>
 #include <openssl/md5.h>
 #include <string.h>
@@ -63,8 +65,8 @@ TIEMPO_DUMP=5000
 //Estructura para guardar la configuracion del proceso
 ConfiguracionLFS* configuracion;
 typedef struct{
-   //char consistencia[5]; //opción 1
-   int consistencia; //opción 2 //SC, HC, EC en protocolo.h
+   char consistencia[3]; //opción 1
+   //int consistencia; //opción 2 //SC, SHC, EC en protocolo.h
    int particiones;
    int tiempoCompactacion;
 } MetadataLFS;
@@ -81,14 +83,23 @@ typedef struct{
 	t_list* registro;
 } Tabla;
 //Estructura para guardar las Tablas
+typedef struct {
+   int tamanioBloque;
+   int cantidadBloques;
+   char *magicNumber;
+} Metadata;
+//Estructura para guardar la Metadata del filesystem
 
+char *bitarray;
+t_bitarray *bitmap;
+Metadata *metadata;
 t_list *tablasLFS; //La memtable
 
 void compactacion();
 void fileSystem();
 void API_LFS();
 
-Tabla* crearTabla(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion);
+Tabla* crearTabla(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
 void tablaDestruir(Tabla* tabla);
 Tabla* tablaEncontrar(char* nombre);
 void mostrarTablas();
@@ -98,7 +109,7 @@ RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key);
 void mostrarRegistros(char* nombre);
 
 
-void createLFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion);
+void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
 void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp);
 char* selectLFS(char* nombreTabla, uint16_t key);
 

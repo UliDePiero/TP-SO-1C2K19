@@ -62,8 +62,6 @@ int main()
 
 	socketEscucha = crearSocketEscucha(configuracion->PUERTO_ESCUCHA, logger);
 
-	free(configuracion);
-
 	//crearHiloIndependiente(&hiloCompactador,(void*)compactacion, NULL, "LFS");
 	//pthread_create(&hiloCompactador, NULL, (void*)compactacion, NULL);
 	//pthread_join(hiloCompactador, NULL);
@@ -101,6 +99,8 @@ int main()
 
 	desconectarseDe(socketActivo);
 	desconectarseDe(socketEscucha);
+	destruirFileSystem();
+	free(configuracion);
 	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
 }
 
@@ -182,7 +182,7 @@ char* itoa(int value, char* buffer, int base)
 
 
 
-void createLFS(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion){
+void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
 	createFS(nombreTabla, consistencia, particiones, tiempoCompactacion);
 }
 void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
@@ -262,11 +262,11 @@ char* selectLFS(char* nombreTabla, uint16_t key){
 }
 
 //Funciones de estructuras
-Tabla* crearTabla(char* nombreTabla, int consistencia, int particiones, long tiempoCompactacion){
+Tabla* crearTabla(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
 	Tabla *nuevaTabla = malloc(sizeof(Tabla));
 	nuevaTabla->nombreTabla = nombreTabla;
 	MetadataLFS *metadata = malloc(sizeof(MetadataLFS));
-	metadata->consistencia = consistencia;
+	strcpy(metadata->consistencia, consistencia);
 	metadata->particiones = particiones;
 	metadata->tiempoCompactacion = tiempoCompactacion;
 	nuevaTabla->metadata = metadata;

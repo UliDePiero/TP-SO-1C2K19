@@ -51,7 +51,7 @@ void ejecutarSelect(char* instruccion){
 	comando = string_n_split(instruccion, 3, " ");
 	if(comandoValido(3, comando)){
 		registro = selectLFS(comando[1], atoi(comando[2]));
-		printf("value: %d\n", registro->value);
+		printf("value: %s\n", registro->value);
 	}
 }
 void ejecutarInsert(char* instruccion){
@@ -68,7 +68,7 @@ void ejecutarCreate(char* instruccion){
 	char** comando ;
 	comando = string_n_split(instruccion, 5, " ");
 	if(comandoValido(5, comando))
-		puts("comando valido");
+		createLFS(comando[1], comando[2], atoi(comando[3]), atol(comando[4]));
 }
 void ejecutarDescribe(char* instruccion){
 	puts("describe ejecutado");
