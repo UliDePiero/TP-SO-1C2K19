@@ -37,6 +37,13 @@ void cambiosConfigLFS(){
 		archivoConfigDestruir(archivoConfig);
 	}
 }
+void destruirLFS(){
+	desconectarseDe(socketActivo);
+	desconectarseDe(socketEscucha);
+	destruirFileSystem();
+	free(configuracion);
+	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
+}
 
 int main()
 {
@@ -44,8 +51,6 @@ int main()
 	logger = log_create(logFile, "LFS",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionLFS));
 	configurar(configuracion);
-
-
 	levantarFileSystem();
 
 
@@ -66,8 +71,6 @@ int main()
 	//pthread_create(&hiloCompactador, NULL, (void*)compactacion, NULL);
 	//pthread_join(hiloCompactador, NULL);
 
-	crearHilo(&hiloFileSystem,(void*)fileSystem, NULL, "LFS"); //LEVANTO FILESYSTEM
-	joinearHilo(hiloFileSystem, NULL, "LFS");
 	crearHiloIndependiente(&hiloAPI,(void*)API_LFS, NULL, "LFS");
 
 	//ESTO TIENE QUE IR EN UN HILO APARTE PARA QUE QUEDE EN LOOP  ???
@@ -97,13 +100,25 @@ int main()
 
 	}
 
-	desconectarseDe(socketActivo);
-	desconectarseDe(socketEscucha);
-	destruirFileSystem();
-	free(configuracion);
-	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
+	destruirLFS();
 }
+//MAIN DE TESTS
+int main2(){
+	tablasLFS = list_create();
+	//logger = log_create(logFile, "LFS",true, LOG_LEVEL_INFO);
+	configuracion = malloc(sizeof(ConfiguracionLFS));
+	configurar(configuracion);
+	levantarFileSystem();
 
+	crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS"); //LEVANTO FILESYSTEM
+	joinearHilo(hiloAPI, NULL, "LFS");
+
+	mostrarRegistros("A");
+	mostrarRegistros("B");
+
+	destruirLFS();
+	puts("TERMINE");
+}
 
 //--------------------------------------------------------//
 
@@ -183,6 +198,14 @@ char* itoa(int value, char* buffer, int base)
 
 
 void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
+	if(strcmp(consistencia, "SC") && strcmp(consistencia, "SHC") && strcmp(consistencia, "EC")){
+		perror("Consistencia invalida");
+		return;
+	}
+	if(tablaEncontrar(nombreTabla)!=NULL){
+		perror("Ya existe una tabla con ese nombre");
+		return;
+	}
 	createFS(nombreTabla, consistencia, particiones, tiempoCompactacion);
 }
 void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){

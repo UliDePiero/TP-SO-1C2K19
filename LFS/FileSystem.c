@@ -8,7 +8,6 @@
 #include "FileSystem.h"
 
 void levantarFileSystem(){
-	tablasLFS = list_create();
 	char *puntoMontaje = string_from_format("%s", configuracion->PUNTO_MONTAJE);
 
 	//Creo el punto de montaje en caso que no exista
@@ -30,9 +29,6 @@ void levantarFileSystem(){
 	free(bloquesPath);
 
 	free(puntoMontaje);
-}
-void fileSystem(){
-
 }
 void destruirFileSystem(){
 	//free(metadata->magicNumber);
@@ -338,15 +334,6 @@ void mostrarBitmap(){
 
 //Comandos
 void createFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
-	if(strcmp(consistencia, "SC") && strcmp(consistencia, "SHC") && strcmp(consistencia, "EC")){
-		perror("Consistencia invalida");
-		return;
-	}
-	if(tablaEncontrar(nombreTabla)!=NULL){
-		//Loguear error
-		perror("Ya existe una tabla con ese nombre");
-		return;
-	}
 	char *pathTabla = string_from_format("%s/Tables/%s", configuracion->PUNTO_MONTAJE, nombreTabla);
 	mkdir(pathTabla, 0777);
 
@@ -378,8 +365,29 @@ void createFS(char* nombreTabla, char* consistencia, int particiones, long tiemp
 
 	list_add(tablasLFS, crearTabla(nombreTabla, consistencia, particiones, tiempoCompactacion));
 }
+char* selectFS(char* tabla, int particion, uint16_t key){
+	char* pathTabla = string_from_format("%sTables/%s", configuracion->PUNTO_MONTAJE, tabla);
+	char* pathParticion = string_from_format("/%d.bin", particion);
+	//TODO: habria que recorrer los temporales tambien
+	char* value = encontrarRegistroParticion(pathParticion, key);
+	free(pathParticion);
+
+	if(value){
+		//break;
+	}
+
+	//TODO: recorrer la particion y encontrar el value
+
+	return NULL;
+	free(pathTabla);
+}
+
+
+//EL FILESYSTEM NO HACE INSERTS
+//EL COMPILADOR SE ENCARGA DE PASAR LA MEMTABLE A LOS TEMPORALES
+/*
 void insertFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
-	/*
+
 	//int numeroTabla = 0;
 	//MetadataLFS* metadataTabla;
 	char* strParticion = NULL;
@@ -407,31 +415,14 @@ void insertFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 		fwrite(registro , 1 , sizeof(registro) , particion);
 		//Verificar si existe en memoria una lista de datos a dumpear. De no existir, alocar dicha memoria.
 		//Insertar en la memoria temporal del punto anterior una nueva entrada que contenga los datos enviados en la request.
-		/*
+
 		De esta manera, cada insert se realizará siempre sobre la porción de memoria temporal asignada a dicha tabla sin importarle
 		si dentro de la misma ya existe la key. Esto es así, ya que al momento de obtener la misma se retornará el que tenga un Timestamp más
 		reciente mientras que el proceso de Compactación (explicado en el Anexo I), posterior al proceso de dump, será el que se encargue
 		de unificar dichas Keys dentro del archivo original.
-		*/
-		/*
+
 		 Todo dato dentro de un archivo será persistido con el formato:
 		 [TIMESTAMP];[KEY];[VALUE]
 
-	}*/
-}
-char* selectFS(char* tabla, int particion, uint16_t key){
-	char* pathTabla = string_from_format("%sTables/%s", configuracion->PUNTO_MONTAJE, tabla);
-	char* pathParticion = string_from_format("/%d.bin", particion);
-	//TODO: habria que recorrer los temporales tambien
-	char* value = encontrarRegistroParticion(pathParticion, key);
-	free(pathParticion);
-
-	if(value){
-		//break;
 	}
-
-	//TODO: recorrer la particion y encontrar el value
-
-	return NULL;
-	free(pathTabla);
-}
+}*/

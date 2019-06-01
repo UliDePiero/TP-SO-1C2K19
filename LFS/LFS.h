@@ -9,8 +9,8 @@
 #define LFS_H_
 
 //Ruta del archivo de configuraciones
-#define RUTA_CONFIG "./LFS.config" // Para correr desde Eclipse
-//#define RUTA_CONFIG "../LFS.config" // Para correr desde Consola
+//#define RUTA_CONFIG "./LFS.config" // Para correr desde Eclipse
+#define RUTA_CONFIG "../LFS.config" // Para correr desde Consola
 #define BACKLOG 16
 
 #include "FileSystem.h"
@@ -31,20 +31,7 @@
 #include <inotify.h>
 #include <inttypes.h>
 
-///---------------------VARIABLES A UTILIZAR-------------------------
-
-int socketEscucha;
-int maxSock;
-int socketActivo;
-
-pthread_t hiloCompactador;
-pthread_t hiloFileSystem;
-pthread_t hiloAPI;
-
-t_log* logger;
-char* logFile;
-
-///---------------------ESTRUCTURA DE CONFIGURACION DE LFS-------------------------
+///--------------------- ESTRUCTURAS -------------------------//
 
 //Estructura para datos del archivo de configuracion
 typedef struct {
@@ -90,15 +77,34 @@ typedef struct {
 } Metadata;
 //Estructura para guardar la Metadata del filesystem
 
+///--------------------- VARIABLES A UTILIZAR -------------------------//
+
+int socketEscucha;
+int maxSock;
+int socketActivo;
+
+pthread_t hiloCompactador;
+pthread_t hiloFileSystem;
+pthread_t hiloAPI;
+
+t_log* logger;
+char* logFile;
+
 char *bitarray;
 t_bitarray *bitmap;
 Metadata *metadata;
 t_list *tablasLFS; //La memtable
 
+
+//------------------------ FUNCIONES --------------------------------//
+
 void compactacion();
 void fileSystem();
 void API_LFS();
 
+void destruirLFS();
+
+//Estructuras
 Tabla* crearTabla(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
 void tablaDestruir(Tabla* tabla);
 Tabla* tablaEncontrar(char* nombre);
@@ -108,7 +114,7 @@ void RegistroLFSDestruir(RegistroLFS* registro);
 RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key);
 void mostrarRegistros(char* nombre);
 
-
+//Comandos
 void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
 void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp);
 char* selectLFS(char* nombreTabla, uint16_t key);
