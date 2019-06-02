@@ -140,7 +140,7 @@ TablaGossip* buscarNodoMemoria(int nroMemoria) {
 
 void asociarACriterioSC(int nroMemoria) {
 	if (memoriaSC->elements_count == 0) {
-		list_add(memoriaSC, (void*)nroMemoria); // Asignar la memoria al criterio
+		list_add(memoriaSC, (void*) nroMemoria); // Asignar la memoria al criterio
 		// Agregar el criterio en la Tabla de Gossip de la memoria:
 		nodoMemoria = buscarNodoMemoria(nroMemoria); // Buscar nodo correspondiente a la memoria en cuestión
 		nodoMemoria->criterioSC = 1; // Como la memoria está asignada al criterio SC, ponemos este campo en 1
@@ -151,7 +151,15 @@ void asociarACriterioSC(int nroMemoria) {
 	}
 }
 
-void desasociarDeCriterioSC(int nroMemoria) {
+void asociarACriterioEC(int nroMemoria) {
+	// Las memorias se pueden asignar a este criterio sin restricción alguna
+	list_add(memoriasEC, (void*) nroMemoria);
+	nodoMemoria = buscarNodoMemoria(nroMemoria);
+	nodoMemoria->criterioEC = 1;
+	printf("Se asignó la memoria %d al criterio EC \n", nroMemoria);
+}
+
+void desasociarDeCriterioSC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES PARA DESASOCIAR
 	if (memoriaSC->elements_count == 1) {
 		list_remove(memoriaSC, 0); // Desasignar memoria del criterio (Como es una sola, va a estar en la primer posición de la lista)
 		// Eliminar el criterio en la Tabla de Gossip de la memoria:
@@ -164,13 +172,61 @@ void desasociarDeCriterioSC(int nroMemoria) {
 	}
 }
 
+int buscarMemoriaEnListaCriterio(int nroMemoria, t_list* listaMemoriasCriterio) {
+	t_link_element* nodoActual = listaMemoriasCriterio->head;
+
+	for (int i = 0; i < listaMemoriasCriterio->elements_count; i++) {
+		if ((int) nodoActual->data == nroMemoria)
+			return i;
+		nodoActual = nodoActual->next;
+	}
+	return -1;
+}
+
+void desasociarDeCriterioEC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES PARA DESASOCIAR
+	if (memoriasEC->elements_count > 0) {
+		int indice = buscarMemoriaEnListaCriterio(nroMemoria, memoriasEC);
+		if (indice >= 0) {
+			list_remove(memoriasEC, indice);
+			nodoMemoria = buscarNodoMemoria(nroMemoria);
+			nodoMemoria->criterioEC = 0;
+			printf("Se desasoció la memoria %d del criterio EC \n", nroMemoria);
+		}
+	} else {
+		// Si no existe memoria asignada al criterio, informarlo y no hacer nada más
+		printf("No existe ninguna memoria asignada al criterio EC \n");
+	}
+}
+
 TablaGossip* elegirMemoriaCriterioSC() {
 	if (memoriaSC->elements_count == 1) {
-		int nroMemoria = (int)memoriaSC->head->data; // Buscar número de memoria en lista de memoriaSC
+		int nroMemoria = (int) memoriaSC->head->data; // Buscar número de memoria en lista de memoriaSC
 		TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
 		return memoriaElegida;
 	} else {
 		printf("No existe ninguna memoria asignada al criterio SC \n");
+	}
+	return NULL;
+}
+
+int generarNumeroRandom(int nroMax) {
+	srand(time(NULL));
+	int nroRandom = rand() % nroMax + 1;
+
+	return nroRandom;
+}
+
+TablaGossip* elegirMemoriaCriterioEC() {
+	if (memoriasEC->elements_count > 0) {
+		// Generar un número random entre 1 y cantidad de memorias asignadas al criterio EC
+		int indice = generarNumeroRandom(memoriasEC->elements_count);
+		// Con el índice elijo la memoria de la lista de memoriasEC
+		int nroMemoria = (int) list_get(memoriasEC, indice);
+		// Con nroMemoria busco el nodo en la lista de TablaGossip y lo retorno
+		TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
+		return memoriaElegida;
+	} else {
+		printf("No existe ninguna memoria asignada al criterio EC \n");
 	}
 	return NULL;
 }

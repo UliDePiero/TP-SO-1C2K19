@@ -28,6 +28,8 @@
 #include <pthread.h>
 #include <configuraciones.h>
 #include <inotify.h>
+#include <commons/collections/list.h>
+#include <time.h>
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
 int socketMemoria;
