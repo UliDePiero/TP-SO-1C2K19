@@ -70,6 +70,8 @@ int parser(char* linea){
 		return DROP;
 	if(!strncmp("JOURNAL", linea, 7))
 		return JOURNAL;
+	if(!strncmp("ADD ", linea, 4))
+		return ADD;
 	if(!strncmp("RUN ", linea, 4))
 		return RUN;
 	if(!strncmp("METRICS ", linea, 8))
@@ -91,6 +93,8 @@ int parserSinTrim(char* linea){
 		return DROP;
 	if(!strncmp("JOURNAL", linea, 7))
 		return JOURNAL;
+	if(!strncmp("ADD ", linea, 4))
+		return ADD;
 	if(!strncmp("RUN ", linea, 4))
 		return RUN;
 	if(!strncmp("METRICS ", linea, 8))

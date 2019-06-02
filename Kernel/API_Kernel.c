@@ -78,6 +78,8 @@ void API_Kernel(void){
 					moverLQL(Exec,Exit);
 				sem_post(&semMultiprocesamiento);
 				break;
+			case METRICS:
+				// Comando METRICS
 			case -1:
 				informarComandoInvalido();
 				break;
@@ -177,18 +179,59 @@ void ejecutarJournal(char* instruccion){
 		liberarPaquete(mensaje);
 	}
 }
-void ejecutarAdd(char* instruccion){
+
+int cadenaEsDigito(char* cadena) {
+	int esDigito = 1;
+
+	for (int i = 0; i < strlen(cadena); i++) {
+		if (!isdigit(cadena[i]))
+			esDigito = 0;
+	}
+
+	return esDigito;
+}
+
+int validacionStringsFijosAdd(char** comando) {
+	if (!strcmp("ADD", comando[0]) && !strcmp("MEMORY", comando[1]) && !strcmp("TO", comando[3]))
+		return 1;
+	else
+		return 0;
+}
+
+int validacionStringCriterios(char* criterio) {
+	if (!strcmp("SC", criterio) || !strcmp("SHC", criterio)
+			|| !strcmp("EC", criterio))
+		return 1;
+	else {
+		printf("Criterio inválido. Los criterios válidos son: SC, SHC y EC\n");
+		return 0;
+	}
+}
+
+void ejecutarAdd(char* instruccion) {
 	puts("add ejecutado");
-	char** comando ;
-	comando = string_n_split(instruccion, 2, " ");
-	if(comandoValido(2, comando)){
+	char** comando;
+	comando = string_n_split(instruccion, 5, " ");
+	if (comandoValido(5, comando)) {
 		puts("comando valido");
+		if (validacionStringsFijosAdd(comando) && cadenaEsDigito(comando[2]) && validacionStringCriterios(comando[4])) {
+			printf("Comando ADD ejecutado correctamente\n");
+			if (!strcmp("SC", comando[4])) {
+				printf("Criterio SC\n"); //asociarACriterioSC(comando[2]);
+			} else if (!strcmp("SHC", comando[4])) {
+				printf("Criterio SHC\n");
+			} else if (!strcmp("EC", comando[4])) {
+				printf("Criterio EC\n");
+			}
+		} else
+			printf("Error en el comando ADD. La sintaxis correcta es: ADD MEMORY [NÚMERO] TO [CRITERIO]\n");
+		/*
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = ADD;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando ADD desde Kernel.");
-		liberarPaquete(mensaje);
+		liberarPaquete(mensaje);*/
 	}
 }
 int ejecutarRun(char* instruccion, int requestEjecutadas){
