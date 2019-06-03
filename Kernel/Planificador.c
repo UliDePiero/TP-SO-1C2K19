@@ -151,6 +151,16 @@ void asociarACriterioSC(int nroMemoria) {
 	}
 }
 
+void asociarACriterioSHC(int nroMemoria) {
+	// Las memorias se pueden asignar a este criterio sin restricción alguna
+	list_add(memoriasSHC, (void*) nroMemoria);
+	nodoMemoria = buscarNodoMemoria(nroMemoria);
+	nodoMemoria->criterioSHC = 1;
+	printf("Se asignó la memoria %d al criterio SHC \n", nroMemoria);
+	// Realizar un JOURNAL sobre todas las memorias asociadas al criterio, para garantizar que las keys se mantienen en las memorias correctas
+	// TODO: Llamada a JOURNAL de memoria (pasándole la lista memoriasSHC)
+}
+
 void asociarACriterioEC(int nroMemoria) {
 	// Las memorias se pueden asignar a este criterio sin restricción alguna
 	list_add(memoriasEC, (void*) nroMemoria);
@@ -183,6 +193,23 @@ int buscarMemoriaEnListaCriterio(int nroMemoria, t_list* listaMemoriasCriterio) 
 	return -1;
 }
 
+void desasociarDeCriterioSHC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES PARA DESASOCIAR
+	if (memoriasSHC->elements_count > 0) {
+		int indice = buscarMemoriaEnListaCriterio(nroMemoria, memoriasSHC);
+		if (indice >= 0) {
+			list_remove(memoriasSHC, indice);
+			nodoMemoria = buscarNodoMemoria(nroMemoria);
+			nodoMemoria->criterioSHC = 0;
+			printf("Se desasoció la memoria %d del criterio SHC \n", nroMemoria);
+			// Realizar un JOURNAL sobre todas las memorias asociadas al criterio, para garantizar que las keys se mantienen en las memorias correctas
+			// TODO: Llamada a JOURNAL de memoria (pasándole la lista memoriasSHC)
+		} else {
+			// Si no existe memoria asignada al criterio, informarlo y no hacer nada más
+			printf("No existe ninguna memoria asignada al criterio SHC \n");
+		}
+	}
+}
+
 void desasociarDeCriterioEC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES PARA DESASOCIAR
 	if (memoriasEC->elements_count > 0) {
 		int indice = buscarMemoriaEnListaCriterio(nroMemoria, memoriasEC);
@@ -209,16 +236,36 @@ TablaGossip* elegirMemoriaCriterioSC() {
 	return NULL;
 }
 
+int funcionHash(int key, int cantMaxMemoriasSHC) {
+	int nroHash = key % cantMaxMemoriasSHC;
+	return nroHash;
+}
+
+TablaGossip* elegirMemoriaCriterioSHC(int key) {
+	if (memoriasSHC->elements_count > 0) {
+		// Mediante la función de Hash, asignar una memoria a una determinada key
+		int indice = funcionHash(key, memoriasSHC->elements_count);
+		// Con el índice elijo la memoria de la lista de memoriasSHC
+		int nroMemoria = (int) list_get(memoriasSHC, indice);
+		// Con nroMemoria busco el nodo en la lista de TablaGossip y lo retorno
+		TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
+		return memoriaElegida;
+	} else {
+		printf("No existe ninguna memoria asignada al criterio SHC \n");
+	}
+	return NULL;
+}
+
 int generarNumeroRandom(int nroMax) {
 	srand(time(NULL));
-	int nroRandom = rand() % nroMax + 1;
+	int nroRandom = rand() % nroMax;
 
 	return nroRandom;
 }
 
 TablaGossip* elegirMemoriaCriterioEC() {
 	if (memoriasEC->elements_count > 0) {
-		// Generar un número random entre 1 y cantidad de memorias asignadas al criterio EC
+		// Generar un número random entre 0 y cantidad de memorias asignadas al criterio EC - 1
 		int indice = generarNumeroRandom(memoriasEC->elements_count);
 		// Con el índice elijo la memoria de la lista de memoriasEC
 		int nroMemoria = (int) list_get(memoriasEC, indice);
