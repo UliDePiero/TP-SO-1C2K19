@@ -110,15 +110,37 @@ int main2(){
 	configurar(configuracion);
 	levantarFileSystem();
 
-	crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS"); //LEVANTO FILESYSTEM
-	joinearHilo(hiloAPI, NULL, "LFS");
+	/*createFS("A", "SC", 5, 123);
+	createFS("A", "SC", 5, 123);
+	createFS("B", "SC", 2, 123);
+	createFS("C", "SC", 3, 123);*/
 
-	mostrarRegistros("A");
-	mostrarRegistros("B");
+	//crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS"); //LEVANTO API
+	//joinearHilo(hiloAPI, NULL, "LFS");
 
+	//limpiarMemtable();
+	//mostrarRegistros("A");
+	//mostrarRegistros("B");
+
+	/*Tabla* t = list_get(tablasLFS, 1);
+	char* registrosComprimidos = string_new();
+	for(int i = 0; i<t->registro->elements_count; i++){
+		RegistroLFS* reg = list_get(t->registro, i);
+		char* comprimido = comprimirRegistro(reg);
+		string_append(&registrosComprimidos, comprimido);
+		free(comprimido);
+	}
+	printf("Registros: \n%s", registrosComprimidos);
+	free(registrosComprimidos);*/
+
+	for(int i = 0; i<20; i++){
+		insertLFS("A", i, "value", 1);
+	}
+	dump();
 	destruirLFS();
 	puts("TERMINE");
 }
+
 
 //--------------------------------------------------------//
 
@@ -211,6 +233,10 @@ void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiem
 void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 	if(sizeof(value) > configuracion->TAMANIO_VALUE){
 		perror("Tamaño del value mayor que el permitido");
+		return;
+	}
+	if(string_contains(value, ";")){
+		perror("Value no puede contener ;");
 		return;
 	}
 	Tabla* t = tablaEncontrar(nombreTabla);
@@ -338,10 +364,23 @@ RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key){
 
 	return registro;
 }
+char* comprimirRegistro(RegistroLFS* reg){
+	char* comprimido = malloc(sizeof(reg->key)+sizeof(reg->timestamp)+sizeof(reg->value)+5);
+	sprintf(comprimido, "%d;%hd;%s\n", reg->timestamp, reg->key, reg->value);
+	return comprimido;
+}
 void mostrarRegistros(char* nombre){
 	Tabla* tabla = tablaEncontrar(nombre);
+	printf("Tabla %s (%d)\n", nombre, tabla->registro->elements_count);
 	for(int i = 0; i < tabla->registro->elements_count; i++){
 		RegistroLFS* registro = list_get(tabla->registro, i);
 		printf("key: %hd timestamp: %d value: %s\n", registro->key, registro->timestamp, registro->value);
+	}
+}
+void limpiarMemtable(){
+	for(int j = 0; j<tablasLFS->elements_count; j++){
+		Tabla* t = list_get(tablasLFS, j);
+		list_destroy_and_destroy_elements(t->registro, (void*) RegistroLFSDestruir);
+		t->registro = list_create();
 	}
 }

@@ -43,4 +43,8 @@ void mostrarBitmap();
 void createFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
 char* selectFS(char* tabla, int particiones, uint16_t key);
 
+//Bajar la memtable al FS
+void dump();
+void crearNuevosBloques(char* registrosComprimidos, char* nombre);
+
 #endif /* FILESYSTEM_H_ */

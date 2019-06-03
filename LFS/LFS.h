@@ -112,7 +112,9 @@ void mostrarTablas();
 RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, char* value);
 void RegistroLFSDestruir(RegistroLFS* registro);
 RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key);
+char* comprimirRegistro(RegistroLFS* reg);
 void mostrarRegistros(char* nombre);
+void limpiarMemtable();
 
 //Comandos
 void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);

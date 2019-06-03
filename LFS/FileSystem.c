@@ -38,7 +38,6 @@ void destruirFileSystem(){
 	//list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
 }
 
-//TODO: testear todas las cosas
 //MAINS DE TESTS
 int main3(){
 	configuracion = malloc(sizeof(ConfiguracionLFS));
@@ -104,10 +103,10 @@ int main9(){
 
 	//mostrarTablas();
 
-	/*insertFS("A", 1, 1, 1);
-	insertFS("A", 2, 2, 2);
-	insertFS("A", 5, 5, 5);
-	insertFS("A", 98, 98, 98);
+	/*insertLFS("A", 1, "SC", 1);
+	insertLFS("A", 2, "SC", 2);
+	insertLFS("A", 5, "SC", 5);
+	insertLFS("A", 98, "SC", 98);
 	mostrarRegistros("A");*/
 
 	destruirFileSystem();
@@ -382,47 +381,86 @@ char* selectFS(char* tabla, int particion, uint16_t key){
 	free(pathTabla);
 }
 
-
-//EL FILESYSTEM NO HACE INSERTS
-//EL COMPILADOR SE ENCARGA DE PASAR LA MEMTABLE A LOS TEMPORALES
-/*
-void insertFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
-
-	//int numeroTabla = 0;
-	//MetadataLFS* metadataTabla;
-	char* strParticion = NULL;
-	char* direccion = NULL;
-	char* registro = NULL;
-	char* buffer = NULL;
-	Tabla* tablaEncontrada = tablaEncontrar(nombreTabla);
-	if(tablaEncontrada!=NULL)
-		perror("No se encontro la tabla solicitada.");
-	else{
-		//metadataTabla = tablasLFS[numeroTabla]->metadata;
-		//INSERT EN UN ARCHIVO .BIN DIRECTO (NO SE CONTEMPLA DUMPS NI TEMPORALES)
-		strParticion = itoa(key % tablaEncontrada->metadata->particiones, strParticion, 10);
-		strcpy (direccion,"/Tables/");
-		strcat (direccion,nombreTabla);
-		strcat (direccion,"/");
-		strcat (direccion,strParticion);
-		strcat (direccion, ".bin");
-		FILE* particion = fopen(direccion, "w");
-		strcpy (registro,itoa(timestamp, buffer, 10));
-		strcat (registro,";");
-		strcat (registro,itoa(key, buffer, 10));
-		strcat (registro,";");
-		strcat (registro, itoa(value, buffer, 10));
-		fwrite(registro , 1 , sizeof(registro) , particion);
-		//Verificar si existe en memoria una lista de datos a dumpear. De no existir, alocar dicha memoria.
-		//Insertar en la memoria temporal del punto anterior una nueva entrada que contenga los datos enviados en la request.
-
-		De esta manera, cada insert se realizará siempre sobre la porción de memoria temporal asignada a dicha tabla sin importarle
-		si dentro de la misma ya existe la key. Esto es así, ya que al momento de obtener la misma se retornará el que tenga un Timestamp más
-		reciente mientras que el proceso de Compactación (explicado en el Anexo I), posterior al proceso de dump, será el que se encargue
-		de unificar dichas Keys dentro del archivo original.
-
-		 Todo dato dentro de un archivo será persistido con el formato:
-		 [TIMESTAMP];[KEY];[VALUE]
-
+void dump(){
+	for(int t = 0; t<tablasLFS->elements_count; t++){
+		Tabla* tabla = list_get(tablasLFS, t);
+		if(tabla->registro->elements_count > 0){
+			char* registrosComprimidos = string_new();
+			for(int i = 0; i<tabla->registro->elements_count; i++){
+				RegistroLFS* reg = list_get(tabla->registro, i);
+				char* comprimido = comprimirRegistro(reg);
+				string_append(&registrosComprimidos, comprimido);
+				free(comprimido);
+			}
+			if(string_length(registrosComprimidos) > 0){
+				crearNuevosBloques(registrosComprimidos, tabla->nombreTabla);
+			}
+			free(registrosComprimidos);
+		}
 	}
-}*/
+	limpiarMemtable();
+}
+void crearNuevosBloques(char* registrosComprimidos, char* nombre){
+	int sizeTotal = string_length(registrosComprimidos);
+	int bloques = sizeTotal/metadata->tamanioBloque;
+	if(sizeTotal%metadata->tamanioBloque)
+		bloques++;
+	int blocks[bloques];
+
+	printf("registrosComprimidos: \n%s\n",registrosComprimidos);
+
+	printf("length registrosComprimidos = %d\n", sizeTotal);
+	printf("sizeTotal/metadata->tamanioBloque = %d\n", sizeTotal/metadata->tamanioBloque);
+	printf("sizeTotal%metadata->tamanioBloque = %d\n", sizeTotal%metadata->tamanioBloque);
+	printf("bloques = %d\n", bloques);
+
+	//Creo los bloques
+	for(int i = 0; i<bloques; i++){
+		int proxBloque = proximoBloqueLibre();
+		if(proxBloque == -1){
+			perror("No hay bloques libres");
+			break;
+		}
+		blocks[i] = proxBloque;
+		char* pathNuevo = string_from_format("%sBloques/%d.bin", configuracion->PUNTO_MONTAJE, proxBloque);
+		bitarray_set_bit(bitmap, proxBloque);
+		FILE* nuevoBloque = fopen(pathNuevo, "w+");
+		free(pathNuevo);
+
+		unsigned long pos = i*metadata->tamanioBloque;
+		char* substring = string_substring(registrosComprimidos, pos, metadata->tamanioBloque);
+		printf("bloque %d %lu-%lu\n",i, pos, pos+metadata->tamanioBloque);
+		printf("%s\n",substring);
+		fprintf(nuevoBloque, "%s", substring);
+		free(substring);
+
+		fclose(nuevoBloque);
+	}
+	guardarBitmap();
+
+	//Creo el .temp
+	char* pathTable = string_from_format("%sTables/%s", configuracion->PUNTO_MONTAJE, nombre);
+	struct dirent *dir;
+	DIR *tables = opendir(pathTable);
+	int tempNum = 0;
+	if (tables){
+		while ((dir = readdir(tables)) != NULL){
+			if(strcmp(dir->d_name, ".") && strcmp(dir->d_name, "..") && string_ends_with(dir->d_name, ".temp")){
+				tempNum++;
+			}
+		}
+	}
+	closedir(tables);
+	char* pathNuevo = string_from_format("%s/%d.temp", pathTable, tempNum);
+	FILE* nuevoTemporal = fopen(pathNuevo, "w+");
+	free(pathNuevo);
+	fprintf(nuevoTemporal, "SIZE=%d\n", sizeTotal);
+	fprintf(nuevoTemporal, "BLOCKS=[%d", blocks[0]);
+	for(int b = 1; b<bloques; b++)
+		fprintf(nuevoTemporal, ",%d", blocks[b]);
+	fprintf(nuevoTemporal, "]\n");
+	fclose(nuevoTemporal);
+
+	free(pathTable);
+	free(registrosComprimidos);
+}
