@@ -151,8 +151,10 @@ void obtenerBitmap(char* pathMetadata){
 		crearBitmap(bitmapFile);
 	}
 	FILE *bitmapArchivo = fopen(bitmapFile, "r+b");
-	size_t sizeArchivo = bytesArchivo(bitmapArchivo);
-	bitarray = malloc(sizeArchivo);
+	fseek(bitmapArchivo, 0 , SEEK_END);
+	long fileSize = ftell(bitmapArchivo);
+  	fseek(bitmapArchivo, 0 , SEEK_SET);
+	bitarray = malloc(fileSize);
 	int Bytes = metadata->cantidadBloques/8;
 	if(metadata->cantidadBloques%8 != 0)
 		Bytes++;
@@ -214,12 +216,6 @@ int bytesArchivoPath(char* path){
     }
 	return fileInfo.st_size;
 	close(fd);
-}
-size_t bytesArchivo(FILE* Archivo){
-	//El archivo debe estar abierto con open()
-	struct stat st;
-	fstat(Archivo, &st);
-	return st.st_size;
 }
 int cantidadBloques(char** bloquesArray){
 	int cantidad = 0;
@@ -393,7 +389,9 @@ void dump(){
 				free(comprimido);
 			}
 			if(string_length(registrosComprimidos) > 0){
-				crearNuevosBloques(registrosComprimidos, tabla->nombreTabla);
+				char* nombre = string_from_format("%s", tabla->nombreTabla);
+				crearNuevosBloques(registrosComprimidos, nombre);
+				free(nombre);
 			}
 			free(registrosComprimidos);
 		}
@@ -453,5 +451,4 @@ void crearNuevosBloques(char* registrosComprimidos, char* nombre){
 	fclose(nuevoTemporal);
 
 	free(pathTable);
-	free(registrosComprimidos);
 }

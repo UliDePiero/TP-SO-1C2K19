@@ -137,8 +137,7 @@ int main2(){
 	for(int i = 0; i<20; i++){
 		insertLFS("A", i, "value", 1);
 	}
-	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS");
-	sleep(20);
+	dump();
 	destruirLFS();
 	puts("TERMINE");
 }

@@ -27,7 +27,6 @@ void obtenerBitmap(char* pathMetadata);
 void obtenerTablas(char* puntoMontaje);
 
 int bytesArchivoPath(char* path);
-size_t bytesArchivo(FILE* Archivo);
 int cantidadBloques(char** bloquesArray);
 char* encontrarRegistroParticion(char* pathParticion, uint16_t key);
 //Funciones de bitmap
