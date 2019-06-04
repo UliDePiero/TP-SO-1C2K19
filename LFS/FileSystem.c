@@ -407,13 +407,6 @@ void crearNuevosBloques(char* registrosComprimidos, char* nombre){
 		bloques++;
 	int blocks[bloques];
 
-	printf("registrosComprimidos: \n%s\n",registrosComprimidos);
-
-	printf("length registrosComprimidos = %d\n", sizeTotal);
-	printf("sizeTotal/metadata->tamanioBloque = %d\n", sizeTotal/metadata->tamanioBloque);
-	printf("sizeTotal%metadata->tamanioBloque = %d\n", sizeTotal%metadata->tamanioBloque);
-	printf("bloques = %d\n", bloques);
-
 	//Creo los bloques
 	for(int i = 0; i<bloques; i++){
 		int proxBloque = proximoBloqueLibre();
@@ -429,8 +422,6 @@ void crearNuevosBloques(char* registrosComprimidos, char* nombre){
 
 		unsigned long pos = i*metadata->tamanioBloque;
 		char* substring = string_substring(registrosComprimidos, pos, metadata->tamanioBloque);
-		printf("bloque %d %lu-%lu\n",i, pos, pos+metadata->tamanioBloque);
-		printf("%s\n",substring);
 		fprintf(nuevoBloque, "%s", substring);
 		free(substring);
 

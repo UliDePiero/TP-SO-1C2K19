@@ -72,6 +72,7 @@ int main()
 	//pthread_join(hiloCompactador, NULL);
 
 	crearHiloIndependiente(&hiloAPI,(void*)API_LFS, NULL, "LFS");
+	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS");
 
 	//ESTO TIENE QUE IR EN UN HILO APARTE PARA QUE QUEDE EN LOOP  ???
 	FD_SET(socketEscucha, &setSocketsOrquestador);
@@ -110,10 +111,10 @@ int main2(){
 	configurar(configuracion);
 	levantarFileSystem();
 
-	/*createFS("A", "SC", 5, 123);
+	createFS("A", "SC", 5, 123);
 	createFS("A", "SC", 5, 123);
 	createFS("B", "SC", 2, 123);
-	createFS("C", "SC", 3, 123);*/
+	createFS("C", "SC", 3, 123);
 
 	//crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS"); //LEVANTO API
 	//joinearHilo(hiloAPI, NULL, "LFS");
@@ -136,7 +137,8 @@ int main2(){
 	for(int i = 0; i<20; i++){
 		insertLFS("A", i, "value", 1);
 	}
-	dump();
+	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS");
+	sleep(20);
 	destruirLFS();
 	puts("TERMINE");
 }
@@ -382,5 +384,14 @@ void limpiarMemtable(){
 		Tabla* t = list_get(tablasLFS, j);
 		list_destroy_and_destroy_elements(t->registro, (void*) RegistroLFSDestruir);
 		t->registro = list_create();
+	}
+}
+
+void dumpLFS(){
+	unsigned int tiempo = configuracion->TIEMPO_DUMP/1000;
+
+	while(1){
+		sleep(tiempo);
+		dump();
 	}
 }

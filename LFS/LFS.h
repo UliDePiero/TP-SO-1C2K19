@@ -30,6 +30,7 @@
 #include <configuraciones.h>
 #include <inotify.h>
 #include <inttypes.h>
+#include <sys/wait.h>
 
 ///--------------------- ESTRUCTURAS -------------------------//
 
@@ -40,17 +41,8 @@ typedef struct {
 	char PUNTO_MONTAJE[100];
 	int RETARDO;
 	int TAMANIO_VALUE;
-	int TIEMPO_DUMP;
+	unsigned int TIEMPO_DUMP;
 } ConfiguracionLFS;
-/*
-PUERTO_ESCUCHA=5003
-PUNTO_MONTAJE=/mnt/LISSANDRA_FS/
-RETARDO=500
-TAMANIO_VALUE=4
-TIEMPO_DUMP=5000
-*/
-//Estructura para guardar la configuracion del proceso
-ConfiguracionLFS* configuracion;
 typedef struct{
    char consistencia[3]; //opción 1
    //int consistencia; //opción 2 //SC, SHC, EC en protocolo.h
@@ -86,10 +78,12 @@ int socketActivo;
 pthread_t hiloCompactador;
 pthread_t hiloFileSystem;
 pthread_t hiloAPI;
+pthread_t hiloDump;
 
 t_log* logger;
 char* logFile;
 
+ConfiguracionLFS* configuracion;
 char *bitarray;
 t_bitarray *bitmap;
 Metadata *metadata;
@@ -101,6 +95,7 @@ t_list *tablasLFS; //La memtable
 void compactacion();
 void fileSystem();
 void API_LFS();
+void dumpLFS();
 
 void destruirLFS();
 
