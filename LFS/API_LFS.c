@@ -48,10 +48,13 @@ void ejecutarSelect(char* instruccion){
 	puts("select ejecutado");
 	char** comando ;
 	RegistroLFS* registro;
+	char* retorno;
 	comando = string_n_split(instruccion, 3, " ");
 	if(comandoValido(3, comando)){
-		registro = selectLFS(comando[1], atoi(comando[2]));
-		printf("value: %s\n", registro->value);
+		//registro = selectLFS(comando[1], atoi(comando[2]));
+		retorno = selectLFS(comando[1], atoi(comando[2]));
+		//printf("value: %s\n", registro->value);
+		printf("SELECT devolvio: %s\n", retorno);
 	}
 }
 void ejecutarInsert(char* instruccion){

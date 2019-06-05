@@ -91,7 +91,7 @@ t_list *tablasLFS; //La memtable
 
 
 //------------------------ FUNCIONES --------------------------------//
-
+void configurar(ConfiguracionLFS* configuracion);
 void compactacion();
 void fileSystem();
 void API_LFS();

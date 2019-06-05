@@ -30,6 +30,7 @@
 #include <inotify.h>
 #include <commons/collections/list.h>
 #include <time.h>
+#include "API_Kernel.h"
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
 int socketMemoria;

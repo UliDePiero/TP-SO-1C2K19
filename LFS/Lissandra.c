@@ -140,6 +140,7 @@ int main2(){
 	dump();
 	destruirLFS();
 	puts("TERMINE");
+	return 0;
 }
 
 
