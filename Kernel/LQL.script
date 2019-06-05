@@ -1,3 +1,10 @@
-SELECT asd asd
-hola
-que tal
+INSERT tabla42 6 hola
+INSERT tabla36 8 que
+INSERT tabla14 2 tal
+SELECT tabla42 6
+INSERT tabla42 1 como
+INSERT tabla2 5 estas
+SELECT tabla42 1
+SELECT tabla42 1
+DESCRIBE uno
+SELECT tabla2 5

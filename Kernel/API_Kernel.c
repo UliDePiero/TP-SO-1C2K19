@@ -22,6 +22,9 @@ void API_Kernel(void){
 				sem_wait(&semEjecutarLQL);
 				ejecutarSelect(linea2);
 				moverLQL(Exec,Exit);
+				LQL = queue_peek(Exit);
+				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
 			case INSERT:
@@ -29,6 +32,9 @@ void API_Kernel(void){
 				sem_wait(&semEjecutarLQL);
 				ejecutarInsert(linea2);
 				moverLQL(Exec,Exit);
+				LQL = queue_peek(Exit);
+				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
 			case CREATE:
@@ -36,6 +42,9 @@ void API_Kernel(void){
 				sem_wait(&semEjecutarLQL);
 				ejecutarCreate(linea2);
 				moverLQL(Exec,Exit);
+				LQL = queue_peek(Exit);
+				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
 			case DESCRIBE:
@@ -43,6 +52,9 @@ void API_Kernel(void){
 				sem_wait(&semEjecutarLQL);
 				ejecutarDescribe(linea2);
 				moverLQL(Exec,Exit);
+				LQL = queue_peek(Exit);
+				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
 			case DROP:
@@ -50,6 +62,9 @@ void API_Kernel(void){
 				sem_wait(&semEjecutarLQL);
 				ejecutarDrop(linea2);
 				moverLQL(Exec,Exit);
+				LQL = queue_peek(Exit);
+				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
 			case JOURNAL:
@@ -57,6 +72,9 @@ void API_Kernel(void){
 				sem_wait(&semEjecutarLQL);
 				ejecutarJournal(linea2);
 				moverLQL(Exec,Exit);
+				LQL = queue_peek(Exit);
+				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
 			case ADD:
@@ -64,6 +82,9 @@ void API_Kernel(void){
 				sem_wait(&semEjecutarLQL);
 				ejecutarAdd(linea2);
 				moverLQL(Exec,Exit);
+				LQL = queue_peek(Exit);
+				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
 			case RUN:
@@ -73,9 +94,17 @@ void API_Kernel(void){
 				if(retornoRUN == -1){
 					actualizarRequestEjecutadas();
 					moverLQL(Exec,Ready);
+					LQL = queue_peek(Ready);
+					printf("\nLQL en Ready: %s\n", LQL->Instruccion);
+					sem_post(&semContadorLQL);
 				}
-				else
+				else{
 					moverLQL(Exec,Exit);
+					LQL = queue_peek(Exit);
+					printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+					free(queue_pop(Exit));
+				}
+				printf("\nRetorno de la ejecucion: %d\n",retornoRUN);
 				sem_post(&semMultiprocesamiento);
 				break;
 			case METRICS:
@@ -255,7 +284,7 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 			fgets(stringLQL, 100, script);
 		while(fgets(stringLQL, 100, script)!=NULL){
 			quantum--;
-			if(quantum>0){
+			if(quantum>=0){
 				printf("\n%s\n",stringLQL);
 				switch(parserSinTrim(stringLQL)){
 						case SELECT:

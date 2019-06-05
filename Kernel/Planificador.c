@@ -71,38 +71,47 @@ int main()
 	desconectarseDe(socketMemoria);
 }
 void planificacion(){
-	int retornoRUN;
 	while(1){
 		sem_wait(&semMultiprocesamiento);
 		sem_wait(&semContadorLQL);
 		moverLQL(Ready,Exec);
+		LQL = queue_peek(Exec);
+		printf("\nLQL en Exec: %s\n", LQL->Instruccion);
 		LQLEnEjecucion++;
 		LQL = queue_peek(Exec);
-		if(LQL->FlagIncializado == 0)
+		if(LQL->FlagIncializado == 0){
 			LQL->FlagIncializado = 1;
+			sem_post(&semEjecutarLQL);
+		}
 		else{
-			sem_wait(&semEjecutarLQL);
-			retornoRUN = ejecutarRun(LQL->Instruccion, LQL->requestEjecutadas);
-			if(retornoRUN == -1){
+			if( ejecutarRun(LQL->Instruccion, LQL->requestEjecutadas) == -1){
 				actualizarRequestEjecutadas();
 				moverLQL(Exec,Ready);
+				LQL = queue_peek(Ready);
+				printf("\nLQL en Ready: %s\n", LQL->Instruccion);
+				sem_post(&semContadorLQL);
 			}
-			else
+			else{
 				moverLQL(Exec,Exit);
+				free(queue_pop(Exit));
+				printf("\n>");
+			}
 			sem_post(&semMultiprocesamiento);
 		}
-		sem_post(&semEjecutarLQL);
 	}
 }
 void cargarNuevoLQL(char* ScriptLQL) {
-	EstructuraLQL* NuevoLQL = malloc(sizeof(EstructuraLQL)); //FALTA FREE
+	EstructuraLQL* NuevoLQL = malloc(sizeof(EstructuraLQL)); //FALTA FREE//FALTA FREE//FALTA FREE//FALTA FREE//FALTA FREE//FALTA FREE moverLQL(Exec,Exit);
 	queue_push(New, NuevoLQL);
 	NuevoLQL->FlagIncializado = 0;
 	NuevoLQL->requestEjecutadas = 0;
 	NuevoLQL->ID = IDLQL++;
 	strcpy(NuevoLQL->Instruccion, ScriptLQL);
+	printf("\nNuevo LQL: %s\n", NuevoLQL->Instruccion);
 	//list_add(ListaLQL, NuevoLQL); //creo que no es necesaria
 	queue_push(Ready, NuevoLQL);
+	LQL = queue_peek(Ready);
+	printf("\nLQL en Ready: %s\n", LQL->Instruccion);
 	sem_post(&semContadorLQL);
 }
 void moverLQL(t_queue *colaOrigen, t_queue *colaDestino){
