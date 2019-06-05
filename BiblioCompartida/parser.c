@@ -177,14 +177,14 @@ int leerLinea(char* linea){
 int comandoValido(int inputs, char** comando){
 	int valido = 1;
 	for(int i = 1; i<inputs; i++){
-		if(string_is_empty(comando[i])){ //if(string_is_empty(&comando[i])){
+		if(string_is_empty(&comando[i])){
 			valido = 0;
 			break;
 		}
 	}
 	if(valido){
 		char** subComando = string_n_split(comando[inputs-1], 2, " ");
-		if(!string_is_empty(subComando[1])){ //if(!string_is_empty(&subComando[1])){
+		if(!string_is_empty(&subComando[1])){
 			valido = 0;
 		}
 		free(subComando);
