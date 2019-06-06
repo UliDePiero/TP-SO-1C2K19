@@ -58,23 +58,23 @@ int parserEspacio(char * instruccion, int i, char * buffer){
 }*/
 int parser(char* linea){
 	string_trim(&linea);
-	if(!strncmp("SELECT ", linea, 7))
+	if(string_starts_with(linea, "SELECT ")) //if(!strncmp("SELECT ", linea, 7))
 		return SELECT;
-	if(!strncmp("INSERT ", linea, 7))
+	if(string_starts_with(linea, "INSERT ")) //if(!strncmp("INSERT ", linea, 7))
 		return INSERT;
-	if(!strncmp("CREATE ", linea, 7))
+	if(string_starts_with(linea, "CREATE ")) //if(!strncmp("CREATE ", linea, 7))
 		return CREATE;
-	if(!strncmp("DESCRIBE ", linea, 9))
+	if(string_starts_with(linea, "DESCRIBE ")) //if(!strncmp("DESCRIBE ", linea, 9)) // TODO: Admitir DESCRIBE y DESCRIBE [TABLA]
 		return DESCRIBE;
-	if(!strncmp("DROP ", linea, 5))
+	if(string_starts_with(linea, "DROP ")) //if(!strncmp("DROP ", linea, 5))
 		return DROP;
-	if(!strncmp("JOURNAL", linea, 7))
+	if(!strcmp("JOURNAL", linea))
 		return JOURNAL;
-	if(!strncmp("ADD ", linea, 4))
+	if(string_starts_with(linea, "ADD ")) //if(!strncmp("ADD ", linea, 4))
 		return ADD;
-	if(!strncmp("RUN ", linea, 4))
+	if(string_starts_with(linea, "RUN ")) //if(!strncmp("RUN ", linea, 4))
 		return RUN;
-	if(!strncmp("METRICS ", linea, 8))
+	if(!strcmp("METRICS", linea))
 		return METRICS;
 	if(string_is_empty(linea))
 		return 0;
@@ -91,13 +91,13 @@ int parserSinTrim(char* linea){
 		return DESCRIBE;
 	if(!strncmp("DROP ", linea, 5))
 		return DROP;
-	if(!strncmp("JOURNAL", linea, 7))
+	if(!strcmp("JOURNAL", linea))
 		return JOURNAL;
 	if(!strncmp("ADD ", linea, 4))
 		return ADD;
 	if(!strncmp("RUN ", linea, 4))
 		return RUN;
-	if(!strncmp("METRICS ", linea, 8))
+	if(!strcmp("METRICS", linea))
 		return METRICS;
 	if(string_is_empty(linea))
 		return 0;

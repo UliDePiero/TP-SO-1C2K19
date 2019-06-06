@@ -14,8 +14,9 @@ void API_Kernel(void){
 	linea = readline(">");
 
 	while(strncmp("EXIT", linea, 5)){
-		linea2 = malloc(strlen(linea)+1);
-		strcpy(linea2, linea);
+		//linea2 = malloc(strlen(linea)+1);
+		//strcpy(linea2, linea);
+		linea2 = string_duplicate(linea);
 		switch(parser(linea)){
 			case SELECT:
 				cargarNuevoLQL(linea2);
@@ -109,6 +110,8 @@ void API_Kernel(void){
 				break;
 			case METRICS:
 				// Comando METRICS
+				printf("Comando METRICS\n");
+				break;
 			case -1:
 				informarComandoInvalido();
 				break;
@@ -212,7 +215,7 @@ void ejecutarJournal(char* instruccion){
 int cadenaEsDigito(char* cadena) {
 	int esDigito = 1;
 
-	for (int i = 0; i < strlen(cadena); i++) {
+	for (int i = 0; i < string_length(cadena); i++) {
 		if (!isdigit(cadena[i]))
 			esDigito = 0;
 	}
