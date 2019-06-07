@@ -45,8 +45,7 @@ void destruirLFS(){
 	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
 }
 
-int main()
-{
+int main99(){
 	tablasLFS = list_create();
 	logger = log_create(logFile, "LFS",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionLFS));
@@ -104,7 +103,7 @@ int main()
 	destruirLFS();
 }
 //MAIN DE TESTS
-int main2(){
+int main98(){
 	tablasLFS = list_create();
 	//logger = log_create(logFile, "LFS",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionLFS));
@@ -142,7 +141,26 @@ int main2(){
 	puts("TERMINE");
 	return 0;
 }
+int main(){
+	tablasLFS = list_create();
+	configuracion = malloc(sizeof(ConfiguracionLFS));
+	configurar(configuracion);
+	levantarFileSystem();
 
+	/*char* value = selectLFS("A", 1);
+	printf("value:%s key:1\n", value);
+	value = selectLFS("A", 19);
+	printf("value:%s key:19\n", value);
+	free(value);
+	value = selectLFS("A", 200);
+	printf("value:%s key:200\n", value);
+	free(value);*/
+	crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS");
+	joinearHilo(hiloAPI,NULL,"LFS");
+
+	destruirLFS();
+	//puts("TERMINE");
+}
 
 //--------------------------------------------------------//
 
@@ -305,8 +323,10 @@ char* selectLFS(char* nombreTabla, uint16_t key){
 	}
 
 	RegistroLFS* registro = registroEncontrar(tabla, key);
-	if(registro)
-		return registro->value;
+	if(registro){
+		char* value = string_from_format("%s", registro->value);
+		return value;
+	}
 	else{
 		return selectFS(tabla->nombreTabla, key%tabla->metadata->particiones, key);
 	}
@@ -315,7 +335,7 @@ char* selectLFS(char* nombreTabla, uint16_t key){
 //Funciones de estructuras
 Tabla* crearTabla(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
 	Tabla *nuevaTabla = malloc(sizeof(Tabla));
-	nuevaTabla->nombreTabla = nombreTabla;
+	nuevaTabla->nombreTabla = string_from_format("%s", nombreTabla);
 	MetadataLFS *metadata = malloc(sizeof(MetadataLFS));
 	strcpy(metadata->consistencia, consistencia);
 	metadata->particiones = particiones;
@@ -327,6 +347,7 @@ Tabla* crearTabla(char* nombreTabla, char* consistencia, int particiones, long t
 }
 void tablaDestruir(Tabla* tabla){
 	free(tabla->metadata);
+	free(tabla->nombreTabla);
 	list_destroy_and_destroy_elements(tabla->registro, (void*) RegistroLFSDestruir);
 	free(tabla);
 }
@@ -347,15 +368,16 @@ RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, char* value){
 	RegistroLFS *registro = malloc(sizeof(RegistroLFS));
 	registro->key = key;
 	registro->timestamp = timestamp;
-	registro->value = value;
+	registro->value = string_from_format("%s", value);
 	return registro;
 }
 void RegistroLFSDestruir(RegistroLFS* registro){
+	free(registro->value);
 	free(registro);
 }
 RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key){
 	//RETORNA NULL SI EL REGISTRO NO EXISTE EN LA MEMTABLE
-	RegistroLFS* registro;
+	RegistroLFS* registro = NULL;
 	if(tabla->registro->elements_count > 0){
 		for(int i = 0; i < tabla->registro->elements_count; i++){
 			RegistroLFS* registroEncontrado = list_get(tabla->registro, i);
@@ -363,8 +385,67 @@ RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key){
 				registro = registroEncontrado;
 		}
 	}
-
 	return registro;
+}
+RegistroLFS* registroEncontrarArray(uint16_t key, char* array){
+	//TODO: eliminar leaks
+	char* value = string_new();
+	int timestampMayor = 0;
+	int numero = 0;
+	char* timestampArray = string_new();
+	char* keyArray = string_new();
+	char* valueNuevo = string_new();
+
+	for(int i = 0; i!=string_length(array); i++){
+		if(array[i]=='\n'){
+			if(atoi(keyArray) == key && atoi(timestampArray) > timestampMayor){
+				timestampMayor = atoi(timestampArray);
+				free(value);
+				value = string_from_format("%s", valueNuevo);
+			}
+			free(timestampArray);
+			timestampArray = string_new();
+			free(keyArray);
+			keyArray = string_new();
+			free(valueNuevo);
+			valueNuevo = string_new();
+			numero = 0;
+		}
+		else{
+			if(array[i]==';')
+				numero++;
+			else switch(numero){
+					case 0:
+						timestampArray = string_from_format("%s%c", timestampArray, array[i]);
+						break;
+					case 1:
+						keyArray = string_from_format("%s%c", keyArray, array[i]);
+						break;
+					case 2:
+						valueNuevo = string_from_format("%s%c", valueNuevo, array[i]);
+						break;
+				}
+		}
+	}
+	/*if(atoi(keyArray) == key && atoi(timestampArray) > timestampMayor){
+		timestampMayor = atoi(timestampArray);
+		free(value);
+		value = string_from_format("%s", valueNuevo);
+	}*/
+
+	free(valueNuevo);
+	free(keyArray);
+	free(timestampArray);
+
+
+	if(string_is_empty(value)){
+		free(value);
+		return NULL;
+	}
+	else{
+		RegistroLFS* reg = RegistroLFSCrear(key, timestampMayor, value);
+		return reg;
+	}
 }
 char* comprimirRegistro(RegistroLFS* reg){
 	char* comprimido = malloc(sizeof(reg->key)+sizeof(reg->timestamp)+sizeof(reg->value)+5);

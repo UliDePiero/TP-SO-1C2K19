@@ -227,7 +227,7 @@ int cantidadBloques(char** bloquesArray){
 	}
 	return cantidad;
 }
-char* encontrarRegistroParticion(char* pathParticion, uint16_t key){
+/*char* encontrarRegistroParticion(char* pathParticion, uint16_t key){
 	char* value = malloc(configuracion->TAMANIO_VALUE+1);
 	int timestamp = 0;
 	char* camposMetadatas[] = {
@@ -237,6 +237,9 @@ char* encontrarRegistroParticion(char* pathParticion, uint16_t key){
 	t_config* particionData = archivoConfigCrear(pathParticion, camposMetadatas);
 	int bloques = cantidadBloques(archivoConfigSacarArrayDe(particionData, "BLOCKS"));
 	free(particionData);
+	if(bloques == 0)
+		return NULL;
+
 	char* bloque = malloc(metadata->tamanioBloque+1);
 	char* pathBloque;
 
@@ -251,14 +254,26 @@ char* encontrarRegistroParticion(char* pathParticion, uint16_t key){
 
 	free(bloque);
 	return value;
-}
+}*/
 int proximoPuntoYComa(char* array){
 	for(int i = 0; i<sizeof(array); i++)
 		if(array[0] == ';')
 			return i;
 	return -1;
 }
-
+char* fileToArray(char* path){
+	char* buffer;
+	FILE* infile = fopen(path, "r");
+	if(infile != NULL){
+		fseek(infile, 0L, SEEK_END);
+		long numbytes = ftell(infile);
+		fseek(infile, 0L, SEEK_SET);
+		buffer = (char*)calloc(numbytes, sizeof(char));
+		fread(buffer, sizeof(char), numbytes, infile);
+		fclose(infile);
+	}
+	return buffer;
+}
 
 //Funciones de bitmap
 void crearBitmap(char* pathBitmap){
@@ -361,9 +376,72 @@ void createFS(char* nombreTabla, char* consistencia, int particiones, long tiemp
 	list_add(tablasLFS, crearTabla(nombreTabla, consistencia, particiones, tiempoCompactacion));
 }
 char* selectFS(char* tabla, int particion, uint16_t key){
+	char* value = string_new();
+	int timestampMayor = 0;
 	char* pathTabla = string_from_format("%sTables/%s", configuracion->PUNTO_MONTAJE, tabla);
-	char* pathParticion = string_from_format("/%d.bin", particion);
-	//TODO: habria que recorrer los temporales tambien
+	char* pathParticion = string_from_format("%d.bin", particion);
+
+	struct dirent *dir;
+	DIR *tables = opendir(pathTabla);
+	if (tables)
+	{
+		struct stat buffer;
+		int status;
+		while ((dir = readdir(tables)) != NULL)
+		{
+			if(strcmp(dir->d_name, ".") && strcmp(dir->d_name, "..") && (string_ends_with(dir->d_name, ".temp") || string_ends_with(dir->d_name, ".tempc") || !strcmp(dir->d_name, pathParticion))){
+
+				char* pathArchivo = string_from_format("%s/%s", pathTabla, dir->d_name);
+				status = stat(pathArchivo, &buffer);
+				if(status == 0 && buffer.st_size != 0) {
+					char* camposMetadatas[] = {
+											   "SIZE",
+											   "BLOCKS"
+											 };
+					t_config* archivoParticion = archivoConfigCrear(pathArchivo, camposMetadatas);
+					unsigned int size = archivoConfigSacarIntDe(archivoParticion, "SIZE");
+					if(size!=0){
+						char* bloquesJuntos = string_new();
+						char** bloques = archivoConfigSacarArrayDe(archivoParticion, "BLOCKS");
+						char* pathBloques = string_from_format("%sBloques", configuracion->PUNTO_MONTAJE);
+						for(int i = 0; bloques[i]!=NULL;i++){
+							char* pathBloque = string_from_format("%s/%d.bin", pathBloques, atoi(bloques[i]));
+							char* buffer = fileToArray(pathBloque);
+							bloquesJuntos = string_from_format("%s%s", bloquesJuntos, buffer);
+							free(buffer);
+							free(pathBloque);
+						}
+						free(pathBloques);
+
+						RegistroLFS* registroValue = registroEncontrarArray(key, bloquesJuntos);
+						free(bloquesJuntos);
+
+						if(registroValue && (registroValue->timestamp > timestampMayor || string_is_empty(value))){
+							timestampMayor = registroValue->timestamp;
+							free(value);
+							value = string_from_format("%s", registroValue->value);
+							RegistroLFSDestruir(registroValue);
+						}
+					}
+				}
+			}
+		}
+		closedir(tables);
+	}
+
+	free(pathTabla);
+	free(pathParticion);
+
+	if(string_is_empty(value)){
+		free(value);
+		return NULL;
+	} else {
+		return value;
+	}
+
+/*
+
+
 	char* value = encontrarRegistroParticion(pathParticion, key);
 	free(pathParticion);
 
@@ -374,7 +452,7 @@ char* selectFS(char* tabla, int particion, uint16_t key){
 	//TODO: recorrer la particion y encontrar el value
 
 	return NULL;
-	free(pathTabla);
+	free(pathTabla);*/
 }
 
 void dump(){

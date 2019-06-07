@@ -45,20 +45,19 @@ void API_LFS(){
 }
 
 void ejecutarSelect(char* instruccion){
-	puts("select ejecutado");
 	char** comando ;
-	RegistroLFS* registro;
-	char* retorno;
 	comando = string_n_split(instruccion, 3, " ");
 	if(comandoValido(3, comando)){
-		//registro = selectLFS(comando[1], atoi(comando[2]));
-		retorno = selectLFS(comando[1], atoi(comando[2]));
-		//printf("value: %s\n", registro->value);
-		printf("SELECT devolvio: %s\n", retorno);
+		char* retorno = selectLFS(comando[1], atoi(comando[2]));
+		if(retorno){
+			printf("SELECT devolvio: %s\n", retorno);
+			free(retorno);
+		}
+		else
+			perror("Key no encontrado");
 	}
 }
 void ejecutarInsert(char* instruccion){
-	puts("insert ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 5, " ");
 	if(comandoValido(4, comando))
@@ -67,23 +66,20 @@ void ejecutarInsert(char* instruccion){
 		insertLFS(comando[1], atoi(comando[2]), comando[3], atoi(comando[4]));
 }
 void ejecutarCreate(char* instruccion){
-	puts("create ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 5, " ");
 	if(comandoValido(5, comando))
 		createLFS(comando[1], comando[2], atoi(comando[3]), atol(comando[4]));
 }
 void ejecutarDescribe(char* instruccion){
-	puts("describe ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 2, " ");
 	if(comandoValido(2, comando))
-		puts("comando valido");
+		puts("describe ejecutado");
 }
 void ejecutarDrop(char* instruccion){
-	puts("drop ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 2, " ");
 	if(comandoValido(2, comando))
-		puts("comando valido");
+		puts("drop ejecutado");
 }
