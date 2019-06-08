@@ -12,6 +12,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
+
+/* --------------------    Definición de Funciones    -------------------- */
 
 //Devuelve la instruccion a parsear. Si retorna 0 es un comentario. Si retorna -1 es fin de archivo
 int parser(char * instruccion);
@@ -24,11 +27,14 @@ void parserFinDeLinea(char * instruccion, int i, char * buffer);
 //void leerLinea(char* linea);
 //int leerLinea(char* linea);
 
-
 int leerlineas(char* linea, int tipo);
 //Retorna si el comando es valido
 int comandoValido(int inputs, char** comando);
 //Informa que el comando ingresado no es valido
 void informarComandoInvalido();
+
+int cadenaEsDigito(char* cadena);
+int validacionStringsFijosAdd(char** comando);
+int validacionStringCriterios(char* criterio);
 
 #endif /* PARSER_H_ */

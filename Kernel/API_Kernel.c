@@ -212,34 +212,6 @@ void ejecutarJournal(char* instruccion){
 	}
 }
 
-int cadenaEsDigito(char* cadena) {
-	int esDigito = 1;
-
-	for (int i = 0; i < string_length(cadena); i++) {
-		if (!isdigit(cadena[i]))
-			esDigito = 0;
-	}
-
-	return esDigito;
-}
-
-int validacionStringsFijosAdd(char** comando) {
-	if (!strcmp("ADD", comando[0]) && !strcmp("MEMORY", comando[1]) && !strcmp("TO", comando[3]))
-		return 1;
-	else
-		return 0;
-}
-
-int validacionStringCriterios(char* criterio) {
-	if (!strcmp("SC", criterio) || !strcmp("SHC", criterio)
-			|| !strcmp("EC", criterio))
-		return 1;
-	else {
-		printf("Criterio inválido. Los criterios válidos son: SC, SHC y EC\n");
-		return 0;
-	}
-}
-
 void ejecutarAdd(char* instruccion) {
 	puts("add ejecutado");
 	char** comando;
