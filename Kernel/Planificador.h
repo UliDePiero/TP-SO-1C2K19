@@ -8,10 +8,9 @@
 #ifndef PLANIFICADOR_H_
 #define PLANIFICADOR_H_
 
-
 //Ruta del archivo de configuraciones
-#define RUTA_CONFIG "./Kernel.config" // Para correr desde Eclipse
-//#define RUTA_CONFIG "../Kernel.config" // Para correr desde Consola
+//#define RUTA_CONFIG "./Kernel.config" // Para correr desde Eclipse
+#define RUTA_CONFIG "../Kernel.config" // Para correr desde Consola
 
 #include <stdio.h>
 
@@ -67,13 +66,13 @@ typedef struct {
 	int SLEEP_EJECUCION;
 } ConfiguracionKernel;
 /*
-IP_MEMORIA=127.0.0.2
-PUERTO_MEMORIA=8001
-QUANTUM=4
-MULTIPROCESAMIENTO=3
-METADATA_REFRESH=10000
-SLEEP_EJECUCION=5000
-*/
+ IP_MEMORIA=127.0.0.2
+ PUERTO_MEMORIA=8001
+ QUANTUM=4
+ MULTIPROCESAMIENTO=3
+ METADATA_REFRESH=10000
+ SLEEP_EJECUCION=5000
+ */
 //Estructura para guardar la configuracion del proceso
 ConfiguracionKernel* configuracion;
 
@@ -102,13 +101,33 @@ typedef struct {
 	unsigned char criterioEC; // Vale 1 si la Memoria está asignada al criterio EC, sino 0
 } TablaGossip;
 
-TablaGossip* nodoMemoria;
 t_list* listaGossiping;
 
+/* --------------------    Definición de Funciones    -------------------- */
+
+// Funciones de Configuración
+void configurar(ConfiguracionKernel* configuracion);
+void cambiosConfigKernel();
+// Funciones para Planificación
 void API_Kernel();
 void planificacion();
 void cargarNuevoLQL(char* ScriptLQL);
 void moverLQL(t_queue *colaOrigen, t_queue *colaDestino);
 void actualizarRequestEjecutadas();
+// Funciones de Criterios de Consistencia
+void crearListasDeCriteriosMemorias();
+TablaGossip* buscarNodoMemoria(int nroMemoria);
+void asociarACriterioSC(int nroMemoria);
+void asociarACriterioSHC(int nroMemoria);
+void asociarACriterioEC(int nroMemoria);
+void desasociarDeCriterioSC(int nroMemoria);
+int buscarMemoriaEnListaCriterio(int nroMemoria, t_list* listaMemoriasCriterio);
+void desasociarDeCriterioSHC(int nroMemoria);
+void desasociarDeCriterioEC(int nroMemoria);
+TablaGossip* elegirMemoriaCriterioSC();
+int funcionHash(int key, int cantMaxMemoriasSHC);
+TablaGossip* elegirMemoriaCriterioSHC(int key);
+int generarNumeroRandom(int nroMax);
+TablaGossip* elegirMemoriaCriterioEC();
 
 #endif /* PLANIFICADOR_H_ */

@@ -8,26 +8,25 @@
 #include "Planificador.h"
 void configurar(ConfiguracionKernel* configuracion) {
 
-	char* campos[] = {
-					   "IP_MEMORIA",
-					   "PUERTO_MEMORIA",
-					   "QUANTUM",
-					   "MULTIPROCESAMIENTO",
-					   "METADATA_REFRESH",
-					   "SLEEP_EJECUCION"
-					 };
+	char* campos[] = { "IP_MEMORIA", "PUERTO_MEMORIA", "QUANTUM",
+			"MULTIPROCESAMIENTO", "METADATA_REFRESH", "SLEEP_EJECUCION" };
 
 	t_config* archivoConfig = archivoConfigCrear(RUTA_CONFIG, campos);
 
 	//Relleno los campos con la info del archivo
 
-	strcpy(configuracion->IP_MEMORIA, archivoConfigSacarStringDe(archivoConfig, "IP_MEMORIA"));
+	strcpy(configuracion->IP_MEMORIA,
+			archivoConfigSacarStringDe(archivoConfig, "IP_MEMORIA"));
 	//strcpy(configuracion->PUERTO_MEMORIA, archivoConfigSacarStringDe(archivoConfig, "PUERTO_MEMORIA"));
-	configuracion->PUERTO_MEMORIA = archivoConfigSacarIntDe(archivoConfig, "PUERTO_MEMORIA");
+	configuracion->PUERTO_MEMORIA = archivoConfigSacarIntDe(archivoConfig,
+			"PUERTO_MEMORIA");
 	configuracion->QUANTUM = archivoConfigSacarIntDe(archivoConfig, "QUANTUM");
-	configuracion->MULTIPROCESAMIENTO = archivoConfigSacarIntDe(archivoConfig, "MULTIPROCESAMIENTO");
-	configuracion->METADATA_REFRESH = archivoConfigSacarIntDe(archivoConfig, "METADATA_REFRESH");
-	configuracion->SLEEP_EJECUCION = archivoConfigSacarIntDe(archivoConfig, "SLEEP_EJECUCION");
+	configuracion->MULTIPROCESAMIENTO = archivoConfigSacarIntDe(archivoConfig,
+			"MULTIPROCESAMIENTO");
+	configuracion->METADATA_REFRESH = archivoConfigSacarIntDe(archivoConfig,
+			"METADATA_REFRESH");
+	configuracion->SLEEP_EJECUCION = archivoConfigSacarIntDe(archivoConfig,
+			"SLEEP_EJECUCION");
 
 	archivoConfigDestruir(archivoConfig);
 }
@@ -35,16 +34,18 @@ void configurar(ConfiguracionKernel* configuracion) {
 void cambiosConfigKernel() {
 	if (configModificado()) {
 		t_config* archivoConfig = config_create(RUTA_CONFIG);
-		configuracion->QUANTUM = archivoConfigSacarIntDe(archivoConfig, "QUANTUM");
-		configuracion->METADATA_REFRESH = archivoConfigSacarIntDe(archivoConfig, "METADATA_REFRESH");
-		configuracion->SLEEP_EJECUCION = archivoConfigSacarIntDe(archivoConfig, "SLEEP_EJECUCION");
+		configuracion->QUANTUM = archivoConfigSacarIntDe(archivoConfig,
+				"QUANTUM");
+		configuracion->METADATA_REFRESH = archivoConfigSacarIntDe(archivoConfig,
+				"METADATA_REFRESH");
+		configuracion->SLEEP_EJECUCION = archivoConfigSacarIntDe(archivoConfig,
+				"SLEEP_EJECUCION");
 		archivoConfigDestruir(archivoConfig);
 	}
 }
 
-int main()
-{
-	logger = log_create(logFile, "Planificador",true, LOG_LEVEL_INFO);
+int main() {
+	logger = log_create(logFile, "Planificador", true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionKernel));
 	configurar(configuracion);
 	New = queue_create();
@@ -53,46 +54,46 @@ int main()
 	Exit = queue_create();
 	ListaLQL = list_create();
 	IDLQL = 0;
-	sem_init(&semContadorLQL,0,0);
-	sem_init(&semMultiprocesamiento,0,configuracion->MULTIPROCESAMIENTO);
-	sem_init(&semEjecutarLQL,0,0);
+	sem_init(&semContadorLQL, 0, 0);
+	sem_init(&semMultiprocesamiento, 0, configuracion->MULTIPROCESAMIENTO);
+	sem_init(&semEjecutarLQL, 0, 0);
 
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
 
 	// cliente
 	//int socketMEMORIA = conectarAUnServidor(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA);
-	socketMemoria = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
+	socketMemoria = connectToServer(configuracion->IP_MEMORIA,
+			configuracion->PUERTO_MEMORIA, logger);
 	free(configuracion);
 	//crearHiloIndependiente(&hiloAPI,(void*)API_Kernel, NULL, "Kernel");
-	crearHilo(&hiloAPI,(void*)API_Kernel, NULL, "Kernel");
-	crearHiloIndependiente(&hiloPlanificacion, (void*)planificacion, NULL, "Kernel");
+	crearHilo(&hiloAPI, (void*) API_Kernel, NULL, "Kernel");
+	crearHiloIndependiente(&hiloPlanificacion, (void*) planificacion, NULL,
+			"Kernel");
 
-	joinearHilo(hiloAPI,NULL,"Kernel");
+	joinearHilo(hiloAPI, NULL, "Kernel");
 	desconectarseDe(socketMemoria);
 }
-void planificacion(){
-	while(1){
+void planificacion() {
+	while (1) {
 		sem_wait(&semMultiprocesamiento);
 		sem_wait(&semContadorLQL);
-		moverLQL(Ready,Exec);
+		moverLQL(Ready, Exec);
 		LQL = queue_peek(Exec);
 		printf("\nLQL en Exec: %s\n", LQL->Instruccion);
 		LQLEnEjecucion++;
 		LQL = queue_peek(Exec);
-		if(LQL->FlagIncializado == 0){
+		if (LQL->FlagIncializado == 0) {
 			LQL->FlagIncializado = 1;
 			sem_post(&semEjecutarLQL);
-		}
-		else{
-			if( ejecutarRun(LQL->Instruccion, LQL->requestEjecutadas) == -1){
+		} else {
+			if (ejecutarRun(LQL->Instruccion, LQL->requestEjecutadas) == -1) {
 				actualizarRequestEjecutadas();
-				moverLQL(Exec,Ready);
+				moverLQL(Exec, Ready);
 				LQL = queue_peek(Ready);
 				printf("\nLQL en Ready: %s\n", LQL->Instruccion);
 				sem_post(&semContadorLQL);
-			}
-			else{
-				moverLQL(Exec,Exit);
+			} else {
+				moverLQL(Exec, Exit);
 				free(queue_pop(Exit));
 				printf("\n>");
 			}
@@ -114,14 +115,14 @@ void cargarNuevoLQL(char* ScriptLQL) {
 	printf("\nLQL en Ready: %s\n", LQL->Instruccion);
 	sem_post(&semContadorLQL);
 }
-void moverLQL(t_queue *colaOrigen, t_queue *colaDestino){
+void moverLQL(t_queue *colaOrigen, t_queue *colaDestino) {
 	/*
-	EstructuraLQL* LQL;
-	EstructuraLQL* LQL_Elegido = list_find(ListaLQL, (void*) (LQL->ID == ID)); //puede romper duramente
-	*/
+	 EstructuraLQL* LQL;
+	 EstructuraLQL* LQL_Elegido = list_find(ListaLQL, (void*) (LQL->ID == ID)); //puede romper duramente
+	 */
 	queue_push(colaDestino, queue_pop(colaOrigen));
 }
-void actualizarRequestEjecutadas(){
+void actualizarRequestEjecutadas() {
 	LQL = queue_peek(Exec);
 	LQL->requestEjecutadas += configuracion->QUANTUM;
 }
@@ -151,7 +152,7 @@ void asociarACriterioSC(int nroMemoria) {
 	if (memoriaSC->elements_count == 0) {
 		list_add(memoriaSC, (void*) nroMemoria); // Asignar la memoria al criterio
 		// Agregar el criterio en la Tabla de Gossip de la memoria:
-		nodoMemoria = buscarNodoMemoria(nroMemoria); // Buscar nodo correspondiente a la memoria en cuestión
+		TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria); // Buscar nodo correspondiente a la memoria en cuestión
 		nodoMemoria->criterioSC = 1; // Como la memoria está asignada al criterio SC, ponemos este campo en 1
 		printf("Se asignó la memoria %d al criterio SC \n", nroMemoria);
 	} else {
@@ -163,7 +164,7 @@ void asociarACriterioSC(int nroMemoria) {
 void asociarACriterioSHC(int nroMemoria) {
 	// Las memorias se pueden asignar a este criterio sin restricción alguna
 	list_add(memoriasSHC, (void*) nroMemoria);
-	nodoMemoria = buscarNodoMemoria(nroMemoria);
+	TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria);
 	nodoMemoria->criterioSHC = 1;
 	printf("Se asignó la memoria %d al criterio SHC \n", nroMemoria);
 	// Realizar un JOURNAL sobre todas las memorias asociadas al criterio, para garantizar que las keys se mantienen en las memorias correctas
@@ -173,7 +174,7 @@ void asociarACriterioSHC(int nroMemoria) {
 void asociarACriterioEC(int nroMemoria) {
 	// Las memorias se pueden asignar a este criterio sin restricción alguna
 	list_add(memoriasEC, (void*) nroMemoria);
-	nodoMemoria = buscarNodoMemoria(nroMemoria);
+	TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria);
 	nodoMemoria->criterioEC = 1;
 	printf("Se asignó la memoria %d al criterio EC \n", nroMemoria);
 }
@@ -182,7 +183,7 @@ void desasociarDeCriterioSC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES
 	if (memoriaSC->elements_count == 1) {
 		list_remove(memoriaSC, 0); // Desasignar memoria del criterio (Como es una sola, va a estar en la primer posición de la lista)
 		// Eliminar el criterio en la Tabla de Gossip de la memoria:
-		nodoMemoria = buscarNodoMemoria(nroMemoria); // Buscar nodo correspondiente a la memoria en cuestión
+		TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria); // Buscar nodo correspondiente a la memoria en cuestión
 		nodoMemoria->criterioSC = 0; // Como la memoria ya no está asignada al criterio SC, ponemos este campo en 0
 		printf("Se desasoció la memoria %d del criterio SC \n", nroMemoria);
 	} else {
@@ -207,9 +208,10 @@ void desasociarDeCriterioSHC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONE
 		int indice = buscarMemoriaEnListaCriterio(nroMemoria, memoriasSHC);
 		if (indice >= 0) {
 			list_remove(memoriasSHC, indice);
-			nodoMemoria = buscarNodoMemoria(nroMemoria);
+			TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria);
 			nodoMemoria->criterioSHC = 0;
-			printf("Se desasoció la memoria %d del criterio SHC \n", nroMemoria);
+			printf("Se desasoció la memoria %d del criterio SHC \n",
+					nroMemoria);
 			// Realizar un JOURNAL sobre todas las memorias asociadas al criterio, para garantizar que las keys se mantienen en las memorias correctas
 			// TODO: Llamada a JOURNAL de memoria (pasándole la lista memoriasSHC)
 		} else {
@@ -224,7 +226,7 @@ void desasociarDeCriterioEC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES
 		int indice = buscarMemoriaEnListaCriterio(nroMemoria, memoriasEC);
 		if (indice >= 0) {
 			list_remove(memoriasEC, indice);
-			nodoMemoria = buscarNodoMemoria(nroMemoria);
+			TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria);
 			nodoMemoria->criterioEC = 0;
 			printf("Se desasoció la memoria %d del criterio EC \n", nroMemoria);
 		}
