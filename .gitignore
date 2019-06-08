@@ -1,6 +1,17 @@
 # Prerequisites
 *.d
 
+#EJECUTABLES
+/Kernel/Debug/Kernel
+/LFS/Debug/LFS
+/Memoria/Debug/Memoria
+
+#Eclipse
+**/language.settings.xml
+/RemoteSystemsTempFiles
+
+#Tests
+
 # Object files
 *.o
 *.ko
@@ -51,15 +62,8 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# Project Files
-*.cproject
-*.project
-*.metadata
-
 # Log Files
+*/.gitignore
 *.log
 
-[Dd]ebug*/
-[Rr]elease*/
-.settings/
 /.metadata/
