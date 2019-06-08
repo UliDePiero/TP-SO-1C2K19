@@ -64,6 +64,7 @@ int main()
 	logger = log_create(logFile, "Memoria",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionMemoria));
 	for(int i=0;i<16;i++) configuracion->PUERTO_SEEDS[i]=0;
+	socketLFS=0;
 	configurar(configuracion);
 	levantarMemoria();
 
@@ -72,8 +73,8 @@ int main()
 	// cliente
 	//int socketLFS = conectarAUnServidor(configuracion->IP_FS, configuracion->PUERTO_FS);
 	//int socketSEED = conectarAUnServidor(configuracion->IP_SEEDS, configuracion->PUERTO_SEEDS);
-	int socketLFS = connectToServer(configuracion->IP_FS, configuracion->PUERTO_FS, logger);
-	int seed=0;
+	socketLFS = connectToServer(configuracion->IP_FS, configuracion->PUERTO_FS, logger);
+	seed=0;
 	while(configuracion->PUERTO_SEEDS[seed] != 0 && seed<16){
 		socketSEED[seed] = connectToServer(configuracion->IP_SEEDS[seed], configuracion->PUERTO_SEEDS[seed], logger);
 		seed++;
@@ -99,7 +100,7 @@ int main()
 	maxSock = socketEscucha;
 	tMensaje tipoMensaje;
 	char * sPayload;
-	while (1) {
+	while (tipoMensaje != DESCONEXION) {
 
 		puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
@@ -139,6 +140,7 @@ int main()
 					break;
 				case DESCONEXION:
 					printf("\nSe desconecto un cliente\n");
+					terminar(seed);
 					break;
 
 				default:
@@ -150,19 +152,18 @@ int main()
 
 	}
 
+}
+void terminar(int seed){
 	free(configuracion);
-	memoriaPrincipalDestruir();
-	desconectarseDe(socketActivo);
-	desconectarseDe(socketEscucha);
-	desconectarseDe(socketLFS);
+	//memoriaPrincipalDestruir(); ESTA ROMPIENDO
+	if(socketLFS!=0)desconectarseDe(socketLFS);
 	seed=0;
 	while(configuracion->PUERTO_SEEDS[seed] != 0 && seed<16){
 		desconectarseDe(socketSEED[seed]);
-	    seed++;
+		seed++;
 	}
-
+	return;
 }
-
 
 
 //FALTA LRU + Que pasa si esta la memoria FULL + journal, esto ultimo dentro de la funcion LRU

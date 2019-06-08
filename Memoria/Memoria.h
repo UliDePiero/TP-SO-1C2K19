@@ -35,6 +35,7 @@ int maxSock;
 int socketActivo;
 int	socketLFS;
 int	socketSEED[16];
+int seed;
 
 t_log* logger;
 char* logFile;
@@ -104,6 +105,7 @@ int tamanioRealDeUnaPagina;
 unsigned int cantidadDeRegistros;
 unsigned int cantidadDeSegmentos;
 
+void terminar(int seed);
 Segmento* segmentoCrear(char*, Pagina**);
 void segmentoDestruir(Segmento*);
 Pagina* paginaCrear(int modificado, RegistroMemoria* registro);

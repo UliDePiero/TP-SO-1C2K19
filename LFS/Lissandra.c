@@ -38,14 +38,12 @@ void cambiosConfigLFS(){
 	}
 }
 void destruirLFS(){
-	desconectarseDe(socketActivo);
-	desconectarseDe(socketEscucha);
 	destruirFileSystem();
 	free(configuracion);
 	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
 }
 
-int main99(){
+int main(){
 	tablasLFS = list_create();
 	logger = log_create(logFile, "LFS",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionLFS));
@@ -78,7 +76,7 @@ int main99(){
 	maxSock = socketEscucha;
 	tMensaje tipoMensaje;
 	char * sPayload;
-	while (1) {
+	while (tipoMensaje != DESCONEXION) {
 
 		puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
@@ -90,6 +88,10 @@ int main99(){
 								printf("\nRecibi CREATE\n");
 								//funcion CREATE
 								break;
+							case DESCONEXION:
+								printf("\nSe desconecto un cliente, socket: %d\n", socketActivo);
+								destruirLFS();
+								break;
 
 							default:
 								printf("Tipo de mensaje desconocido \n");
@@ -100,8 +102,8 @@ int main99(){
 
 	}
 
-	destruirLFS();
 }
+
 //MAIN DE TESTS
 int main98(){
 	tablasLFS = list_create();
@@ -141,7 +143,7 @@ int main98(){
 	puts("TERMINE");
 	return 0;
 }
-int main(){
+int main99(){
 	tablasLFS = list_create();
 	configuracion = malloc(sizeof(ConfiguracionLFS));
 	configurar(configuracion);
@@ -160,6 +162,7 @@ int main(){
 
 	destruirLFS();
 	//puts("TERMINE");
+	return 0;
 }
 
 //--------------------------------------------------------//
@@ -244,6 +247,7 @@ void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiem
 		perror("Consistencia invalida");
 		return;
 	}
+	sleep(configuracion->RETARDO / 1000);
 	if(tablaEncontrar(nombreTabla)!=NULL){
 		perror("Ya existe una tabla con ese nombre");
 		return;
@@ -259,6 +263,7 @@ void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 		perror("Value no puede contener ;");
 		return;
 	}
+	sleep(configuracion->RETARDO / 1000);
 	Tabla* t = tablaEncontrar(nombreTabla);
 	if(!t){
 		perror("Tabla no encontrada");
@@ -315,7 +320,7 @@ char* selectLFS(char* nombreTabla, uint16_t key){
 		perror("No se encontro la tabla solicitada.");
 		return NULL;
 	}*/
-
+	sleep(configuracion->RETARDO / 1000);
 	Tabla* tabla = tablaEncontrar(nombreTabla);
 	if(!tabla){
 		perror("Tabla no encontrada");

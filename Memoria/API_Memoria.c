@@ -53,14 +53,17 @@ void ejecutarSelect(char* instruccion){
 	comando = string_n_split(instruccion, 3, " ");
 	if(comandoValido(3, comando)){
 		registro = selectMemoria(comando[1], atoi(comando[2]));
+		sleep(configuracion->RETARDO_MEM / 1000);
 		if(registro != NULL) printf("value: %s\n", registro->value);
 	}
 }
 void ejecutarInsert(char* instruccion){
 	char** comando ;
 	comando = string_n_split(instruccion, 4, " ");
-	if(comandoValido(4, comando))
+	if(comandoValido(4, comando)){
+		sleep(configuracion->RETARDO_MEM / 1000);
 		insertMemoria(comando[1], atoi(comando[2]), comando[3], (int)time(NULL));
+	}
 }
 void ejecutarCreate(char* instruccion){
 	puts("create ejecutado");

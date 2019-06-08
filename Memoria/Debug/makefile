@@ -25,7 +25,7 @@ endif
 all: Memoria
 
 dependents:
-	-cd /home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug && $(MAKE) clean all
+	-cd /home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug && $(MAKE) all
 
 # Tool invocations
 Memoria: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug/libBiblioCompartida.so
