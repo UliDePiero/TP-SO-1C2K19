@@ -86,7 +86,10 @@ int main(){
 			switch (tipoMensaje) {
 							case CREATE:
 								printf("\nRecibi CREATE\n");
-								//funcion CREATE
+								char** comando ;
+								comando = string_n_split(sPayload, 5, " ");
+								if(comandoValido(5, comando))
+									createLFS(comando[1], comando[2], atoi(comando[3]), atoi(comando[4]));
 								break;
 							case DESCONEXION:
 								printf("\nSe desconecto un cliente, socket: %d\n", socketActivo);
@@ -253,6 +256,7 @@ void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiem
 		return;
 	}
 	createFS(nombreTabla, consistencia, particiones, tiempoCompactacion);
+	printf("\nSe creo la tabla: %s\n",nombreTabla);
 }
 void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 	if(sizeof(value) > configuracion->TAMANIO_VALUE){
