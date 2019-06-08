@@ -48,6 +48,8 @@ int main() {
 	logger = log_create(logFile, "Planificador", true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionKernel));
 	configurar(configuracion);
+	crearListasDeCriteriosMemorias(); // Creación de listas de criterios de consistencia
+	listaGossiping = list_create(); // Creación de lista para Tabla de Gossip
 	New = queue_create();
 	Ready = queue_create();
 	Exec = queue_create();
@@ -131,6 +133,19 @@ void crearListasDeCriteriosMemorias() {
 	memoriaSC = list_create();
 	memoriasSHC = list_create();
 	memoriasEC = list_create();
+}
+
+void armarNodoMemoria() {
+	TablaGossip* nodoMem = malloc(sizeof(TablaGossip));
+	// Cargo datos el nodo
+	nodoMem->IDMemoria = 1; // Cambiar hardcodeo por número de memoria con la que se conecta
+	nodoMem->IPMemoria = configuracion->IP_MEMORIA; // Cambiar por IP de la memoria a la que se conecta
+	nodoMem->puertoMemoria = configuracion->PUERTO_MEMORIA; // Cambiar por puerto de la memoria a la que se conecta
+	nodoMem->criterioSC = 0;
+	nodoMem->criterioSHC = 0;
+	nodoMem->criterioEC = 0;
+	// Agrego el nodo a listaGossiping
+	list_add(listaGossiping, nodoMem);
 }
 
 TablaGossip* buscarNodoMemoria(int nroMemoria) {

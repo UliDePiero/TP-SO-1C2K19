@@ -213,6 +213,7 @@ void ejecutarJournal(char* instruccion){
 }
 
 void ejecutarAdd(char* instruccion) {
+	armarNodoMemoria(); // Sacar de acá y mandar al main, después de la conexión
 	puts("add ejecutado");
 	char** comando;
 	comando = string_n_split(instruccion, 5, " ");
@@ -221,7 +222,9 @@ void ejecutarAdd(char* instruccion) {
 		if (validacionStringsFijosAdd(comando) && cadenaEsDigito(comando[2]) && validacionStringCriterios(comando[4])) {
 			printf("Comando ADD ejecutado correctamente\n");
 			if (!strcmp("SC", comando[4])) {
-				printf("Criterio SC\n"); //asociarACriterioSC(comando[2]);
+				//printf("Criterio SC\n");
+				int num = atoi(comando[2]);
+				asociarACriterioSC(num);
 			} else if (!strcmp("SHC", comando[4])) {
 				printf("Criterio SHC\n");
 			} else if (!strcmp("EC", comando[4])) {
@@ -229,6 +232,7 @@ void ejecutarAdd(char* instruccion) {
 			}
 		} else
 			printf("Error en el comando ADD. La sintaxis correcta es: ADD MEMORY [NÚMERO] TO [CRITERIO]\n");
+
 		/*
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = ADD;

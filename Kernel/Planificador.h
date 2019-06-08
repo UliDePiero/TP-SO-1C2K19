@@ -116,6 +116,7 @@ void moverLQL(t_queue *colaOrigen, t_queue *colaDestino);
 void actualizarRequestEjecutadas();
 // Funciones de Criterios de Consistencia
 void crearListasDeCriteriosMemorias();
+void armarNodoMemoria();
 TablaGossip* buscarNodoMemoria(int nroMemoria);
 void asociarACriterioSC(int nroMemoria);
 void asociarACriterioSHC(int nroMemoria);
