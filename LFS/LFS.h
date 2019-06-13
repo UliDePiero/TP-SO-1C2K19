@@ -31,6 +31,7 @@
 #include <inotify.h>
 #include <inttypes.h>
 #include <sys/wait.h>
+#include <pthread.h>
 
 ///--------------------- ESTRUCTURAS -------------------------//
 
@@ -59,6 +60,8 @@ typedef struct{
 typedef struct{
 	char* nombreTabla;
 	MetadataLFS* metadata;
+	sem_t semaforo;
+	pthread_t hiloCompactacion;
 	t_list* registro;
 } Tabla;
 //Estructura para guardar las Tablas
@@ -75,10 +78,8 @@ int socketEscucha;
 int maxSock;
 int socketActivo;
 
-pthread_t hiloCompactador;
-pthread_t hiloFileSystem;
-pthread_t hiloAPI;
 pthread_t hiloDump;
+pthread_t hiloAPI;
 
 t_log* logger;
 char* logFile;
@@ -89,13 +90,16 @@ t_bitarray *bitmap;
 Metadata *metadata;
 t_list *tablasLFS; //La memtable
 
+sem_t memtableSemaforo;
+sem_t bitmapSemaforo;
+sem_t bitmapSemaforoFILE;
+sem_t configSemaforo;
+sem_t metadataSemaforo;
+sem_t compactacionSemaforo;
 
 //------------------------ FUNCIONES --------------------------------//
 void configurar(ConfiguracionLFS* configuracion);
-void compactacion();
-void fileSystem();
 void API_LFS();
-void dumpLFS();
 
 void destruirLFS();
 
@@ -111,10 +115,15 @@ RegistroLFS* registroEncontrarArray(uint16_t key, char* array);
 char* comprimirRegistro(RegistroLFS* reg);
 void mostrarRegistros(char* nombre);
 void limpiarMemtable();
+void limpiarTablaMemtable(Tabla* tabla);
+
+void dumpLFS();
+void compactacion(char* nombreTabla);
 
 //Comandos
 void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
 void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp);
 char* selectLFS(char* nombreTabla, uint16_t key);
+void dropLFS(char* nombreTabla);
 
 #endif /* LFS_H_ */

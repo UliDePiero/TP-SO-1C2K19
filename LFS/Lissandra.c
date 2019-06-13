@@ -38,6 +38,7 @@ void cambiosConfigLFS(){
 	}
 }
 void destruirLFS(){
+	pthread_cancel(hiloDump);
 	destruirFileSystem();
 	free(configuracion);
 	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
@@ -45,6 +46,7 @@ void destruirLFS(){
 
 int main(){
 	tablasLFS = list_create();
+	sem_init(&memtableSemaforo, 1, 1);
 	logger = log_create(logFile, "LFS",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionLFS));
 	configurar(configuracion);
@@ -68,8 +70,8 @@ int main(){
 	//pthread_create(&hiloCompactador, NULL, (void*)compactacion, NULL);
 	//pthread_join(hiloCompactador, NULL);
 
-	crearHiloIndependiente(&hiloAPI,(void*)API_LFS, NULL, "LFS");
-	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS");
+	crearHiloIndependiente(&hiloAPI,(void*)API_LFS, NULL, "LFS API");
+	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");
 
 	//ESTO TIENE QUE IR EN UN HILO APARTE PARA QUE QUEDE EN LOOP  ???
 	FD_SET(socketEscucha, &setSocketsOrquestador);
@@ -84,22 +86,26 @@ int main(){
 		if (socketActivo != -1) {
 
 			switch (tipoMensaje) {
-							case CREATE:
-								printf("\nRecibi CREATE\n");
-								char** comando ;
-								comando = string_n_split(sPayload, 5, " ");
-								if(comandoValido(5, comando))
-									createLFS(comando[1], comando[2], atoi(comando[3]), atoi(comando[4]));
-								break;
-							case DESCONEXION:
-								printf("\nSe desconecto un cliente, socket: %d\n", socketActivo);
-								destruirLFS();
-								break;
-
-							default:
-								printf("Tipo de mensaje desconocido \n");
-								break;
-
+				char** comando;
+				case CREATE:
+					printf("\nRecibi CREATE\n");
+					comando = string_n_split(sPayload, 5, " ");
+					if(comandoValido(5, comando))
+						createLFS(comando[1], comando[2], atoi(comando[3]), atoi(comando[4]));
+					break;
+				case DROP:
+					printf("\nRecibi DROP\n");
+					comando = string_n_split(sPayload, 5, " ");
+					if(comandoValido(2, comando))
+						dropLFS(comando[1]);
+					break;
+				case DESCONEXION:
+					printf("\nSe desconecto un cliente, socket: %d\n", socketActivo);
+					destruirLFS();
+					break;
+				default:
+					printf("Tipo de mensaje desconocido \n");
+					break;
 			}
 		}
 
@@ -119,6 +125,15 @@ int main98(){
 	createFS("A", "SC", 5, 123);
 	createFS("B", "SC", 2, 123);
 	createFS("C", "SC", 3, 123);
+
+	/*char* value = selectLFS("A", 1);
+	printf("value:%s key:1\n", value);
+	value = selectLFS("A", 19);
+	printf("value:%s key:19\n", value);
+	free(value);
+	value = selectLFS("A", 200);
+	printf("value:%s key:200\n", value);
+	free(value);*/
 
 	//crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS"); //LEVANTO API
 	//joinearHilo(hiloAPI, NULL, "LFS");
@@ -141,109 +156,34 @@ int main98(){
 	for(int i = 0; i<20; i++){
 		insertLFS("A", i, "value", 1);
 	}
-	dump();
+	//dump();
 	destruirLFS();
 	puts("TERMINE");
 	return 0;
 }
 int main99(){
 	tablasLFS = list_create();
+	sem_init(&memtableSemaforo, 1, 1);
 	configuracion = malloc(sizeof(ConfiguracionLFS));
 	configurar(configuracion);
 	levantarFileSystem();
+	pthread_create(&hiloDump, NULL, (void*)dumpLFS, NULL);
+	pthread_detach(hiloDump);
 
-	/*char* value = selectLFS("A", 1);
-	printf("value:%s key:1\n", value);
-	value = selectLFS("A", 19);
-	printf("value:%s key:19\n", value);
-	free(value);
-	value = selectLFS("A", 200);
-	printf("value:%s key:200\n", value);
-	free(value);*/
-	crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS");
-	joinearHilo(hiloAPI,NULL,"LFS");
+	createLFS("A", "SC", 5, 5000);
+	insertLFS("A", 1, "value1", 1);
+	insertLFS("A", 2, "value2", 1);
+	insertLFS("A", 3, "value3", 1);
+	insertLFS("A", 4, "value4", 1);
+
+	sleep(10);
+	dropLFS("A");
+	sleep(9);
 
 	destruirLFS();
-	//puts("TERMINE");
+	puts("TERMINE");
 	return 0;
 }
-
-//--------------------------------------------------------//
-
-
-//----------------- FUNCIONES AUXILIARES -----------------//
-
-void str_to_uint16(const char *str, uint16_t *res){
-  char *end;
-  errno = 0;
-  intmax_t val = strtoimax(str, &end, 10);
-  /*if (errno == ERANGE || val < 0 || val > UINT16_MAX || end == str || *end != '\0')
-    return false;*/
-  *res = (uint16_t) val;
-  //return true;
-}
-
-// inline function to swap two numbers
-void swap(char *x, char *y) {
-	char t = *x; *x = *y; *y = t;
-}
-
-// function to reverse buffer[i..j]
-char* reverse(char *buffer, int i, int j)
-{
-	while (i < j)
-		swap(&buffer[i++], &buffer[j--]);
-
-	return buffer;
-}
-
-// Iterative function to implement itoa() function in C
-char* itoa(int value, char* buffer, int base)
-{
-	// invalid input
-	if (base < 2 || base > 32)
-		return buffer;
-
-	// consider absolute value of number
-	int n = abs(value);
-
-	int i = 0;
-	while (n)
-	{
-		int r = n % base;
-
-		if (r >= 10)
-			buffer[i++] = 65 + (r - 10);
-		else
-			buffer[i++] = 48 + r;
-
-		n = n / base;
-	}
-
-	// if number is 0
-	if (i == 0)
-		buffer[i++] = '0';
-
-	// If base is 10 and value is negative, the resulting string
-	// is preceded with a minus sign (-)
-	// With any other base, value is always considered unsigned
-	if (value < 0 && base == 10)
-		buffer[i++] = '-';
-
-	buffer[i] = '\0'; // null terminate string
-
-	// reverse the string and return it
-	return reverse(buffer, 0, i - 1);
-}
-
-
-//---------------------------------------------------------//
-
-
-//--------------------------------------------------------//
-
-
-
 
 void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
 	if(strcmp(consistencia, "SC") && strcmp(consistencia, "SHC") && strcmp(consistencia, "EC")){
@@ -256,7 +196,7 @@ void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiem
 		return;
 	}
 	createFS(nombreTabla, consistencia, particiones, tiempoCompactacion);
-	printf("\nSe creo la tabla: %s\n",nombreTabla);
+	//printf("\nSe creo la tabla: %s\n",nombreTabla);
 }
 void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 	if(sizeof(value) > configuracion->TAMANIO_VALUE){
@@ -280,50 +220,7 @@ void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 	list_add(tablaEncontrar(nombreTabla)->registro, RegistroLFSCrear(key, timestamp, value));
 }
 char* selectLFS(char* nombreTabla, uint16_t key){
-	/*
-	//int numeroTabla = 0;
-	//MetadataLFS* metadataTabla;
-	Tabla* tablaEncontrada = tablaEncontrar(nombreTabla);
-	char* strParticion = NULL;
-	RegistroLFS* registroEncontrado = NULL;
-	char* direccion = NULL;
-	//if(tablaEncontrar(nombreTabla)!=NULL){
-	if(tablaEncontrada != NULL){
-		//metadataTabla = tablaEncontrada->metadata;
-		//Calcular cual es la partición que contiene dicho KEY.
-		strParticion = itoa(key % tablaEncontrada->metadata->particiones, strParticion, 10);
-		//Escanear la partición objetivo, todos los archivos temporales y la memoria temporal de dicha tabla (si existe) buscando la key deseada.
-		//Faltaría buscar en archivos temporales y memtable
-		strcpy (direccion,"/Tables/");
-		strcat (direccion,nombreTabla);
-		strcat (direccion,"/");
-		strcat (direccion,strParticion);
-		strcat (direccion, ".bin");
-		FILE* particion = fopen(direccion, "r");
-		while (!feof(particion)){
-			char* buffer = NULL;
-			RegistroLFS* registro = NULL;
-			fread(buffer, 100, 1, particion);//Modificar el valor fijo de la cantidad de caracteres a leer
-			registro->timestamp = atoi(strtok(buffer, ";"));
-			str_to_uint16(strtok(NULL, ";"), &registro->key);
-			registro->value = atoi(strtok(NULL, ";"));
-			if (registro->key == key){
-				if (registroEncontrado == NULL)
-					registroEncontrado = registro;
-				else{
-					if (registro->timestamp > registroEncontrado->timestamp)
-						registroEncontrado = registro;
-				}
-			}
-		}
-		return registroEncontrado;
-		//Encontradas las entradas para dicha Key, se retorna el valor con el Timestamp más grande.
-		//return NULL; //CAMBIAR RETURN
-	}
-	else{
-		perror("No se encontro la tabla solicitada.");
-		return NULL;
-	}*/
+	//TODO: poner semaforos en select
 	sleep(configuracion->RETARDO / 1000);
 	Tabla* tabla = tablaEncontrar(nombreTabla);
 	if(!tabla){
@@ -340,8 +237,19 @@ char* selectLFS(char* nombreTabla, uint16_t key){
 		return selectFS(tabla->nombreTabla, key%tabla->metadata->particiones, key);
 	}
 }
+void dropLFS(char* nombreTabla){
+	sem_wait(&memtableSemaforo);
+	for(int i = 0; i<tablasLFS->elements_count; i++){
+		Tabla* t = list_get(tablasLFS, i);
+		if(string_equals_ignore_case(t->nombreTabla, nombreTabla))
+			list_remove_and_destroy_element(tablasLFS, i, (void*)tablaDestruir);
+	}
+	sem_post(&memtableSemaforo);
+	dropFS(nombreTabla);
+}
 
-//Funciones de estructuras
+//----------------- FUNCIONES DE ESTRUCTURAS -----------------//
+
 Tabla* crearTabla(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
 	Tabla *nuevaTabla = malloc(sizeof(Tabla));
 	nuevaTabla->nombreTabla = string_from_format("%s", nombreTabla);
@@ -351,10 +259,15 @@ Tabla* crearTabla(char* nombreTabla, char* consistencia, int particiones, long t
 	metadata->tiempoCompactacion = tiempoCompactacion;
 	nuevaTabla->metadata = metadata;
 	nuevaTabla->registro = list_create();
+	sem_init(&nuevaTabla->semaforo, 1, 1);
+	pthread_create(&nuevaTabla->hiloCompactacion, NULL, (void*)compactar, nuevaTabla->nombreTabla);
+	pthread_detach(nuevaTabla->hiloCompactacion);
 
 	return nuevaTabla;
 }
 void tablaDestruir(Tabla* tabla){
+	pthread_cancel(tabla->hiloCompactacion);
+	sem_wait(&tabla->semaforo);
 	free(tabla->metadata);
 	free(tabla->nombreTabla);
 	list_destroy_and_destroy_elements(tabla->registro, (void*) RegistroLFSDestruir);
@@ -362,16 +275,23 @@ void tablaDestruir(Tabla* tabla){
 }
 void mostrarTablas(){
 	Tabla *t;
+	sem_wait(&memtableSemaforo);
 	for(int i = 0; i<tablasLFS->elements_count; i++){
 		t = list_get(tablasLFS, i);
+		sem_wait(&t->semaforo);
 		printf("tabla: %s particiones=%d\n", t->nombreTabla, t->metadata->particiones);
+		sem_post(&t->semaforo);
 	}
+	sem_post(&memtableSemaforo);
 }
 Tabla* tablaEncontrar(char* nombre){
 	int _is_the_one(Tabla *t) {
 		return string_equals_ignore_case(t->nombreTabla, nombre);
 	}
-	return list_find(tablasLFS, (void*) _is_the_one);
+	sem_wait(&memtableSemaforo);
+	Tabla* tabla = list_find(tablasLFS, (void*) _is_the_one);
+	sem_post(&memtableSemaforo);
+	return tabla;
 }
 RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, char* value){
 	RegistroLFS *registro = malloc(sizeof(RegistroLFS));
@@ -387,6 +307,7 @@ void RegistroLFSDestruir(RegistroLFS* registro){
 RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key){
 	//RETORNA NULL SI EL REGISTRO NO EXISTE EN LA MEMTABLE
 	RegistroLFS* registro = NULL;
+	sem_wait(&tabla->semaforo);
 	if(tabla->registro->elements_count > 0){
 		for(int i = 0; i < tabla->registro->elements_count; i++){
 			RegistroLFS* registroEncontrado = list_get(tabla->registro, i);
@@ -394,6 +315,7 @@ RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key){
 				registro = registroEncontrado;
 		}
 	}
+	sem_post(&tabla->semaforo);
 	return registro;
 }
 RegistroLFS* registroEncontrarArray(uint16_t key, char* array){
@@ -463,25 +385,110 @@ char* comprimirRegistro(RegistroLFS* reg){
 }
 void mostrarRegistros(char* nombre){
 	Tabla* tabla = tablaEncontrar(nombre);
+	sem_wait(&tabla->semaforo);
 	printf("Tabla %s (%d)\n", nombre, tabla->registro->elements_count);
 	for(int i = 0; i < tabla->registro->elements_count; i++){
 		RegistroLFS* registro = list_get(tabla->registro, i);
 		printf("key: %hd timestamp: %d value: %s\n", registro->key, registro->timestamp, registro->value);
 	}
+	sem_post(&tabla->semaforo);
 }
 void limpiarMemtable(){
+	sem_wait(&memtableSemaforo);
 	for(int j = 0; j<tablasLFS->elements_count; j++){
 		Tabla* t = list_get(tablasLFS, j);
-		list_destroy_and_destroy_elements(t->registro, (void*) RegistroLFSDestruir);
-		t->registro = list_create();
+		limpiarTablaMemtable(t);
 	}
+	sem_post(&memtableSemaforo);
+}
+void limpiarTablaMemtable(Tabla* tabla){
+	sem_wait(&tabla->semaforo);
+	list_destroy_and_destroy_elements(tabla->registro, (void*) RegistroLFSDestruir);
+	tabla->registro = list_create();
+	sem_post(&tabla->semaforo);
 }
 
 void dumpLFS(){
+	sem_wait(&configSemaforo);
 	unsigned int tiempo = configuracion->TIEMPO_DUMP/1000;
-
+	sem_post(&configSemaforo);
 	while(1){
 		sleep(tiempo);
+		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 		dump();
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	}
+}
+
+void compactacion(char* nombreTabla){
+	Tabla* t = tablaEncontrar(nombreTabla);
+	int tiempo = t->metadata->tiempoCompactacion;
+	while(1){
+		sleep(tiempo);
+		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+		compactar(nombreTabla);
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	}
+}
+
+//----------------- FUNCIONES AUXILIARES -----------------//
+
+void str_to_uint16(const char *str, uint16_t *res){
+  char *end;
+  errno = 0;
+  intmax_t val = strtoimax(str, &end, 10);
+  /*if (errno == ERANGE || val < 0 || val > UINT16_MAX || end == str || *end != '\0')
+    return false;*/
+  *res = (uint16_t) val;
+  //return true;
+}
+// inline function to swap two numbers
+void swap(char *x, char *y) {
+	char t = *x; *x = *y; *y = t;
+}
+// function to reverse buffer[i..j]
+char* reverse(char *buffer, int i, int j)
+{
+	while (i < j)
+		swap(&buffer[i++], &buffer[j--]);
+
+	return buffer;
+}
+// Iterative function to implement itoa() function in C
+char* itoa(int value, char* buffer, int base)
+{
+	// invalid input
+	if (base < 2 || base > 32)
+		return buffer;
+
+	// consider absolute value of number
+	int n = abs(value);
+
+	int i = 0;
+	while (n)
+	{
+		int r = n % base;
+
+		if (r >= 10)
+			buffer[i++] = 65 + (r - 10);
+		else
+			buffer[i++] = 48 + r;
+
+		n = n / base;
+	}
+
+	// if number is 0
+	if (i == 0)
+		buffer[i++] = '0';
+
+	// If base is 10 and value is negative, the resulting string
+	// is preceded with a minus sign (-)
+	// With any other base, value is always considered unsigned
+	if (value < 0 && base == 10)
+		buffer[i++] = '-';
+
+	buffer[i] = '\0'; // null terminate string
+
+	// reverse the string and return it
+	return reverse(buffer, 0, i - 1);
 }

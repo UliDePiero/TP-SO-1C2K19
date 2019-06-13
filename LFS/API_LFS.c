@@ -81,5 +81,5 @@ void ejecutarDrop(char* instruccion){
 	char** comando ;
 	comando = string_n_split(instruccion, 2, " ");
 	if(comandoValido(2, comando))
-		puts("drop ejecutado");
+		dropLFS(comando[1]);
 }

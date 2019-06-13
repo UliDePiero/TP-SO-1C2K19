@@ -29,6 +29,7 @@ void obtenerTablas(char* puntoMontaje);
 int bytesArchivoPath(char* path);
 int cantidadBloques(char** bloquesArray);
 char* encontrarRegistroParticion(char* pathParticion, uint16_t key);
+int calcularBloques(int sizeTotal);
 //Funciones de bitmap
 void crearBitmap(char* pathBitmap);
 int bloquesLibres();
@@ -40,10 +41,13 @@ int proximoBloqueLibre();
 void mostrarBitmap();
 
 void createFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
-char* selectFS(char* tabla, int particiones, uint16_t key);
+char* selectFS(char* nombreTabla, int particiones, uint16_t key);
+void dropFS(char* nombreTabla);
 
 //Bajar la memtable al FS
 void dump();
 void crearNuevosBloques(char* registrosComprimidos, char* nombre);
+
+void compactar(char* nombreTabla);
 
 #endif /* FILESYSTEM_H_ */
