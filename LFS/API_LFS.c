@@ -7,29 +7,25 @@
 #include "API_LFS.h"
 
 void API_LFS(){
-	char* linea;
-	char* linea2;
+	line = readline(">");
 
-	linea = readline(">");
-
-	while(strncmp("EXIT", linea, 5)){
-		linea2 = malloc(strlen(linea)+1);
-		strcpy(linea2, linea);
-		switch(parser(linea)){
+	while(strncmp("EXIT", line, 5)){
+		instruccion = string_from_format("%s", line);
+		switch(parser(line)){
 			case SELECT:
-				ejecutarSelect(linea2);
+				ejecutarSelect();
 				break;
 			case INSERT:
-				ejecutarInsert(linea2);
+				ejecutarInsert();
 				break;
 			case CREATE:
-				ejecutarCreate(linea2);
+				ejecutarCreate();
 				break;
 			case DESCRIBE:
-				ejecutarDescribe(linea2);
+				ejecutarDescribe();
 				break;
 			case DROP:
-				ejecutarDrop(linea2);
+				ejecutarDrop();
 				break;
 			case -1:
 				informarComandoInvalido();
@@ -38,48 +34,67 @@ void API_LFS(){
 				//printf("Es un comentario o fin de linea \n");
 				break;
 		}
-		free(linea2);
-		linea = readline(">");
+		free(line);
+		free(instruccion);
+		line = readline(">");
 	}
-	free(linea);
+	free(line);
 }
 
-void ejecutarSelect(char* instruccion){
-	char** comando ;
-	comando = string_n_split(instruccion, 3, " ");
-	if(comandoValido(3, comando)){
+void ejecutarSelect(){
+	char** comando = validarComando(line, 3);
+	if(comando){
 		char* retorno = selectLFS(comando[1], atoi(comando[2]));
 		if(retorno){
 			printf("SELECT devolvio: %s\n", retorno);
 			free(retorno);
 		}
-		else
-			perror("Key no encontrado");
+		for(int i = 0; i<3; i++)
+			free(comando[i]);
+		free(comando);
 	}
 }
-void ejecutarInsert(char* instruccion){
-	char** comando ;
-	comando = string_n_split(instruccion, 5, " ");
-	if(comandoValido(4, comando))
-		insertLFS(comando[1], atoi(comando[2]), comando[3], (int)time(NULL));
-	else
-		insertLFS(comando[1], atoi(comando[2]), comando[3], atoi(comando[4]));
+void ejecutarInsert(){
+	char** comando = validarComandoInsert(instruccion);
+	if(comando){
+		if(!comando[4]){
+			insertLFS(comando[1], atoi(comando[2]), comando[3], (int)time(NULL));
+		}
+		else{
+			insertLFS(comando[1], atoi(comando[2]), comando[3], atoi(comando[4]));
+			free(comando[4]);
+		}
+		for(int i = 0; i<4; i++)
+			free(comando[i]);
+		free(comando);
+	}
 }
-void ejecutarCreate(char* instruccion){
-	char** comando ;
-	comando = string_n_split(instruccion, 5, " ");
-	if(comandoValido(5, comando))
+void ejecutarCreate(){
+	char** comando = validarComando(instruccion, 5);
+	if(comando){
 		createLFS(comando[1], comando[2], atoi(comando[3]), atol(comando[4]));
+		for(int i = 0; i<5; i++)
+			free(comando[i]);
+		free(comando);
+	}
 }
-void ejecutarDescribe(char* instruccion){
-	char** comando ;
-	comando = string_n_split(instruccion, 2, " ");
-	if(comandoValido(2, comando))
-		puts("describe ejecutado");
+void ejecutarDescribe(){
+	char** comando = validarComando(instruccion, 2);
+	if(comando){
+		//TODO: describeLFS(comando[1]);
+		for(int i = 0; i<2; i++)
+			free(comando[i]);
+		free(comando);
+	}
 }
-void ejecutarDrop(char* instruccion){
-	char** comando ;
-	comando = string_n_split(instruccion, 2, " ");
-	if(comandoValido(2, comando))
+void ejecutarDrop(){
+	char** comando = validarComando(instruccion, 2);
+	if(comando){
 		dropLFS(comando[1]);
+		for(int i = 0; i<2; i++)
+			free(comando[i]);
+		free(comando);
+	}
 }
+
+

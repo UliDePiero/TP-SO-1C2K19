@@ -27,12 +27,15 @@
 #include <time.h>
 #include "LFS.h"
 
+char* line = NULL;
+char* instruccion = NULL;
+
 void API_LFS();
-int ejecutarInstruccion(char * instruccion);
-void ejecutarSelect(char*);
-void ejecutarInsert(char*);
-void ejecutarCreate(char*);
-void ejecutarDescribe(char*);
-void ejecutarDrop(char*);
+int ejecutarInstruccion();
+void ejecutarSelect();
+void ejecutarInsert();
+void ejecutarCreate();
+void ejecutarDescribe();
+void ejecutarDrop();
 
 #endif /* API_LFS_H_ */

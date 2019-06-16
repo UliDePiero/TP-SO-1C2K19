@@ -38,15 +38,19 @@ void cambiosConfigLFS(){
 	}
 }
 void destruirLFS(){
-	pthread_cancel(hiloDump);
+	sem_wait(&dumpSemaforo);
+	//TODO: pthread_cancel(hiloDump);
 	destruirFileSystem();
+	sem_wait(&configSemaforo);
 	free(configuracion);
+	sem_wait(&memtableSemaforo);
 	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
 }
 
 int main(){
 	tablasLFS = list_create();
 	sem_init(&memtableSemaforo, 1, 1);
+	sem_init(&dumpSemaforo, 1, 1);
 	logger = log_create(logFile, "LFS",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionLFS));
 	configurar(configuracion);
@@ -164,13 +168,15 @@ int main98(){
 int main99(){
 	tablasLFS = list_create();
 	sem_init(&memtableSemaforo, 1, 1);
+	sem_init(&dumpSemaforo, 1, 1);
 	configuracion = malloc(sizeof(ConfiguracionLFS));
 	configurar(configuracion);
 	levantarFileSystem();
-	pthread_create(&hiloDump, NULL, (void*)dumpLFS, NULL);
-	pthread_detach(hiloDump);
+	crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS API");
+	//crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");
+	joinearHilo(hiloAPI, NULL, "LFS API");
 
-	createLFS("A", "SC", 5, 5000);
+	/*createLFS("A", "SC", 5, 5000);
 	insertLFS("A", 1, "value1", 1);
 	insertLFS("A", 2, "value2", 1);
 	insertLFS("A", 3, "value3", 1);
@@ -178,7 +184,7 @@ int main99(){
 
 	sleep(10);
 	dropLFS("A");
-	sleep(9);
+	sleep(9);*/
 
 	destruirLFS();
 	puts("TERMINE");
@@ -414,9 +420,11 @@ void dumpLFS(){
 	sem_post(&configSemaforo);
 	while(1){
 		sleep(tiempo);
+		sem_wait(&dumpSemaforo);
 		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 		dump();
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+		sem_post(&dumpSemaforo);
 	}
 }
 

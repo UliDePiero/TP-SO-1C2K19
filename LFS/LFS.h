@@ -96,6 +96,7 @@ sem_t bitmapSemaforoFILE;
 sem_t configSemaforo;
 sem_t metadataSemaforo;
 sem_t compactacionSemaforo;
+sem_t dumpSemaforo;
 
 //------------------------ FUNCIONES --------------------------------//
 void configurar(ConfiguracionLFS* configuracion);

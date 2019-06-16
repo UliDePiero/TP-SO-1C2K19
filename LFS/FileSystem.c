@@ -37,7 +37,9 @@ void levantarFileSystem(){
 }
 void destruirFileSystem(){
 	//free(metadata->magicNumber);
+	sem_wait(&bitmapSemaforo);
 	free(bitarray);
+	sem_wait(&metadataSemaforo);
 	free(metadata);
 	bitarray_destroy(bitmap);
 }

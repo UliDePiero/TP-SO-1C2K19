@@ -57,7 +57,6 @@ int parserEspacio(char * instruccion, int i, char * buffer) {
  return -1;
  }*/
 int parser(char* linea) {
-	string_trim(&linea);
 	if (string_starts_with(linea, "SELECT ")) //if(!strncmp("SELECT ", linea, 7))
 		return SELECT;
 	if (string_starts_with(linea, "INSERT ")) //if(!strncmp("INSERT ", linea, 7))
@@ -166,6 +165,7 @@ int leerLinea(char* linea) {
 }
 
 int comandoValido(int inputs, char** comando) {
+	//USAR validarComando
 	int valido = 1;
 	for (int i = 1; i < inputs; i++) {
 		if (string_is_empty(comando[i])) {
@@ -188,6 +188,70 @@ int comandoValido(int inputs, char** comando) {
 void informarComandoInvalido() {
 	printf("\nERROR: Comando no valido\n");
 	return;
+}
+char** validarComando(char* instruccion, int inputs){
+	char** comando = string_n_split(instruccion, inputs, " ");
+	for (int i = 1; i < inputs; i++) {
+		if (!comando[i]) {
+			for(int j = 0; j<i; j++)
+				free(comando[j]);
+			free(comando);
+			informarComandoInvalido();
+			return NULL;
+		}
+	}
+	return comando;
+}
+char** validarComandoInsert(char* instruccion){
+	char** comando1 = string_n_split(instruccion, 4, " ");
+	for (int i = 1; i < 3; i++) {
+		if (!comando1[i]) {
+			for(int j = 0; j<i; j++)
+				free(comando1[j]);
+			free(comando1);
+			informarComandoInvalido();
+			return NULL;
+		}
+	}
+	char** comando2 = string_n_split(comando1[3], 2, "\"");
+	if(!comando2[0]){
+		for(int j = 0; j<3; j++)
+			free(comando1[j]);
+		if(!comando2[0])
+			free(comando2[0]);
+		free(comando1);
+		free(comando2);
+		informarComandoInvalido();
+		return NULL;
+	}
+
+	char** comando = (char**) calloc(5, sizeof(char*));
+	comando[0] = string_from_format("%s", comando1[0]);
+	comando[1] = string_from_format("%s", comando1[1]);
+	comando[2] = string_from_format("%s", comando1[2]);
+	comando[3] = string_from_format("%s", comando2[0]);
+	if(comando2[1]){
+		char** comando3 = string_n_split(comando2[1], 2, " ");
+		if(comando3[0])
+			comando[4] = string_from_format("%s", comando3[0]);
+		for(int i = 0; i<2; i++)
+			if(comando3[i])
+				free(comando3[i]);
+		free(comando3);
+	}
+	for(int i = 0; i<4; i++){
+		if(comando1[i])
+			free(comando1[i]);
+	}
+	for(int i = 0; i<2; i++){
+		if(comando2[i])
+			free(comando2[i]);
+
+	}
+	free(comando1);
+	free(comando2);
+
+	return comando;
 }
 
 int cadenaEsDigito(char* cadena) {

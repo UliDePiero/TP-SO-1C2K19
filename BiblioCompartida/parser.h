@@ -32,6 +32,8 @@ int leerlineas(char* linea, int tipo);
 int comandoValido(int inputs, char** comando);
 //Informa que el comando ingresado no es valido
 void informarComandoInvalido();
+char** validarComando(char* instruccion, int inputs);
+char** validarComandoInsert(char* instruccion);
 
 int cadenaEsDigito(char* cadena);
 int validacionStringsFijosAdd(char** comando);
