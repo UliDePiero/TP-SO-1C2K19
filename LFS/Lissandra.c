@@ -384,8 +384,20 @@ RegistroLFS* registroEncontrarArray(uint16_t key, char* array){
 		return reg;
 	}
 }
+int cantDigitos(int numero){
+    int digitos = 0;
+    if (numero < 0)
+    	digitos = 1;
+    while (numero) {
+        numero /= 10;
+        digitos++;
+    }
+    return digitos;
+}
 char* comprimirRegistro(RegistroLFS* reg){
-	char* comprimido = malloc(sizeof(reg->key)+sizeof(reg->timestamp)+sizeof(reg->value)+5);
+	char * comprimido;
+	comprimido = (char*) malloc(cantDigitos(reg->timestamp) + cantDigitos(reg->key) + string_length(reg->value) + 5) /** sizeof(char)*/;
+	//char* comprimido = malloc(sizeof(reg->key)+sizeof(reg->timestamp)+sizeof(reg->value)+5);
 	sprintf(comprimido, "%d;%hd;%s\n", reg->timestamp, reg->key, reg->value);
 	return comprimido;
 }
