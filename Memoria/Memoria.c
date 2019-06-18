@@ -108,44 +108,53 @@ int main()
 		if (socketActivo != -1) {
 
 			switch (tipoMensaje) {
-				case SELECT:
-					printf("\nRecibi %s\n",sPayload);
-					//funcion SELECT
-					ejecutarSelect(sPayload);
-					break;
-				case INSERT:
-					printf("\nRecibi %s\n",sPayload);
-					//funcion INSERT
-					ejecutarInsert(sPayload);
-					break;
-				case CREATE:
-					printf("\nRecibi %s\n",sPayload);
-					//funcion CREATE
-					ejecutarCreate(sPayload);
-					break;
-				case DESCRIBE:
-					printf("\nRecibi %s\n",sPayload);
-					//funcion DESCRIBE
-					ejecutarDescribe(sPayload);
-					break;
-				case DROP:
-					printf("\nRecibi %s\n",sPayload);
-					//funcion DROP
-					ejecutarDrop(sPayload);
-					break;
-				case JOURNAL:
-					printf("\nRecibi %s\n",sPayload);
-					//funcion JOURNAL
-					ejecutarJournal(sPayload);
-					break;
-				case DESCONEXION:
-					printf("\nSe desconecto un cliente\n");
-					terminar(seed);
-					break;
+			case SELECT:
+				printf("\nRecibi %s\n", sPayload);
+				//funcion SELECT
+				ejecutarSelect(sPayload);
+				break;
+			case INSERT:
+				printf("\nRecibi %s\n", sPayload);
+				//funcion INSERT
+				ejecutarInsert(sPayload);
+				break;
+			case CREATE:
+				printf("\nRecibi %s\n", sPayload);
+				//funcion CREATE
+				ejecutarCreate(sPayload);
+				break;
+			case DESCRIBE:
+				printf("\nRecibi %s\n", sPayload);
+				//funcion DESCRIBE
+				ejecutarDescribe(sPayload);
+				break;
+			case DROP:
+				printf("\nRecibi %s\n", sPayload);
+				//funcion DROP
+				ejecutarDrop(sPayload);
+				break;
+			case JOURNAL:
+				printf("\nRecibi %s\n", sPayload);
+				//funcion JOURNAL
+				ejecutarJournal(sPayload);
+				break;
+			case DESCONEXION:
+				printf("\nSe desconecto un cliente\n");
+				terminar(seed);
+				break;
+			case HANDSHAKE:
+				printf("\nKernel y Memoria realizan Handshake\n");
+				tPaquete* mensaje = malloc(sizeof(tPaquete));
+				mensaje->type = HANDSHAKE;
+				strcpy(mensaje->payload, string_itoa(configuracion->MEMORY_NUMBER));
+				mensaje->length = sizeof(mensaje->payload);
+				enviarPaquete(socketActivo, mensaje, logger, "Enviar Número de Memoria a Kernel");
+				liberarPaquete(mensaje);
+				break;
 
-				default:
-					printf("Tipo de mensaje desconocido \n");
-					break;
+			default:
+				printf("Tipo de mensaje desconocido \n");
+				break;
 
 			}
 		}

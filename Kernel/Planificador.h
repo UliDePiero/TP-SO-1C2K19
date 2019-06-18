@@ -115,8 +115,9 @@ void cargarNuevoLQL(char* ScriptLQL);
 void moverLQL(t_queue *colaOrigen, t_queue *colaDestino);
 void actualizarRequestEjecutadas();
 // Funciones de Criterios de Consistencia
+void realizarHandshakeConMemoria();
 void crearListasDeCriteriosMemorias();
-void armarNodoMemoria();
+void armarNodoMemoria(int nroMemoria);
 TablaGossip* buscarNodoMemoria(int nroMemoria);
 void asociarACriterioSC(int nroMemoria);
 void asociarACriterioSHC(int nroMemoria);

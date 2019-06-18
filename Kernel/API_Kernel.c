@@ -220,7 +220,6 @@ void ejecutarJournal(char* instruccion){
 
 void ejecutarAdd(char* instruccion) {
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
-	armarNodoMemoria(); // Sacar de acá y mandar al main, después de la conexión
 	puts("add ejecutado");
 	char** comando;
 	comando = string_n_split(instruccion, 5, " ");

@@ -66,6 +66,9 @@ int main() {
 	//int socketMEMORIA = conectarAUnServidor(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA);
 	socketMemoria = connectToServer(configuracion->IP_MEMORIA,
 			configuracion->PUERTO_MEMORIA, logger);
+
+	realizarHandshakeConMemoria(); // Creo que esto después va a quedar dentro de Gossiping
+
 	free(configuracion);
 	//crearHiloIndependiente(&hiloAPI,(void*)API_Kernel, NULL, "Kernel");
 	crearHilo(&hiloAPI, (void*) API_Kernel, NULL, "Kernel");
@@ -129,16 +132,30 @@ void actualizarRequestEjecutadas() {
 	LQL->requestEjecutadas += configuracion->QUANTUM;
 }
 
+void realizarHandshakeConMemoria() {
+	tPaquete* msjeEnviado = malloc(sizeof(tPaquete));
+	msjeEnviado->type = HANDSHAKE;
+	strcpy(msjeEnviado->payload, "Kernel realiza handshake con Memoria");
+	msjeEnviado->length = sizeof(msjeEnviado->payload);
+	enviarPaquete(socketMemoria, msjeEnviado, logger, "Realizar Handshake entre Kernel y Memoria.");
+	liberarPaquete(msjeEnviado);
+
+	tPaquete* msjeRecibido = malloc(sizeof(tPaquete));
+	recv(socketMemoria, msjeRecibido, sizeof(tPaquete), 0);
+	armarNodoMemoria(atoi(msjeRecibido->payload));
+	liberarPaquete(msjeRecibido);
+}
+
 void crearListasDeCriteriosMemorias() {
 	memoriaSC = list_create();
 	memoriasSHC = list_create();
 	memoriasEC = list_create();
 }
 
-void armarNodoMemoria() {
+void armarNodoMemoria(int nroMemoria) {
 	TablaGossip* nodoMem = malloc(sizeof(TablaGossip));
 	// Cargo datos el nodo
-	nodoMem->IDMemoria = 1; // Cambiar hardcodeo por número de memoria con la que se conecta
+	nodoMem->IDMemoria = nroMemoria;
 	nodoMem->IPMemoria = configuracion->IP_MEMORIA; // Cambiar por IP de la memoria a la que se conecta
 	nodoMem->puertoMemoria = configuracion->PUERTO_MEMORIA; // Cambiar por puerto de la memoria a la que se conecta
 	nodoMem->criterioSC = 0;
