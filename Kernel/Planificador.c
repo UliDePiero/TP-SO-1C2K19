@@ -182,11 +182,14 @@ TablaGossip* buscarNodoMemoria(int nroMemoria) {
 
 void asociarACriterioSC(int nroMemoria) {
 	if (memoriaSC->elements_count == 0) {
-		list_add(memoriaSC, (void*) nroMemoria); // Asignar la memoria al criterio
-		// Agregar el criterio en la Tabla de Gossip de la memoria:
 		TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria); // Buscar nodo correspondiente a la memoria en cuestión
-		nodoMemoria->criterioSC = 1; // Como la memoria está asignada al criterio SC, ponemos este campo en 1
-		printf("Se asignó la memoria %d al criterio SC \n", nroMemoria);
+		if (nodoMemoria) {
+			list_add(memoriaSC, (void*) nroMemoria); // Asignar la memoria al criterio
+			// Agregar el criterio en la Tabla de Gossip de la memoria:
+			nodoMemoria->criterioSC = 1; // Como la memoria está asignada al criterio SC, ponemos este campo en 1
+			printf("Se asignó la memoria %d al criterio SC \n", nroMemoria);
+		} else
+			printf("La memoria %d no se encuentra conectada\n", nroMemoria);
 	} else {
 		// Si ya hay una memoria asignada al criterio SC, informarlo y no hacer nada más
 		printf("Ya existe una memoria asignada al criterio SC \n");
@@ -195,20 +198,26 @@ void asociarACriterioSC(int nroMemoria) {
 
 void asociarACriterioSHC(int nroMemoria) {
 	// Las memorias se pueden asignar a este criterio sin restricción alguna
-	list_add(memoriasSHC, (void*) nroMemoria);
 	TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria);
-	nodoMemoria->criterioSHC = 1;
-	printf("Se asignó la memoria %d al criterio SHC \n", nroMemoria);
-	// Realizar un JOURNAL sobre todas las memorias asociadas al criterio, para garantizar que las keys se mantienen en las memorias correctas
-	// TODO: Llamada a JOURNAL de memoria (pasándole la lista memoriasSHC)
+	if (nodoMemoria) {
+		list_add(memoriasSHC, (void*) nroMemoria);
+		nodoMemoria->criterioSHC = 1;
+		printf("Se asignó la memoria %d al criterio SHC \n", nroMemoria);
+		// Realizar un JOURNAL sobre todas las memorias asociadas al criterio, para garantizar que las keys se mantienen en las memorias correctas
+		// TODO: Llamada a JOURNAL de memoria (pasándole la lista memoriasSHC)
+	} else
+		printf("La memoria %d no se encuentra conectada\n", nroMemoria);
 }
 
 void asociarACriterioEC(int nroMemoria) {
 	// Las memorias se pueden asignar a este criterio sin restricción alguna
-	list_add(memoriasEC, (void*) nroMemoria);
 	TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria);
-	nodoMemoria->criterioEC = 1;
-	printf("Se asignó la memoria %d al criterio EC \n", nroMemoria);
+	if (nodoMemoria) {
+		list_add(memoriasEC, (void*) nroMemoria);
+		nodoMemoria->criterioEC = 1;
+		printf("Se asignó la memoria %d al criterio EC \n", nroMemoria);
+	} else
+		printf("La memoria %d no se encuentra conectada\n", nroMemoria);
 }
 
 void desasociarDeCriterioSC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES PARA DESASOCIAR

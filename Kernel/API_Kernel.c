@@ -227,14 +227,13 @@ void ejecutarAdd(char* instruccion) {
 		puts("comando valido");
 		if (validacionStringsFijosAdd(comando) && cadenaEsDigito(comando[2]) && validacionStringCriterios(comando[4])) {
 			printf("Comando ADD ejecutado correctamente\n");
+			int num = atoi(comando[2]);
 			if (!strcmp("SC", comando[4])) {
-				//printf("Criterio SC\n");
-				int num = atoi(comando[2]);
 				asociarACriterioSC(num);
 			} else if (!strcmp("SHC", comando[4])) {
-				printf("Criterio SHC\n");
+				asociarACriterioSHC(num);
 			} else if (!strcmp("EC", comando[4])) {
-				printf("Criterio EC\n");
+				asociarACriterioEC(num);
 			}
 		} else
 			printf("Error en el comando ADD. La sintaxis correcta es: ADD MEMORY [NÚMERO] TO [CRITERIO]\n");
