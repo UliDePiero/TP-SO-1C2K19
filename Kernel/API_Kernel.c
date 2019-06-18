@@ -126,6 +126,7 @@ void API_Kernel(void){
 }
 
 void ejecutarSelect(char* instruccion){
+	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	puts("select ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 3, " ");
@@ -141,6 +142,7 @@ void ejecutarSelect(char* instruccion){
 
 }
 void ejecutarInsert(char* instruccion){
+	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	puts("insert ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 4, " ");
@@ -155,6 +157,7 @@ void ejecutarInsert(char* instruccion){
 	}
 }
 void ejecutarCreate(char* instruccion){
+	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	puts("create ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 5, " ");
@@ -169,6 +172,7 @@ void ejecutarCreate(char* instruccion){
 	}
 }
 void ejecutarDescribe(char* instruccion){
+	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	puts("describe ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 2, " ");
@@ -184,6 +188,7 @@ void ejecutarDescribe(char* instruccion){
 	}
 }
 void ejecutarDrop(char* instruccion){
+	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	puts("drop ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 2, " ");
@@ -198,6 +203,7 @@ void ejecutarDrop(char* instruccion){
 	}
 }
 void ejecutarJournal(char* instruccion){
+	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	puts("journal ejecutado");
 	char** comando ;
 	comando = string_n_split(instruccion, 1, " ");
@@ -213,6 +219,7 @@ void ejecutarJournal(char* instruccion){
 }
 
 void ejecutarAdd(char* instruccion) {
+	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	armarNodoMemoria(); // Sacar de acá y mandar al main, después de la conexión
 	puts("add ejecutado");
 	char** comando;
@@ -243,6 +250,7 @@ void ejecutarAdd(char* instruccion) {
 	}
 }
 int ejecutarRun(char* instruccion, int requestEjecutadas){
+	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	puts("run ejecutado");
 	char** comando ;
 	FILE *script;

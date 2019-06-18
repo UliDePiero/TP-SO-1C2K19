@@ -5,19 +5,16 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../API_LFS.c \
-../Compactador.c \
 ../FileSystem.c \
 ../Lissandra.c 
 
 OBJS += \
 ./API_LFS.o \
-./Compactador.o \
 ./FileSystem.o \
 ./Lissandra.o 
 
 C_DEPS += \
 ./API_LFS.d \
-./Compactador.d \
 ./FileSystem.d \
 ./Lissandra.d 
 

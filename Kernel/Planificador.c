@@ -82,7 +82,6 @@ void planificacion() {
 		moverLQL(Ready, Exec);
 		LQL = queue_peek(Exec);
 		printf("\nLQL en Exec: %s\n", LQL->Instruccion);
-		sleep(configuracion->SLEEP_EJECUCION / 1000);
 		LQLEnEjecucion++;
 		LQL = queue_peek(Exec);
 		if (LQL->FlagIncializado == 0) {

@@ -82,10 +82,15 @@ MEMORY_NUMBER=1
 ConfiguracionMemoria* configuracion;
 
 int maxValueSize; //Obtener de LISS en el handshake
-typedef struct {
+/*typedef struct {
 	int timestamp;
 	uint16_t key;
 	char* value;
+} RegistroMemoria;*/
+typedef struct {
+		int* timestamp;
+		uint16_t* key;
+		char** value;
 } RegistroMemoria;
 typedef struct{
 	int modificado;
