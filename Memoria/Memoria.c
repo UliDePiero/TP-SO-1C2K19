@@ -247,7 +247,7 @@ void levantarMemoria(){
 	maxValueSize = 20; //ESTO TIENE QUE VENIR DE LFS
 	tamanioRealDeUnRegistro = sizeof(int) + sizeof(uint16_t) + maxValueSize + 1/*Para el \0*/;
 	cantidadDeRegistros = configuracion->TAM_MEM / tamanioRealDeUnRegistro;
-	void* granMalloc = malloc(configuracion->TAM_MEM);
+	void* granMalloc = malloc(cantidadDeRegistros*tamanioRealDeUnRegistro);
 	memoriaPrincipal = malloc(cantidadDeRegistros * sizeof(RegistroMemoria*));
 	for(i=0; i < cantidadDeRegistros; i++){
 				memoriaPrincipal[i] = (RegistroMemoria*) malloc(sizeof(RegistroMemoria));
