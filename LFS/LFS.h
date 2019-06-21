@@ -129,7 +129,7 @@ void compactacion(char* nombreTabla);
 //Comandos
 void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
 void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp);
-char* selectLFS(char* nombreTabla, uint16_t key);
+void selectLFS(char* nombreTabla, uint16_t key);
 void dropLFS(char* nombreTabla);
 
 #endif /* LFS_H_ */

@@ -32,7 +32,7 @@ void configurar(ConfiguracionLFS* configuracion) {
 void cambiosConfigLFS(){
 	while(1){
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-		if(configModificado()){
+		if(configModificadoSilencioso()){
 			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 			sleep(1);
 			char* campos[] = {
@@ -43,9 +43,21 @@ void cambiosConfigLFS(){
 						   "TIEMPO_DUMP"
 						 };
 			t_config* archivoConfig = archivoConfigCrear(RUTA_CONFIG, campos);
+			int retardoNuevo = archivoConfigSacarIntDe(archivoConfig, "RETARDO");
+			int dumpNuevo = archivoConfigSacarIntDe(archivoConfig, "TIEMPO_DUMP");
 			sem_wait(&configSemaforo);
-			configuracion->RETARDO = archivoConfigSacarIntDe(archivoConfig, "RETARDO");
-			configuracion->TIEMPO_DUMP = archivoConfigSacarIntDe(archivoConfig, "TIEMPO_DUMP");
+			if(configuracion->RETARDO != retardoNuevo){
+				sem_wait(&loggerSemaforo);
+				log_error(logger, "Retardo cambiado %d -> %d", configuracion->RETARDO, retardoNuevo);
+				sem_post(&loggerSemaforo);
+				configuracion->RETARDO = retardoNuevo;
+			}
+			if(configuracion->TIEMPO_DUMP != dumpNuevo){
+				sem_wait(&loggerSemaforo);
+				log_error(logger, "Tiempo dump cambiado %d -> %d", configuracion->TIEMPO_DUMP, dumpNuevo);
+				sem_post(&loggerSemaforo);
+				configuracion->TIEMPO_DUMP = dumpNuevo;
+			}
 			sem_post(&configSemaforo);
 			archivoConfigDestruir(archivoConfig);
 		}
@@ -60,6 +72,8 @@ void levantarLFS(){
 	configuracion = malloc(sizeof(ConfiguracionLFS));
 	configurar(configuracion);
 	levantarFileSystem();
+
+	log_info(logger, "Modulo LFS iniciado");
 }
 void destruirLFS(){
 	sem_wait(&dumpSemaforo);
@@ -70,7 +84,7 @@ void destruirLFS(){
 	free(configuracion);
 	sem_wait(&memtableSemaforo);
 	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
-
+	log_info(logger, "Modulo LFS cerrado");
 	log_destroy(logger);
 }
 
@@ -113,23 +127,31 @@ int main99(){
 			switch (tipoMensaje) {
 				char** comando;
 				case CREATE:
-					printf("\nRecibi CREATE\n");
-					comando = string_n_split(sPayload, 5, " ");
-					if(comandoValido(5, comando))
-						createLFS(comando[1], comando[2], atoi(comando[3]), atoi(comando[4]));
+					comando = validarComando(sPayload, 5);
+					if(comando){
+						createLFS(comando[1], comando[2], atoi(comando[3]), atol(comando[4]));
+						for(int i = 0; i<5; i++)
+							free(comando[i]);
+						free(comando);
+					}
 					break;
 				case DROP:
-					printf("\nRecibi DROP\n");
-					comando = string_n_split(sPayload, 5, " ");
-					if(comandoValido(2, comando))
+					comando = validarComando(sPayload, 2);
+					if(comando){
 						dropLFS(comando[1]);
+						for(int i = 0; i<2; i++)
+							free(comando[i]);
+						free(comando);
+					}
 					break;
 				case DESCONEXION:
 					printf("\nSe desconecto un cliente, socket: %d\n", socketActivo);
 					destruirLFS();
 					break;
 				default:
-					printf("Tipo de mensaje desconocido \n");
+					sem_wait(&loggerSemaforo);
+					log_error(logger, "Comando desconocido \"%s\"", sPayload);
+					sem_post(&loggerSemaforo);
 					break;
 			}
 		}
@@ -210,30 +232,39 @@ int main(){
 
 void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
 	if(strcmp(consistencia, "SC") && strcmp(consistencia, "SHC") && strcmp(consistencia, "EC")){
-		perror("Consistencia invalida");
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "Consistencia invalida \"%s\" al crear la tabla \"%s\"", consistencia, nombreTabla);
+		sem_post(&loggerSemaforo);
 		return;
 	}
 	sleep(configuracion->RETARDO / 1000);
 	if(tablaEncontrar(nombreTabla)!=NULL){
-		perror("Ya existe una tabla con ese nombre");
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "Ya existe una tabla con el nombre \"%s\"", nombreTabla);
+		sem_post(&loggerSemaforo);
 		return;
 	}
 	createFS(nombreTabla, consistencia, particiones, tiempoCompactacion);
-	//printf("\nSe creo la tabla: %s\n",nombreTabla);
 }
 void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 	if(sizeof(value) > configuracion->TAMANIO_VALUE){
-		perror("Tamaño del value mayor que el permitido");
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "Tamaño del value mayor que el permitido");
+		sem_post(&loggerSemaforo);
 		return;
 	}
 	if(string_contains(value, ";")){
-		perror("Value no puede contener ;");
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "Value no puede contener ;");
+		sem_post(&loggerSemaforo);
 		return;
 	}
 	sleep(configuracion->RETARDO / 1000);
 	Tabla* t = tablaEncontrar(nombreTabla);
 	if(!t){
-		perror("Tabla no encontrada");
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "Tabla \"%s\" no encontrada", nombreTabla);
+		sem_post(&loggerSemaforo);
 		return;
 	}
 
@@ -241,26 +272,41 @@ void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 		timestamp = (int)time(NULL);
 
 	list_add(tablaEncontrar(nombreTabla)->registro, RegistroLFSCrear(key, timestamp, value));
+	sem_wait(&loggerSemaforo);
+	log_info(logger, "Insertado registro tabla \"%s\" key %hd value \"%s\"", nombreTabla, key, value);
+	sem_post(&loggerSemaforo);
 }
-char* selectLFS(char* nombreTabla, uint16_t key){
-	//TODO: poner semaforos en select
+void selectLFS(char* nombreTabla, uint16_t key){
 	sleep(configuracion->RETARDO / 1000);
 	Tabla* tabla = tablaEncontrar(nombreTabla);
 	if(!tabla){
-		perror("Tabla no encontrada");
-		return NULL;
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "Tabla \"%s\" no encontrada", nombreTabla);
+		sem_post(&loggerSemaforo);
+		return;
 	}
 
 	RegistroLFS* registro = registroEncontrar(tabla, key);
 	if(registro){
 		char* value = string_from_format("%s", registro->value);
-		return value;
+		sem_wait(&loggerSemaforo);
+		log_info(logger, "Select tabla \"%s\" key %hd value \"%s\"", nombreTabla, key, value);
+		sem_post(&loggerSemaforo);
+		free(value);
 	}
 	else{
-		return selectFS(tabla->nombreTabla, key%tabla->metadata->particiones, key);
+		selectFS(tabla->nombreTabla, key%tabla->metadata->particiones, key);
 	}
 }
 void dropLFS(char* nombreTabla){
+	sleep(configuracion->RETARDO / 1000);
+	Tabla* tabla = tablaEncontrar(nombreTabla);
+	if(!tabla){
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "Tabla \"%s\" no encontrada", nombreTabla);
+		sem_post(&loggerSemaforo);
+		return;
+	}
 	sem_wait(&memtableSemaforo);
 	for(int i = 0; i<tablasLFS->elements_count; i++){
 		Tabla* t = list_get(tablasLFS, i);
@@ -269,6 +315,9 @@ void dropLFS(char* nombreTabla){
 	}
 	sem_post(&memtableSemaforo);
 	dropFS(nombreTabla);
+	sem_wait(&loggerSemaforo);
+	log_info(logger, "Drop tabla \"%s\"", nombreTabla);
+	sem_post(&loggerSemaforo);
 }
 
 void dumpLFS(){
@@ -277,6 +326,7 @@ void dumpLFS(){
 		sem_wait(&configSemaforo);
 		tiempo = configuracion->TIEMPO_DUMP/1000;
 		sem_post(&configSemaforo);
+		//printf("Dump : %hd\n", tiempo);
 		sleep(tiempo);
 		sem_wait(&dumpSemaforo);
 		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);

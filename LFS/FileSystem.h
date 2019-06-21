@@ -41,7 +41,7 @@ int proximoBloqueLibre();
 void mostrarBitmap();
 
 void createFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
-char* selectFS(char* nombreTabla, int particiones, uint16_t key);
+void selectFS(char* nombreTabla, int particiones, uint16_t key);
 void dropFS(char* nombreTabla);
 
 //Bajar la memtable al FS

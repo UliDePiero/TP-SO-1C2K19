@@ -340,8 +340,14 @@ void createFS(char* nombreTabla, char* consistencia, int particiones, long tiemp
 	list_add(tablasLFS, tabla);
 	sem_post(&memtableSemaforo);
 }
-char* selectFS(char* tabla, int particion, uint16_t key){
+void selectFS(char* tabla, int particion, uint16_t key){
 	Tabla* t = tablaEncontrar(tabla);
+	if(!t){
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "Tabla \"%s\" no encontrada", tabla);
+		sem_post(&loggerSemaforo);
+		return;
+	}
 	char* value = string_new();
 	int timestampMayor = 0;
 	char* pathTabla = string_from_format("%sTables/%s", configuracion->PUNTO_MONTAJE, tabla);
@@ -409,10 +415,17 @@ char* selectFS(char* tabla, int particion, uint16_t key){
 
 	if(string_is_empty(value)){
 		free(value);
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "Key \"%hi\" no encontrado para la tabla \"%s\"", key, tabla);
+		sem_post(&loggerSemaforo);
 		puts("Key no encontrado");
-		return NULL;
-	} else {
-		return value;
+		return;
+	}else{
+		sem_wait(&loggerSemaforo);
+		log_info(logger, "Select tabla \"%s\" key %hd value \"%s\"", tabla, key, value);
+		sem_post(&loggerSemaforo);
+		free(value);
+		return;
 	}
 
 	/*char* value = string_new();
@@ -539,6 +552,7 @@ void dropFS(char* nombreTabla){
 	rmdir(pathTabla);
 	free(pathTabla);
 	free(pathBloques);
+	guardarBitmap();
 }
 
 void dump(){

@@ -33,5 +33,6 @@
 /* --------------------    Definición de Funciones    -------------------- */
 
 int configModificado(void);
+int configModificadoSilencioso(void);
 
 #endif /* INOTIFY_H_ */

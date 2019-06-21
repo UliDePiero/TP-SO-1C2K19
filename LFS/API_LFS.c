@@ -44,11 +44,7 @@ void API_LFS(){
 void ejecutarSelect(){
 	char** comando = validarComando(line, 3);
 	if(comando){
-		char* retorno = selectLFS(comando[1], atoi(comando[2]));
-		if(retorno){
-			printf("SELECT devolvio: %s\n", retorno);
-			free(retorno);
-		}
+		selectLFS(comando[1], atoi(comando[2]));
 		for(int i = 0; i<3; i++)
 			free(comando[i]);
 		free(comando);
