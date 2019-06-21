@@ -30,32 +30,52 @@ void configurar(ConfiguracionLFS* configuracion) {
 }
 
 void cambiosConfigLFS(){
-	if(configModificado()){
-		t_config* archivoConfig = config_create(RUTA_CONFIG);
-		configuracion->RETARDO = archivoConfigSacarIntDe(archivoConfig, "RETARDO");
-		configuracion->TIEMPO_DUMP = archivoConfigSacarIntDe(archivoConfig, "TIEMPO_DUMP");
-		archivoConfigDestruir(archivoConfig);
+	while(1){
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+		if(configModificado()){
+			pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+			sleep(1);
+			char* campos[] = {
+						   "PUERTO_ESCUCHA",
+						   "PUNTO_MONTAJE",
+						   "RETARDO",
+						   "TAMANIO_VALUE",
+						   "TIEMPO_DUMP"
+						 };
+			t_config* archivoConfig = archivoConfigCrear(RUTA_CONFIG, campos);
+			sem_wait(&configSemaforo);
+			configuracion->RETARDO = archivoConfigSacarIntDe(archivoConfig, "RETARDO");
+			configuracion->TIEMPO_DUMP = archivoConfigSacarIntDe(archivoConfig, "TIEMPO_DUMP");
+			sem_post(&configSemaforo);
+			archivoConfigDestruir(archivoConfig);
+		}
 	}
 }
-void destruirLFS(){
-	sem_wait(&dumpSemaforo);
-	//TODO: pthread_cancel(hiloDump);
-	destruirFileSystem();
-	sem_wait(&configSemaforo);
-	free(configuracion);
-	sem_wait(&memtableSemaforo);
-	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
-}
-
-int main(){
+void levantarLFS(){
 	tablasLFS = list_create();
 	sem_init(&memtableSemaforo, 1, 1);
 	sem_init(&dumpSemaforo, 1, 1);
-	logger = log_create(logFile, "LFS",true, LOG_LEVEL_INFO);
+	sem_init(&loggerSemaforo, 1, 1);
+	logger = log_create(logFile, "LFS", true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionLFS));
 	configurar(configuracion);
 	levantarFileSystem();
+}
+void destruirLFS(){
+	sem_wait(&dumpSemaforo);
+	pthread_cancel(hiloDump);
+	destruirFileSystem();
+	sem_wait(&configSemaforo);
+	pthread_cancel(hiloConfig);
+	free(configuracion);
+	sem_wait(&memtableSemaforo);
+	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
 
+	log_destroy(logger);
+}
+
+int main99(){
+	levantarLFS();
 
 	//servidor
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
@@ -74,6 +94,7 @@ int main(){
 	//pthread_create(&hiloCompactador, NULL, (void*)compactacion, NULL);
 	//pthread_join(hiloCompactador, NULL);
 
+	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS Config");
 	crearHiloIndependiente(&hiloAPI,(void*)API_LFS, NULL, "LFS API");
 	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");
 
@@ -165,15 +186,11 @@ int main98(){
 	puts("TERMINE");
 	return 0;
 }
-int main99(){
-	tablasLFS = list_create();
-	sem_init(&memtableSemaforo, 1, 1);
-	sem_init(&dumpSemaforo, 1, 1);
-	configuracion = malloc(sizeof(ConfiguracionLFS));
-	configurar(configuracion);
-	levantarFileSystem();
+int main(){
+	levantarLFS();
+	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS config");
 	crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS API");
-	//crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");
+	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");
 	joinearHilo(hiloAPI, NULL, "LFS API");
 
 	/*createLFS("A", "SC", 5, 5000);
@@ -254,6 +271,33 @@ void dropLFS(char* nombreTabla){
 	dropFS(nombreTabla);
 }
 
+void dumpLFS(){
+	unsigned int tiempo;
+	while(1){
+		sem_wait(&configSemaforo);
+		tiempo = configuracion->TIEMPO_DUMP/1000;
+		sem_post(&configSemaforo);
+		sleep(tiempo);
+		sem_wait(&dumpSemaforo);
+		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+		dump();
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+		sem_post(&dumpSemaforo);
+	}
+}
+
+void compactacion(char* nombreTabla){
+	Tabla* t = tablaEncontrar(nombreTabla);
+	int tiempo = t->metadata->tiempoCompactacion;
+	while(1){
+		sleep(tiempo);
+		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+		compactar(nombreTabla);
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	}
+}
+
+
 //----------------- FUNCIONES DE ESTRUCTURAS -----------------//
 
 Tabla* crearTabla(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
@@ -325,7 +369,6 @@ RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key){
 	return registro;
 }
 RegistroLFS* registroEncontrarArray(uint16_t key, char* array){
-	//TODO: eliminar leaks
 	char* value = string_new();
 	int timestampMayor = 0;
 	int numero = 0;
@@ -352,14 +395,23 @@ RegistroLFS* registroEncontrarArray(uint16_t key, char* array){
 			if(array[i]==';')
 				numero++;
 			else switch(numero){
-					case 0:
-						timestampArray = string_from_format("%s%c", timestampArray, array[i]);
+					case 0:;
+						char* a = string_duplicate(timestampArray);
+						free(timestampArray);
+						timestampArray = string_from_format("%s%c", a, array[i]);
+						free(a);
 						break;
-					case 1:
-						keyArray = string_from_format("%s%c", keyArray, array[i]);
+					case 1:;
+						char* b = string_duplicate(keyArray);
+						free(keyArray);
+						keyArray = string_from_format("%s%c", b, array[i]);
+						free(b);
 						break;
-					case 2:
-						valueNuevo = string_from_format("%s%c", valueNuevo, array[i]);
+					case 2:;
+						char* c = string_duplicate(valueNuevo);
+						free(valueNuevo);
+						valueNuevo = string_from_format("%s%c", c, array[i]);
+						free(c);
 						break;
 				}
 		}
@@ -375,13 +427,13 @@ RegistroLFS* registroEncontrarArray(uint16_t key, char* array){
 	free(timestampArray);
 
 
-	if(string_is_empty(value)){
+	if(value){
+		RegistroLFS* reg = RegistroLFSCrear(key, timestampMayor, value);
 		free(value);
-		return NULL;
+		return reg;
 	}
 	else{
-		RegistroLFS* reg = RegistroLFSCrear(key, timestampMayor, value);
-		return reg;
+		return NULL;
 	}
 }
 int cantDigitos(int numero){
@@ -396,7 +448,7 @@ int cantDigitos(int numero){
 }
 char* comprimirRegistro(RegistroLFS* reg){
 	char * comprimido;
-	comprimido = (char*) malloc(cantDigitos(reg->timestamp) + cantDigitos(reg->key) + string_length(reg->value) + 5) /** sizeof(char)*/;
+	comprimido = (char*) malloc(cantDigitos(reg->timestamp) + cantDigitos(reg->key) + string_length(reg->value) + 5);
 	//char* comprimido = malloc(sizeof(reg->key)+sizeof(reg->timestamp)+sizeof(reg->value)+5);
 	sprintf(comprimido, "%d;%hd;%s\n", reg->timestamp, reg->key, reg->value);
 	return comprimido;
@@ -426,30 +478,6 @@ void limpiarTablaMemtable(Tabla* tabla){
 	sem_post(&tabla->semaforo);
 }
 
-void dumpLFS(){
-	sem_wait(&configSemaforo);
-	unsigned int tiempo = configuracion->TIEMPO_DUMP/1000;
-	sem_post(&configSemaforo);
-	while(1){
-		sleep(tiempo);
-		sem_wait(&dumpSemaforo);
-		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-		dump();
-		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-		sem_post(&dumpSemaforo);
-	}
-}
-
-void compactacion(char* nombreTabla){
-	Tabla* t = tablaEncontrar(nombreTabla);
-	int tiempo = t->metadata->tiempoCompactacion;
-	while(1){
-		sleep(tiempo);
-		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-		compactar(nombreTabla);
-		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-	}
-}
 
 //----------------- FUNCIONES AUXILIARES -----------------//
 
@@ -512,3 +540,4 @@ char* itoa(int value, char* buffer, int base)
 	// reverse the string and return it
 	return reverse(buffer, 0, i - 1);
 }
+

@@ -11,6 +11,7 @@
 //Ruta del archivo de configuraciones
 //#define RUTA_CONFIG "./LFS.config" // Para correr desde Eclipse
 #define RUTA_CONFIG "../LFS.config" // Para correr desde Consola
+#define logFile "../LFS.log"
 #define BACKLOG 16
 
 #include "FileSystem.h"
@@ -80,9 +81,9 @@ int socketActivo;
 
 pthread_t hiloDump;
 pthread_t hiloAPI;
+pthread_t hiloConfig;
 
 t_log* logger;
-char* logFile;
 
 ConfiguracionLFS* configuracion;
 char *bitarray;
@@ -97,11 +98,14 @@ sem_t configSemaforo;
 sem_t metadataSemaforo;
 sem_t compactacionSemaforo;
 sem_t dumpSemaforo;
+sem_t loggerSemaforo;
+
 
 //------------------------ FUNCIONES --------------------------------//
 void configurar(ConfiguracionLFS* configuracion);
 void API_LFS();
 
+void levantarLFS();
 void destruirLFS();
 
 //Estructuras
@@ -113,6 +117,7 @@ RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, char* value);
 void RegistroLFSDestruir(RegistroLFS* registro);
 RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key);
 RegistroLFS* registroEncontrarArray(uint16_t key, char* array);
+int cantDigitos(int numero);
 char* comprimirRegistro(RegistroLFS* reg);
 void mostrarRegistros(char* nombre);
 void limpiarMemtable();

@@ -193,13 +193,14 @@ int proximoPuntoYComa(char* array){
 	return -1;
 }
 char* fileToArray(char* path){
-	char* buffer;
+	//Returns NULL if file doesn't exist
+	char* buffer = NULL;
 	FILE* infile = fopen(path, "r");
 	if(infile != NULL){
 		fseek(infile, 0L, SEEK_END);
 		long numbytes = ftell(infile);
 		fseek(infile, 0L, SEEK_SET);
-		buffer = (char*)calloc(numbytes, sizeof(char));
+		buffer = (char*)calloc(numbytes, sizeof(char)+1);
 		fread(buffer, sizeof(char), numbytes, infile);
 		fclose(infile);
 	}
@@ -340,7 +341,81 @@ void createFS(char* nombreTabla, char* consistencia, int particiones, long tiemp
 	sem_post(&memtableSemaforo);
 }
 char* selectFS(char* tabla, int particion, uint16_t key){
+	Tabla* t = tablaEncontrar(tabla);
 	char* value = string_new();
+	int timestampMayor = 0;
+	char* pathTabla = string_from_format("%sTables/%s", configuracion->PUNTO_MONTAJE, tabla);
+	char* pathParticion = string_from_format("%d.bin", particion);
+
+	struct dirent *dir;
+	sem_wait(&t->semaforo);
+	DIR *tables = opendir(pathTabla);
+	if (tables){
+		struct stat buffer;
+		int status;
+		while ((dir = readdir(tables)) != NULL){
+			if(strcmp(dir->d_name, ".") && strcmp(dir->d_name, "..") && (string_ends_with(dir->d_name, ".temp") || string_ends_with(dir->d_name, ".tempc") || !strcmp(dir->d_name, pathParticion))){
+				char* pathArchivo = string_from_format("%s/%s", pathTabla, dir->d_name);
+				status = stat(pathArchivo, &buffer);
+				if(status == 0 && buffer.st_size != 0) {
+					char* camposMetadatas[] = {
+											   "SIZE",
+											   "BLOCKS"
+											 };
+					t_config* archivoParticion = archivoConfigCrear(pathArchivo, camposMetadatas);
+					free(pathArchivo);
+					unsigned int size = archivoConfigSacarIntDe(archivoParticion, "SIZE");
+					if(size!=0){
+						char* bloquesJuntos = string_new();
+						char** bloques = archivoConfigSacarArrayDe(archivoParticion, "BLOCKS");
+						char* pathBloques = string_from_format("%sBloques", configuracion->PUNTO_MONTAJE);
+						for(int i = 0; bloques[i]!=NULL;i++){
+							char* pathBloque = string_from_format("%s/%d.bin", pathBloques, atoi(bloques[i]));
+							char* buffer = fileToArray(pathBloque);
+							if(buffer){
+								char* aux = string_from_format("%s", bloquesJuntos);
+								free(bloquesJuntos);
+								bloquesJuntos = string_from_format("%s%s", aux, buffer);
+								free(aux);
+								free(buffer);
+							}
+							free(pathBloque);
+							free(bloques[i]);
+						}
+						free(bloques);
+						free(pathBloques);
+						RegistroLFS* registroValue = registroEncontrarArray(key, bloquesJuntos);
+						free(bloquesJuntos);
+
+						if(registroValue){
+							if(registroValue->timestamp > timestampMayor || string_is_empty(value)){
+								timestampMayor = registroValue->timestamp;
+								free(value);
+								value = string_from_format("%s", registroValue->value);
+							}
+							RegistroLFSDestruir(registroValue);
+						}
+					}
+					archivoConfigDestruir(archivoParticion);
+				}
+			}
+		}
+		sem_post(&t->semaforo);
+		closedir(tables);
+	}
+
+	free(pathTabla);
+	free(pathParticion);
+
+	if(string_is_empty(value)){
+		free(value);
+		puts("Key no encontrado");
+		return NULL;
+	} else {
+		return value;
+	}
+
+	/*char* value = string_new();
 	int timestampMayor = 0;
 	char* pathTabla = string_from_format("%sTables/%s", configuracion->PUNTO_MONTAJE, tabla);
 	char* pathParticion = string_from_format("%d.bin", particion);
@@ -401,7 +476,7 @@ char* selectFS(char* tabla, int particion, uint16_t key){
 		return NULL;
 	} else {
 		return value;
-	}
+	}*/
 
 /*
 
