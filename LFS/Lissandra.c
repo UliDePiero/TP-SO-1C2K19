@@ -299,6 +299,7 @@ void selectLFS(char* nombreTabla, uint16_t key){
 	}
 }
 void describeLFS(char* nombreTabla){
+	sleep(configuracion->RETARDO / 1000);
 	if(nombreTabla){
 		Tabla* tabla = tablaEncontrar("A");
 		if(tabla){
