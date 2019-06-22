@@ -63,7 +63,7 @@ int parser(char* linea) {
 		return INSERT;
 	if (string_starts_with(linea, "CREATE ")) //if(!strncmp("CREATE ", linea, 7))
 		return CREATE;
-	if (string_starts_with(linea, "DESCRIBE ")) //if(!strncmp("DESCRIBE ", linea, 9)) // TODO: Admitir DESCRIBE y DESCRIBE [TABLA]
+	if (string_starts_with(linea, "DESCRIBE")) //if(!strncmp("DESCRIBE ", linea, 9)) // TODO: Admitir DESCRIBE y DESCRIBE [TABLA]
 		return DESCRIBE;
 	if (string_starts_with(linea, "DROP ")) //if(!strncmp("DROP ", linea, 5))
 		return DROP;

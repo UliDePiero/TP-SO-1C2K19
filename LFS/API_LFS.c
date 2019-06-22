@@ -75,13 +75,15 @@ void ejecutarCreate(){
 	}
 }
 void ejecutarDescribe(){
-	char** comando = validarComando(instruccion, 2);
-	if(comando){
-		//TODO: describeLFS(comando[1]);
-		for(int i = 0; i<2; i++)
-			free(comando[i]);
-		free(comando);
+	char** comando = string_n_split(instruccion, 2, " ");
+	if(comando[1]){
+		describeLFS(comando[1]);
+		free(comando[1]);
+	}else{
+		describeLFS(NULL);
 	}
+	free(comando[0]);
+	free(comando);
 }
 void ejecutarDrop(){
 	char** comando = validarComando(instruccion, 2);

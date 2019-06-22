@@ -88,7 +88,7 @@ void destruirLFS(){
 	log_destroy(logger);
 }
 
-int main99(){
+int main(){
 	levantarLFS();
 
 	//servidor
@@ -208,7 +208,7 @@ int main98(){
 	puts("TERMINE");
 	return 0;
 }
-int main(){
+int main97(){
 	levantarLFS();
 	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS config");
 	crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS API");
@@ -296,6 +296,33 @@ void selectLFS(char* nombreTabla, uint16_t key){
 	}
 	else{
 		selectFS(tabla->nombreTabla, key%tabla->metadata->particiones, key);
+	}
+}
+void describeLFS(char* nombreTabla){
+	if(nombreTabla){
+		Tabla* tabla = tablaEncontrar("A");
+		if(tabla){
+			sem_wait(&tabla->semaforo);
+			sem_wait(&loggerSemaforo);
+			log_info(logger, "Describe tabla %s: consistencia %s particiones %d tiempo compactacion %ld", nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
+			sem_post(&loggerSemaforo);
+			sem_post(&tabla->semaforo);
+		}else{
+			sem_wait(&loggerSemaforo);
+			log_error(logger, "Tabla \"%s\" no encontrada", nombreTabla);
+			sem_post(&loggerSemaforo);
+		}
+	}else{
+		sem_wait(&memtableSemaforo);
+		for(int i = 0; i<tablasLFS->elements_count; i++){
+			Tabla* tabla = list_get(tablasLFS, i);
+			sem_wait(&tabla->semaforo);
+			sem_wait(&loggerSemaforo);
+			log_info(logger, "Describe tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tabla->nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
+			sem_post(&loggerSemaforo);
+			sem_post(&tabla->semaforo);
+		}
+		sem_post(&memtableSemaforo);
 	}
 }
 void dropLFS(char* nombreTabla){

@@ -49,7 +49,7 @@ typedef struct{
    char consistencia[3]; //opción 1
    //int consistencia; //opción 2 //SC, SHC, EC en protocolo.h
    int particiones;
-   int tiempoCompactacion;
+   long tiempoCompactacion;
 } MetadataLFS;
 //Estructura para guardar la Metadata
 typedef struct{
@@ -130,6 +130,7 @@ void compactacion(char* nombreTabla);
 void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
 void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp);
 void selectLFS(char* nombreTabla, uint16_t key);
+void describeLFS(char* nombreTabla);
 void dropLFS(char* nombreTabla);
 
 #endif /* LFS_H_ */
