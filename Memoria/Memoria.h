@@ -90,7 +90,7 @@ int maxValueSize; //Obtener de LISS en el handshake
 typedef struct {
 		int* timestamp;
 		uint16_t* key;
-		char** value;
+		char* value;
 } RegistroMemoria;
 typedef struct{
 	int modificado;

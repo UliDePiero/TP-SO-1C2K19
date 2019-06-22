@@ -316,7 +316,7 @@ RegistroMemoria* registroCrear(int timeStamp, uint16_t key, char* value, int nRe
 	registro->value = memoriaPrincipal[nRegistro]->value;
 	*registro->key = key;
 	*registro->timestamp = timeStamp;
-	strcpy(*registro->value, value);
+	strcpy(registro->value, value);
 	return registro;
 }
 void registroDestruir(RegistroMemoria* registro){

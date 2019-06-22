@@ -54,7 +54,7 @@ void ejecutarSelect(char* instruccion){
 	if(comandoValido(3, comando)){
 		registro = selectMemoria(comando[1], atoi(comando[2]));
 		sleep(configuracion->RETARDO_MEM / 1000);
-		if(registro != NULL) printf("value: %s\n", *registro->value);
+		if(registro != NULL) printf("value: %s\n", registro->value);
 	}
 }
 void ejecutarInsert(char* instruccion){
