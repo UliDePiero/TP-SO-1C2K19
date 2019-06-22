@@ -1,5 +1,5 @@
 /*
- * Memoria.c
+ * Memoria_nuevo.c
  *
  *  Created on: 12 abr. 2019
  *      Author: utnso
@@ -191,10 +191,10 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
 		}
 		if(segmento<cantidadDeSegmentos){
 			for(pagina=0; pagina<tablaDeSegmentos[segmento]->cantidadDePaginas;pagina++ ){
-				if(*tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro->key == key) break;
+				if(getKey(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame) == key) break;
 			}
 			if(pagina<tablaDeSegmentos[segmento]->cantidadDePaginas){
-				*tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro->timestamp = timestamp;
+				setTimestamp(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame, timestamp);
 			//printf("\nInserto: %s %d %s %d",tablaDeSegmentos[segmento]->tabla,tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro->key,tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro->value,tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro->timestamp);
 			}else{
 				registro = buscarRegistroDisponible();
@@ -210,17 +210,17 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
 	}
 }
 //FALTA en select Que pasa si esta la memoria FULL + journal
-RegistroMemoria* selectMemoria(char* tabla, uint16_t key){
+Registro* selectMemoria(char* tabla, uint16_t key){
 	int segmento = 0, pagina = 0;
 	for(segmento=0; segmento<cantidadDeSegmentos; segmento++){
 		if(strcmp(tablaDeSegmentos[segmento]->tabla, tabla) == 0) break;
 	}
 	if(segmento<cantidadDeSegmentos){
 		for(pagina=0; pagina<tablaDeSegmentos[segmento]->cantidadDePaginas ; pagina++){
-			if(*tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro->key == key) break;
+			if(getKey(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame) == key) break;
 		}
 		if(pagina<tablaDeSegmentos[segmento]->cantidadDePaginas)
-			return tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->registro;
+			return getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
 		else{
 			/*
 			 * Intercambio de mensajes con LFS para obtener un tablaDeSegmentos[registro]->tablaDePaginas[pagina]->registro
@@ -242,49 +242,40 @@ RegistroMemoria* selectMemoria(char* tabla, uint16_t key){
 void levantarMemoria(){
 #include <malloc.h>
 
-	int i;
 	tablaDeSegmentos = malloc(1);
 	maxValueSize = 20; //ESTO TIENE QUE VENIR DE LFS
 	tamanioRealDeUnRegistro = sizeof(int) + sizeof(uint16_t) + maxValueSize + 1/*Para el \0*/;
 	cantidadDeRegistros = configuracion->TAM_MEM / tamanioRealDeUnRegistro;
-	void* granMalloc = malloc(cantidadDeRegistros*tamanioRealDeUnRegistro);
-	memoriaPrincipal = malloc(cantidadDeRegistros * sizeof(RegistroMemoria*));
-	for(i=0; i < cantidadDeRegistros; i++){
-				memoriaPrincipal[i] = (RegistroMemoria*) malloc(sizeof(RegistroMemoria));
-				memoriaPrincipal[i]->key = granMalloc + i*(tamanioRealDeUnRegistro);
-				memoriaPrincipal[i]->timestamp = granMalloc + i*(tamanioRealDeUnRegistro) + sizeof(uint16_t);
-				memoriaPrincipal[i]->value = granMalloc + i*(tamanioRealDeUnRegistro)+ sizeof(uint16_t) + sizeof(int);
-			}
-	printf("tamanio uint16: %d\t", sizeof(uint16_t));
-	printf("tamanio int: %d\t", sizeof(int));
-	printf("tamanio de un registro: %d\n", tamanioRealDeUnRegistro);
-	for(i=0; i < cantidadDeRegistros; i++){
-				*memoriaPrincipal[i]->key = i;
-				*memoriaPrincipal[i]->timestamp = -1;
-				printf("posicion key: %p\t", memoriaPrincipal[i]->key);
-				printf("posicion timestamp: %p\t", memoriaPrincipal[i]->timestamp);
-				printf("posicion value: %p\t", memoriaPrincipal[i]->value);
-				printf("posicion granMalloc: %p\t", granMalloc + i*(tamanioRealDeUnRegistro) );
-				printf("%d\n", *memoriaPrincipal[i]->key);
-			}
-	printf("tamanio granMalloc: %d\ntamanio memPPal: %d\ntamanio memPPal[registro]: %d\n", malloc_usable_size(granMalloc), malloc_usable_size(memoriaPrincipal), malloc_usable_size(memoriaPrincipal[0]));
+	granMalloc = malloc(cantidadDeRegistros*tamanioRealDeUnRegistro);
+
+	printf("tamanio granMalloc: %d\n", malloc_usable_size(granMalloc));
 }
-/*void levantarMemoriaVIEJO(){
-	int i;
-	tablaDeSegmentos = malloc(1);
-	maxValueSize = 20; //ESTO TIENE QUE VENIR DE LFS
-	//tamanioRealDeUnRegistro = sizeof(RegistroMemoria) + maxValueSize+1; //por que el +1 ???
-	tamanioRealDeUnRegistro = sizeof(RegistroMemoria) + maxValueSize;
-	tamanioRealDeUnaPagina = tamanioRealDeUnRegistro + sizeof(Pagina);
-	cantidadDeRegistros = configuracion->TAM_MEM / tamanioRealDeUnRegistro;
-	memoriaPrincipal = (RegistroMemoria**) malloc(cantidadDeRegistros*sizeof(RegistroMemoria*));
-	for(i=0; i < cantidadDeRegistros; i++){
-		//memoriaPrincipal[i] = (RegistroMemoria*) malloc(tamanioRealDeUnRegistro); //opcion 1
-		memoriaPrincipal[i] = (RegistroMemoria*) malloc(sizeof(RegistroMemoria)); //opcion 2
-		memoriaPrincipal[i]->value = (char*) malloc(maxValueSize*sizeof(char));
-		memoriaPrincipal[i]->timestamp = -1;
-	}
-}*/
+
+uint16_t getKey(void* registro){
+	uint16_t key = *(uint16_t*)registro;
+	return key;
+}
+int getTimestamp(void* registro){
+	int timestamp = *(int*)(registro+sizeof(uint16_t));
+	return timestamp;
+}
+Registro* getRegistro(void* registro){
+	Registro* reg = (Registro*) malloc(sizeof(Registro));
+	reg->value = (char*) malloc(sizeof(maxValueSize+1));
+	reg->key = *(uint16_t*)registro;
+	reg->timestamp = *(int*)(registro+sizeof(uint16_t));
+	strcpy(reg->value,(char*)(registro+sizeof(uint16_t)+sizeof(int)));// NO SE CUAL USAR// NO SE CUAL USAR// NO SE CUAL USAR// NO SE CUAL USAR
+	//memcpy(reg->value,(char*)(registro+sizeof(uint16_t)+sizeof(int)), tamanioRealDeUnRegistro);// NO SE CUAL USAR// NO SE CUAL USAR// NO SE CUAL USAR
+	return reg;
+}
+void setTimestamp(void* registro, int timestamp){
+	memcpy(registro+sizeof(uint16_t),&timestamp,sizeof(int));
+}
+void setRegistro(void* registro, uint16_t key, int timestamp, char* value){
+	memcpy(registro,&key,sizeof(uint16_t));
+	memcpy(registro+sizeof(uint16_t),&timestamp,sizeof(int));
+	memcpy(registro+sizeof(uint16_t)+sizeof(int),value,tamanioRealDeUnRegistro);
+}
 Segmento* segmentoCrear(char* tabla, Pagina** tablaDePaginas){
 	Segmento* segmento = (Segmento*)malloc(sizeof(Segmento));
 	strcpy(segmento->tabla, tabla);
@@ -292,50 +283,34 @@ Segmento* segmentoCrear(char* tabla, Pagina** tablaDePaginas){
 	return segmento;
 }
 void segmentoDestruir(Segmento* segmento){
-	free(segmento->tablaDePaginas);
 	for(int i=0; i < segmento->cantidadDePaginas; i++)
 		free(segmento->tablaDePaginas[i]);
+	free(segmento->tablaDePaginas);
 	free(segmento);
 }
-Pagina* paginaCrear(int modificado, RegistroMemoria* registro){
+Pagina* paginaCrear(int modificado, int nRegistro){
 	Pagina* pagina = (Pagina*)malloc(sizeof(Pagina));
 	pagina->modificado = modificado;
-	pagina->registro = registro;
+	pagina->frame = granMalloc + nRegistro*tamanioRealDeUnRegistro;
 	return pagina;
 }
 //Libera memoria de la pagina y del registro
 void paginaDestruir(Pagina* pagina){
-	registroDestruir(pagina->registro);
 	free(pagina);
 }
-RegistroMemoria* registroCrear(int timeStamp, uint16_t key, char* value, int nRegistro){
-	//RegistroMemoria* registro = (RegistroMemoria*)malloc(sizeof(RegistroMemoria));
-	RegistroMemoria* registro = memoriaPrincipal[nRegistro];
-	registro->key = memoriaPrincipal[nRegistro]->key;
-	registro->timestamp = memoriaPrincipal[nRegistro]->timestamp;
-	registro->value = memoriaPrincipal[nRegistro]->value;
-	*registro->key = key;
-	*registro->timestamp = timeStamp;
-	strcpy(registro->value, value);
-	return registro;
-}
-void registroDestruir(RegistroMemoria* registro){
+void registroDestruir(Registro* registro){
 	free(registro->value);
 	free(registro);
 }
 void memoriaPrincipalDestruir(){
 	for(int j=0; j < cantidadDeSegmentos; j++)
 		segmentoDestruir(tablaDeSegmentos[j]);
-	for(int i = 0; i < cantidadDeRegistros; i++){
-		registroDestruir(memoriaPrincipal[i]);
-	}
-	free(memoriaPrincipal);
+	free(granMalloc);
 }
 void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nSegmento, int nRegistro){
 	cantidadDeSegmentos++;
 	tablaDeSegmentos = (Segmento**) realloc(tablaDeSegmentos, cantidadDeSegmentos*sizeof(Segmento*));
-	RegistroMemoria* registroDelSegmento = registroCrear(timestamp, key, value, nRegistro);
-	Pagina* paginaDelSegmento = paginaCrear(0, registroDelSegmento);
+	Pagina* paginaDelSegmento = paginaCrear(0, nRegistro);
 	Pagina** tablaDePaginasDelSegmento = (Pagina**) malloc(sizeof(Pagina*));
 	Segmento* segmento = segmentoCrear(tabla, tablaDePaginasDelSegmento);
 	tablaDeSegmentos[nSegmento] = segmento;
@@ -345,16 +320,15 @@ void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int t
 	tablaDeSegmentos[nSegmento]->tablaDePaginas[tablaDeSegmentos[nSegmento]->cantidadDePaginas - 1] = paginaDelSegmento;
 }
 void asignarRegistroASegmentoExistente(uint16_t key, char* value, int timestamp, int nSegmento, int nPagina, int nRegistro){
-	RegistroMemoria* registroDelSegmento = registroCrear(timestamp, key, value, nRegistro);
-	Pagina* paginaDelSegmento = paginaCrear(0, registroDelSegmento);
+	Pagina* paginaDelSegmento = paginaCrear(0, nRegistro);
 	tablaDeSegmentos[nSegmento]->cantidadDePaginas ++;
 	tablaDeSegmentos[nSegmento]->tablaDePaginas = (Pagina**) realloc(tablaDeSegmentos[nSegmento]->tablaDePaginas, tablaDeSegmentos[nSegmento]->cantidadDePaginas*sizeof(Pagina*));
 	tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina] = paginaDelSegmento;
-	tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]->registro = registroDelSegmento;
+	tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]->frame = granMalloc + nRegistro*tamanioRealDeUnRegistro;
 }
 int buscarRegistroDisponible(){
 	for(int i = 0; i < cantidadDeRegistros; i++){
-		if (*memoriaPrincipal[i]->timestamp < 0) return i;
+		if (getTimestamp(granMalloc+i*tamanioRealDeUnRegistro) < 0) return i;
 	}
 	return -1;
 }

@@ -1,5 +1,5 @@
 /*
- * Memoria.h
+ * Memoria_nuevo.h
  *
  *  Created on: 12 abr. 2019
  *      Author: utnso
@@ -79,22 +79,19 @@ RETARDO_GOSSIPING=30000
 MEMORY_NUMBER=1
 */
 //Estructura para guardar la configuracion del proceso
+
 ConfiguracionMemoria* configuracion;
 
 int maxValueSize; //Obtener de LISS en el handshake
-/*typedef struct {
-	int timestamp;
-	uint16_t key;
-	char* value;
-} RegistroMemoria;*/
+
 typedef struct {
-		int* timestamp;
-		uint16_t* key;
+		int timestamp;
+		uint16_t key;
 		char* value;
-} RegistroMemoria;
+} Registro;
 typedef struct{
 	int modificado;
-	RegistroMemoria* registro;
+	void* frame;
 } Pagina;
 typedef struct{
 	char tabla[20];
@@ -103,28 +100,31 @@ typedef struct{
 } Segmento;
 
 Segmento** tablaDeSegmentos;
-//Pagina** tablaDePaginas;
-RegistroMemoria** memoriaPrincipal;
+
 int tamanioRealDeUnRegistro;
-int tamanioRealDeUnaPagina;
 unsigned int cantidadDeRegistros;
 unsigned int cantidadDeSegmentos;
+void* granMalloc;
 
 void terminar(int seed);
-Segmento* segmentoCrear(char*, Pagina**);
-void segmentoDestruir(Segmento*);
-Pagina* paginaCrear(int modificado, RegistroMemoria* registro);
-void paginaDestruir(Pagina*);
-RegistroMemoria* registroCrear(int timeStamp, uint16_t key, char* value, int nRegistro);
-void registroDestruir(RegistroMemoria* registro);
 void memoriaPrincipalDestruir();
+void segmentoDestruir(Segmento*);
+void paginaDestruir(Pagina*);
+void registroDestruir(Registro* registro);
+uint16_t getKey(void* registro);
+int getTimestamp(void* registro);
+Registro* getRegistro(void* registro);
+void setTimestamp(void* registro, int timestamp);
+void setRegistro(void* registro, uint16_t key, int timestamp, char* value);
+Segmento* segmentoCrear(char*, Pagina**);
+Pagina* paginaCrear(int modificado, int nRegistro);
 void levantarMemoria();
 void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nSegmento, int nRegistro);
 void asignarRegistroASegmentoExistente(uint16_t key, char* value, int timestamp, int nSegmento, int nPagina, int nRegistro);
 int buscarRegistroDisponible();
 int ejecutarLRU();
 void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp);
-RegistroMemoria* selectMemoria(char* tabla, uint16_t key);
+Registro* selectMemoria(char* tabla, uint16_t key);
 
 void journalization();
 void API_Memoria();

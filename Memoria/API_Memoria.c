@@ -49,7 +49,7 @@ void API_Memoria(){
 }
 void ejecutarSelect(char* instruccion){
 	char** comando ;
-	RegistroMemoria* registro;
+	Registro* registro;
 	comando = string_n_split(instruccion, 3, " ");
 	if(comandoValido(3, comando)){
 		registro = selectMemoria(comando[1], atoi(comando[2]));
