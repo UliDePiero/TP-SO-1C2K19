@@ -7,7 +7,7 @@
 #include "API_Memoria.h"
 
 //void main(){
-void API_Memoria(){
+void* API_Memoria(){
 	char* linea;
 	char* linea2;
 
@@ -46,6 +46,7 @@ void API_Memoria(){
 		linea = readline(">");
 	}
 	free(linea);
+	return (void*)1;
 }
 void ejecutarSelect(char* instruccion){
 	char** comando ;
@@ -55,6 +56,7 @@ void ejecutarSelect(char* instruccion){
 		registro = selectMemoria(comando[1], atoi(comando[2]));
 		sleep(configuracion->RETARDO_MEM / 1000);
 		if(registro != NULL) printf("value: %s\n", registro->value);
+		free(registro);
 	}
 }
 void ejecutarInsert(char* instruccion){

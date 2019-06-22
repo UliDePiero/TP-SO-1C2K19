@@ -127,7 +127,7 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp);
 Registro* selectMemoria(char* tabla, uint16_t key);
 
 void journalization();
-void API_Memoria();
+void* API_Memoria();
 void ejecutarSelect(char*);
 void ejecutarInsert(char*);
 void ejecutarCreate(char*);

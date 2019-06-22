@@ -27,12 +27,4 @@
 #include "Memoria.h"
 #include <time.h>
 
-void API_Memoria();
-void ejecutarSelect(char*);
-void ejecutarInsert(char*);
-void ejecutarCreate(char*);
-void ejecutarDescribe(char*);
-void ejecutarDrop(char*);
-void ejecutarJournal(char*);
-
 #endif /* API_MEMORIA_H_ */
