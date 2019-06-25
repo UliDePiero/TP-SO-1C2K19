@@ -39,4 +39,12 @@ int cadenaEsDigito(char* cadena);
 int validacionStringsFijosAdd(char** comando);
 int validacionStringCriterios(char* criterio);
 
+void str_to_uint16(const char *str, uint16_t *res);
+void swap(char *x, char *y);
+char* reverse(char *buffer, int i, int j);
+char* itoa(int value, char* buffer, int base);
+
+//Retorna el tiempo actual en milisegundos
+uint64_t getCurrentTime();
+
 #endif /* PARSER_H_ */

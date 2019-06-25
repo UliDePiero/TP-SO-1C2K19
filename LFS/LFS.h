@@ -53,9 +53,9 @@ typedef struct{
 } MetadataLFS;
 //Estructura para guardar la Metadata
 typedef struct{
-   int timestamp;
-   uint16_t key;
-   char* value; // Siempre verificar que no sobrepase el tamaño indicado por archivo de configuración
+	uint64_t timestamp;
+	uint16_t key;
+	char* value; // Siempre verificar que no sobrepase el tamaño indicado por archivo de configuración
 } RegistroLFS;
 //Estructura para guardar los Registros
 typedef struct{
@@ -96,7 +96,6 @@ sem_t bitmapSemaforo;
 sem_t bitmapSemaforoFILE;
 sem_t configSemaforo;
 sem_t metadataSemaforo;
-sem_t compactacionSemaforo;
 sem_t dumpSemaforo;
 sem_t loggerSemaforo;
 
@@ -108,16 +107,23 @@ void API_LFS();
 void levantarLFS();
 void destruirLFS();
 
-//Estructuras
+void asd(char* a);
+
+//------------------------ ESTRUCTURAS --------------------------------//
 Tabla* crearTabla(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
 void tablaDestruir(Tabla* tabla);
+void tablaRemover(char* nombreTabla);
 Tabla* tablaEncontrar(char* nombre);
 void mostrarTablas();
-RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, char* value);
+RegistroLFS* RegistroLFSCrear(uint16_t key, uint64_t timestamp, char* value);
 void RegistroLFSDestruir(RegistroLFS* registro);
 RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key);
 RegistroLFS* registroEncontrarArray(uint16_t key, char* array);
-int cantDigitos(int numero);
+RegistroLFS* registroEncontrarLista(t_list* lista, uint16_t key);
+t_list* encontrarRegistros(t_list* lista, int particiones, int particion);
+char* encontrarYComprimirRegistros(t_list* lista, int particiones, int particion);
+void agregarRegistros(t_list* registros, char* array);
+int cantDigitos(uint64_t numero);
 char* comprimirRegistro(RegistroLFS* reg);
 void mostrarRegistros(char* nombre);
 void limpiarMemtable();
@@ -126,9 +132,9 @@ void limpiarTablaMemtable(Tabla* tabla);
 void dumpLFS();
 void compactacion(char* nombreTabla);
 
-//Comandos
+//------------------------ COMANDOS --------------------------------//
 void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
-void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp);
+void insertLFS(char* nombreTabla, uint16_t key, char* value, uint64_t timestamp);
 void selectLFS(char* nombreTabla, uint16_t key);
 void describeLFS(char* nombreTabla);
 void dropLFS(char* nombreTabla);

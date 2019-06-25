@@ -215,25 +215,326 @@ int main97(){
 	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");
 	joinearHilo(hiloAPI, NULL, "LFS API");
 
-	/*createLFS("A", "SC", 5, 5000);
-	insertLFS("A", 1, "value1", 1);
-	insertLFS("A", 2, "value2", 1);
-	insertLFS("A", 3, "value3", 1);
-	insertLFS("A", 4, "value4", 1);
-
-	sleep(10);
-	dropLFS("A");
-	sleep(9);*/
-
 	destruirLFS();
 	puts("TERMINE");
 	return 0;
+
 }
+
+//----------------- FUNCIONES DE ESTRUCTURAS -----------------//
+
+Tabla* crearTabla(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
+	Tabla *nuevaTabla = malloc(sizeof(Tabla));
+	nuevaTabla->nombreTabla = string_from_format("%s", nombreTabla);
+	MetadataLFS *metadata = malloc(sizeof(MetadataLFS));
+	strcpy(metadata->consistencia, consistencia);
+	metadata->particiones = particiones;
+	metadata->tiempoCompactacion = tiempoCompactacion;
+	nuevaTabla->metadata = metadata;
+	nuevaTabla->registro = list_create();
+	sem_init(&nuevaTabla->semaforo, 1, 1);
+	pthread_create(&nuevaTabla->hiloCompactacion, NULL, (void*)compactacion, (void*)nuevaTabla->nombreTabla);
+	pthread_detach(nuevaTabla->hiloCompactacion);
+
+	return nuevaTabla;
+}
+void tablaDestruir(Tabla* tabla){
+	pthread_cancel(tabla->hiloCompactacion);
+	sem_wait(&tabla->semaforo);
+	free(tabla->metadata);
+	free(tabla->nombreTabla);
+	list_destroy_and_destroy_elements(tabla->registro, (void*) RegistroLFSDestruir);
+	free(tabla);
+}
+void tablaRemover(char* nombreTabla){
+	sem_wait(&memtableSemaforo);
+	for(int i = 0; i<tablasLFS->elements_count; i++){
+		Tabla* t = list_get(tablasLFS, i);
+		if(string_equals_ignore_case(t->nombreTabla, nombreTabla)){
+			list_remove_and_destroy_element(tablasLFS, i, (void*)tablaDestruir);
+			break;
+		}
+	}
+	sem_post(&memtableSemaforo);
+}
+void mostrarTablas(){
+	Tabla *t;
+	sem_wait(&memtableSemaforo);
+	for(int i = 0; i<tablasLFS->elements_count; i++){
+		t = list_get(tablasLFS, i);
+		sem_wait(&t->semaforo);
+		printf("tabla: %s particiones=%d\n", t->nombreTabla, t->metadata->particiones);
+		sem_post(&t->semaforo);
+	}
+	sem_post(&memtableSemaforo);
+}
+Tabla* tablaEncontrar(char* nombre){
+	int _is_the_one(Tabla *t) {
+		return string_equals_ignore_case(t->nombreTabla, nombre);
+	}
+	sem_wait(&memtableSemaforo);
+	Tabla* tabla = list_find(tablasLFS, (void*) _is_the_one);
+	sem_post(&memtableSemaforo);
+	return tabla;
+}
+RegistroLFS* RegistroLFSCrear(uint16_t key, uint64_t timestamp, char* value){
+	RegistroLFS *registro = malloc(sizeof(RegistroLFS));
+	registro->key = key;
+	registro->timestamp = timestamp;
+	registro->value = string_duplicate(value);
+	return registro;
+}
+void RegistroLFSDestruir(RegistroLFS* registro){
+	free(registro->value);
+	free(registro);
+}
+RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key){
+	//RETORNA NULL SI EL REGISTRO NO EXISTE EN LA MEMTABLE
+	RegistroLFS* registro = NULL;
+	sem_wait(&tabla->semaforo);
+	if(tabla->registro->elements_count > 0){
+		for(int i = 0; i < tabla->registro->elements_count; i++){
+			RegistroLFS* registroEncontrado = list_get(tabla->registro, i);
+			if(registroEncontrado->key == key && (!registro || registroEncontrado->timestamp > registro->timestamp))
+				registro = registroEncontrado;
+		}
+	}
+	sem_post(&tabla->semaforo);
+	return registro;
+}
+RegistroLFS* registroEncontrarArray(uint16_t key, char* array){
+	char* value = string_new();
+	uint64_t timestampMayor = 0;
+	int numero = 0;
+	char* timestampArray = string_new();
+	uint64_t timestampNuevo = 0;
+	char* keyArray = string_new();
+	char* valueNuevo = string_new();
+
+	for(int i = 0; i!=string_length(array); i++){
+		if(array[i]=='\n'){
+			timestampNuevo = strtoull(timestampArray, NULL, 0);
+			if(atoi(keyArray) == key && timestampNuevo > timestampMayor){
+				timestampMayor = timestampNuevo;
+				free(value);
+				value = string_from_format("%s", valueNuevo);
+			}
+			free(timestampArray);
+			timestampArray = string_new();
+			free(keyArray);
+			keyArray = string_new();
+			free(valueNuevo);
+			valueNuevo = string_new();
+			numero = 0;
+		}
+		else{
+			if(array[i]==';')
+				numero++;
+			else switch(numero){
+					case 0:;
+						char* a = string_duplicate(timestampArray);
+						free(timestampArray);
+						timestampArray = string_from_format("%s%c", a, array[i]);
+						free(a);
+						break;
+					case 1:;
+						char* b = string_duplicate(keyArray);
+						free(keyArray);
+						keyArray = string_from_format("%s%c", b, array[i]);
+						free(b);
+						break;
+					case 2:;
+						char* c = string_duplicate(valueNuevo);
+						free(valueNuevo);
+						valueNuevo = string_from_format("%s%c", c, array[i]);
+						free(c);
+						break;
+				}
+		}
+	}
+
+	free(valueNuevo);
+	free(keyArray);
+	free(timestampArray);
+
+
+	if(value){
+		RegistroLFS* reg = RegistroLFSCrear(key, timestampMayor, value);
+		free(value);
+		return reg;
+	}
+	else{
+		return NULL;
+	}
+}
+RegistroLFS* registroEncontrarLista(t_list* lista, uint16_t key){
+	//RETORNA EL PRIMER REGISTRO CON ESA KEY DE LA LISTA
+	//RETORNA NULL SI LA KEY NO EXISTE EN LA LISTA
+	RegistroLFS* registro = NULL;
+	for(int i = 0; i < lista->elements_count; i++){
+		RegistroLFS* registroEncontrado = list_get(lista, i);
+		if(registroEncontrado->key == key){
+			registro = registroEncontrado;
+			break;
+		}
+	}
+	return registro;
+}
+t_list* encontrarRegistros(t_list* lista, int particiones, int particion){
+	//RETORNA UNA LISTA CON LOS REGISTROS QUE PERTENECEN A LA PARTICION
+	//RETORNA NULL SI NO HAY REGISTROS
+	t_list* ret = list_create();
+	for(int i = 0; i<lista->elements_count; i++){
+		RegistroLFS* reg = list_get(lista, i);
+		if(reg->key % particiones == particion){
+			list_add(ret, reg);
+		}
+	}
+	if(list_is_empty(ret)){
+		list_destroy(ret);
+		return NULL;
+	}
+
+	return ret;
+}
+char* encontrarYComprimirRegistros(t_list* lista, int particiones, int particion){
+	//RETORNA LOS REGISTROS COMPRIMIDOS QUE PERTENECEN A LA PARTICION
+	//RETORNA NULL SI NO HAY REGISTROS
+	char* ret = string_new();
+	for(int i = 0; i<lista->elements_count; i++){
+		RegistroLFS* reg = list_get(lista, i);
+		if(reg->key % particiones == particion){
+			char* comprimido = comprimirRegistro(reg);
+			string_append(&ret, comprimido);
+			free(comprimido);
+		}
+	}
+
+	if(string_is_empty(ret)){
+		free(ret);
+		return NULL;
+	}
+
+	return ret;
+}
+void agregarRegistros(t_list* registros, char* array){
+	int numero = 0;
+	char* value = string_new();
+	char* timestampArray = string_new();
+	char* keyArray = string_new();
+
+	for(int i = 0; i!=string_length(array); i++){
+		if(array[i]=='\n'){
+			RegistroLFS* reg = registroEncontrarLista(registros, atoi(keyArray));
+			if(reg){
+				uint64_t timestamp = 0;
+				sprintf(timestampArray,"%" PRIu64 "", timestamp);
+				if(timestamp > reg->timestamp){
+					reg->timestamp = timestamp;
+					free(reg->value);
+					reg->value = string_duplicate(value);
+				}
+			}else{
+				list_add(registros, RegistroLFSCrear(atoi(keyArray), atoi(timestampArray), value));
+			}
+			free(timestampArray);
+			timestampArray = string_new();
+			free(keyArray);
+			keyArray = string_new();
+			free(value);
+			value = string_new();
+			numero = 0;
+		}
+		else{
+			if(array[i]==';')
+				numero++;
+			else switch(numero){
+					case 0:;
+						char* a = string_duplicate(timestampArray);
+						free(timestampArray);
+						timestampArray = string_from_format("%s%c", a, array[i]);
+						free(a);
+						break;
+					case 1:;
+						char* b = string_duplicate(keyArray);
+						free(keyArray);
+						keyArray = string_from_format("%s%c", b, array[i]);
+						free(b);
+						break;
+					case 2:;
+						char* c = string_duplicate(value);
+						free(value);
+						value = string_from_format("%s%c", c, array[i]);
+						free(c);
+						break;
+				}
+		}
+	}
+
+	free(value);
+	free(keyArray);
+	free(timestampArray);
+}
+int cantDigitos(uint64_t numero){
+    int digitos = 0;
+    if (numero < 0)
+    	digitos = 1;
+    while (numero) {
+        numero /= 10;
+        digitos++;
+    }
+    return digitos;
+}
+char* comprimirRegistro(RegistroLFS* reg){
+	char* comprimido;
+	comprimido = (char*) malloc(cantDigitos(reg->timestamp) + cantDigitos(reg->key) + string_length(reg->value) + 5);
+	sprintf(comprimido, "%" PRIu64 ";%hd;%s\n", reg->timestamp, reg->key, reg->value);
+	return comprimido;
+}
+void mostrarRegistros(char* nombre){
+	Tabla* tabla = tablaEncontrar(nombre);
+	sem_wait(&tabla->semaforo);
+	printf("Tabla %s (%d)\n", nombre, tabla->registro->elements_count);
+	for(int i = 0; i < tabla->registro->elements_count; i++){
+		RegistroLFS* registro = list_get(tabla->registro, i);
+		printf("key: %hd timestamp: %" PRIu64 " value: %s\n", registro->key, registro->timestamp, registro->value);
+	}
+	sem_post(&tabla->semaforo);
+}
+void limpiarMemtable(){
+	sem_wait(&memtableSemaforo);
+	for(int j = 0; j<tablasLFS->elements_count; j++){
+		Tabla* t = list_get(tablasLFS, j);
+		limpiarTablaMemtable(t);
+	}
+	sem_post(&memtableSemaforo);
+}
+void limpiarTablaMemtable(Tabla* tabla){
+	sem_wait(&tabla->semaforo);
+	list_destroy_and_destroy_elements(tabla->registro, (void*) RegistroLFSDestruir);
+	tabla->registro = list_create();
+	sem_post(&tabla->semaforo);
+}
+
+
+//------------------------ COMANDOS --------------------------------//
 
 void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
 	if(strcmp(consistencia, "SC") && strcmp(consistencia, "SHC") && strcmp(consistencia, "EC")){
 		sem_wait(&loggerSemaforo);
 		log_error(logger, "Consistencia invalida \"%s\" al crear la tabla \"%s\"", consistencia, nombreTabla);
+		sem_post(&loggerSemaforo);
+		return;
+	}
+	if(!particiones){
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "Error al crear la tabla \"%s\" con 0 particiones", consistencia, nombreTabla);
+		sem_post(&loggerSemaforo);
+		return;
+	}
+	if(!tiempoCompactacion){
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "Error al crear la tabla \"%s\" con tiempo de compactacion = 0", consistencia, nombreTabla);
 		sem_post(&loggerSemaforo);
 		return;
 	}
@@ -246,7 +547,7 @@ void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiem
 	}
 	createFS(nombreTabla, consistencia, particiones, tiempoCompactacion);
 }
-void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
+void insertLFS(char* nombreTabla, uint16_t key, char* value, uint64_t timestamp){
 	if(sizeof(value) > configuracion->TAMANIO_VALUE){
 		sem_wait(&loggerSemaforo);
 		log_error(logger, "Tamaño del value mayor que el permitido");
@@ -268,8 +569,8 @@ void insertLFS(char* nombreTabla, uint16_t key, char* value, int timestamp){
 		return;
 	}
 
-	if(timestamp == 0)
-		timestamp = (int)time(NULL);
+	if(!timestamp)
+		timestamp = getCurrentTime();
 
 	list_add(tablaEncontrar(nombreTabla)->registro, RegistroLFSCrear(key, timestamp, value));
 	sem_wait(&loggerSemaforo);
@@ -335,13 +636,7 @@ void dropLFS(char* nombreTabla){
 		sem_post(&loggerSemaforo);
 		return;
 	}
-	sem_wait(&memtableSemaforo);
-	for(int i = 0; i<tablasLFS->elements_count; i++){
-		Tabla* t = list_get(tablasLFS, i);
-		if(string_equals_ignore_case(t->nombreTabla, nombreTabla))
-			list_remove_and_destroy_element(tablasLFS, i, (void*)tablaDestruir);
-	}
-	sem_post(&memtableSemaforo);
+	tablaRemover(nombreTabla);
 	dropFS(nombreTabla);
 	sem_wait(&loggerSemaforo);
 	log_info(logger, "Drop tabla \"%s\"", nombreTabla);
@@ -365,257 +660,20 @@ void dumpLFS(){
 }
 
 void compactacion(char* nombreTabla){
-	Tabla* t = tablaEncontrar(nombreTabla);
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	/*Tabla* t = tablaEncontrar(nombreTabla);
 	int tiempo = t->metadata->tiempoCompactacion;
 	while(1){
 		sleep(tiempo);
-		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-		compactar(nombreTabla);
-		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-	}
-}
-
-
-//----------------- FUNCIONES DE ESTRUCTURAS -----------------//
-
-Tabla* crearTabla(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
-	Tabla *nuevaTabla = malloc(sizeof(Tabla));
-	nuevaTabla->nombreTabla = string_from_format("%s", nombreTabla);
-	MetadataLFS *metadata = malloc(sizeof(MetadataLFS));
-	strcpy(metadata->consistencia, consistencia);
-	metadata->particiones = particiones;
-	metadata->tiempoCompactacion = tiempoCompactacion;
-	nuevaTabla->metadata = metadata;
-	nuevaTabla->registro = list_create();
-	sem_init(&nuevaTabla->semaforo, 1, 1);
-	pthread_create(&nuevaTabla->hiloCompactacion, NULL, (void*)compactar, nuevaTabla->nombreTabla);
-	pthread_detach(nuevaTabla->hiloCompactacion);
-
-	return nuevaTabla;
-}
-void tablaDestruir(Tabla* tabla){
-	pthread_cancel(tabla->hiloCompactacion);
-	sem_wait(&tabla->semaforo);
-	free(tabla->metadata);
-	free(tabla->nombreTabla);
-	list_destroy_and_destroy_elements(tabla->registro, (void*) RegistroLFSDestruir);
-	free(tabla);
-}
-void mostrarTablas(){
-	Tabla *t;
-	sem_wait(&memtableSemaforo);
-	for(int i = 0; i<tablasLFS->elements_count; i++){
-		t = list_get(tablasLFS, i);
 		sem_wait(&t->semaforo);
-		printf("tabla: %s particiones=%d\n", t->nombreTabla, t->metadata->particiones);
-		sem_post(&t->semaforo);
-	}
-	sem_post(&memtableSemaforo);
-}
-Tabla* tablaEncontrar(char* nombre){
-	int _is_the_one(Tabla *t) {
-		return string_equals_ignore_case(t->nombreTabla, nombre);
-	}
-	sem_wait(&memtableSemaforo);
-	Tabla* tabla = list_find(tablasLFS, (void*) _is_the_one);
-	sem_post(&memtableSemaforo);
-	return tabla;
-}
-RegistroLFS* RegistroLFSCrear(uint16_t key, int timestamp, char* value){
-	RegistroLFS *registro = malloc(sizeof(RegistroLFS));
-	registro->key = key;
-	registro->timestamp = timestamp;
-	registro->value = string_from_format("%s", value);
-	return registro;
-}
-void RegistroLFSDestruir(RegistroLFS* registro){
-	free(registro->value);
-	free(registro);
-}
-RegistroLFS* registroEncontrar(Tabla* tabla, uint16_t key){
-	//RETORNA NULL SI EL REGISTRO NO EXISTE EN LA MEMTABLE
-	RegistroLFS* registro = NULL;
-	sem_wait(&tabla->semaforo);
-	if(tabla->registro->elements_count > 0){
-		for(int i = 0; i < tabla->registro->elements_count; i++){
-			RegistroLFS* registroEncontrado = list_get(tabla->registro, i);
-			if(registroEncontrado->key == key && (!registro || registroEncontrado->timestamp > registro->timestamp))
-				registro = registroEncontrado;
-		}
-	}
-	sem_post(&tabla->semaforo);
-	return registro;
-}
-RegistroLFS* registroEncontrarArray(uint16_t key, char* array){
-	char* value = string_new();
-	int timestampMayor = 0;
-	int numero = 0;
-	char* timestampArray = string_new();
-	char* keyArray = string_new();
-	char* valueNuevo = string_new();
-
-	for(int i = 0; i!=string_length(array); i++){
-		if(array[i]=='\n'){
-			if(atoi(keyArray) == key && atoi(timestampArray) > timestampMayor){
-				timestampMayor = atoi(timestampArray);
-				free(value);
-				value = string_from_format("%s", valueNuevo);
-			}
-			free(timestampArray);
-			timestampArray = string_new();
-			free(keyArray);
-			keyArray = string_new();
-			free(valueNuevo);
-			valueNuevo = string_new();
-			numero = 0;
-		}
-		else{
-			if(array[i]==';')
-				numero++;
-			else switch(numero){
-					case 0:;
-						char* a = string_duplicate(timestampArray);
-						free(timestampArray);
-						timestampArray = string_from_format("%s%c", a, array[i]);
-						free(a);
-						break;
-					case 1:;
-						char* b = string_duplicate(keyArray);
-						free(keyArray);
-						keyArray = string_from_format("%s%c", b, array[i]);
-						free(b);
-						break;
-					case 2:;
-						char* c = string_duplicate(valueNuevo);
-						free(valueNuevo);
-						valueNuevo = string_from_format("%s%c", c, array[i]);
-						free(c);
-						break;
-				}
-		}
-	}
-	/*if(atoi(keyArray) == key && atoi(timestampArray) > timestampMayor){
-		timestampMayor = atoi(timestampArray);
-		free(value);
-		value = string_from_format("%s", valueNuevo);
+		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+		//compactar(nombreTabla);
+		//TODO: testear
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	}*/
 
-	free(valueNuevo);
-	free(keyArray);
-	free(timestampArray);
+	while(1){
 
-
-	if(value){
-		RegistroLFS* reg = RegistroLFSCrear(key, timestampMayor, value);
-		free(value);
-		return reg;
 	}
-	else{
-		return NULL;
-	}
-}
-int cantDigitos(int numero){
-    int digitos = 0;
-    if (numero < 0)
-    	digitos = 1;
-    while (numero) {
-        numero /= 10;
-        digitos++;
-    }
-    return digitos;
-}
-char* comprimirRegistro(RegistroLFS* reg){
-	char * comprimido;
-	comprimido = (char*) malloc(cantDigitos(reg->timestamp) + cantDigitos(reg->key) + string_length(reg->value) + 5);
-	//char* comprimido = malloc(sizeof(reg->key)+sizeof(reg->timestamp)+sizeof(reg->value)+5);
-	sprintf(comprimido, "%d;%hd;%s\n", reg->timestamp, reg->key, reg->value);
-	return comprimido;
-}
-void mostrarRegistros(char* nombre){
-	Tabla* tabla = tablaEncontrar(nombre);
-	sem_wait(&tabla->semaforo);
-	printf("Tabla %s (%d)\n", nombre, tabla->registro->elements_count);
-	for(int i = 0; i < tabla->registro->elements_count; i++){
-		RegistroLFS* registro = list_get(tabla->registro, i);
-		printf("key: %hd timestamp: %d value: %s\n", registro->key, registro->timestamp, registro->value);
-	}
-	sem_post(&tabla->semaforo);
-}
-void limpiarMemtable(){
-	sem_wait(&memtableSemaforo);
-	for(int j = 0; j<tablasLFS->elements_count; j++){
-		Tabla* t = list_get(tablasLFS, j);
-		limpiarTablaMemtable(t);
-	}
-	sem_post(&memtableSemaforo);
-}
-void limpiarTablaMemtable(Tabla* tabla){
-	sem_wait(&tabla->semaforo);
-	list_destroy_and_destroy_elements(tabla->registro, (void*) RegistroLFSDestruir);
-	tabla->registro = list_create();
-	sem_post(&tabla->semaforo);
-}
-
-
-//----------------- FUNCIONES AUXILIARES -----------------//
-
-void str_to_uint16(const char *str, uint16_t *res){
-  char *end;
-  errno = 0;
-  intmax_t val = strtoimax(str, &end, 10);
-  /*if (errno == ERANGE || val < 0 || val > UINT16_MAX || end == str || *end != '\0')
-    return false;*/
-  *res = (uint16_t) val;
-  //return true;
-}
-// inline function to swap two numbers
-void swap(char *x, char *y) {
-	char t = *x; *x = *y; *y = t;
-}
-// function to reverse buffer[i..j]
-char* reverse(char *buffer, int i, int j)
-{
-	while (i < j)
-		swap(&buffer[i++], &buffer[j--]);
-
-	return buffer;
-}
-// Iterative function to implement itoa() function in C
-char* itoa(int value, char* buffer, int base)
-{
-	// invalid input
-	if (base < 2 || base > 32)
-		return buffer;
-
-	// consider absolute value of number
-	int n = abs(value);
-
-	int i = 0;
-	while (n)
-	{
-		int r = n % base;
-
-		if (r >= 10)
-			buffer[i++] = 65 + (r - 10);
-		else
-			buffer[i++] = 48 + r;
-
-		n = n / base;
-	}
-
-	// if number is 0
-	if (i == 0)
-		buffer[i++] = '0';
-
-	// If base is 10 and value is negative, the resulting string
-	// is preceded with a minus sign (-)
-	// With any other base, value is always considered unsigned
-	if (value < 0 && base == 10)
-		buffer[i++] = '-';
-
-	buffer[i] = '\0'; // null terminate string
-
-	// reverse the string and return it
-	return reverse(buffer, 0, i - 1);
 }
 

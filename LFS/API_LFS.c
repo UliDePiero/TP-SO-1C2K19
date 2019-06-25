@@ -54,9 +54,8 @@ void ejecutarInsert(){
 	char** comando = validarComandoInsert(instruccion);
 	if(comando){
 		if(!comando[4]){
-			insertLFS(comando[1], atoi(comando[2]), comando[3], (int)time(NULL));
-		}
-		else{
+			insertLFS(comando[1], atoi(comando[2]), comando[3], getCurrentTime());
+		}else{
 			insertLFS(comando[1], atoi(comando[2]), comando[3], atoi(comando[4]));
 			free(comando[4]);
 		}
