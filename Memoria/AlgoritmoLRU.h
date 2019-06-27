@@ -28,4 +28,12 @@ t_list* listaPaginasLRU;
 
 /* --------------------    Definición de Funciones    -------------------- */
 
+int memoriaEstaFull(t_list* lista);
+void mostrarlistaPaginasLRU(t_list* lista);
+void encolarNuevaPagina(t_list* lista, t_nodoLRU* nodo);
+void encolarPaginaExistente(t_list* lista, t_link_element* nodo);
+void desencolarPrimerElementoNoModificado(t_list *lista);
+int estaEnListaDePaginas(t_list* lista, t_nodoLRU* nodo);
+t_list* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo);
+
 #endif /* ALGORITMOLRU_H_ */

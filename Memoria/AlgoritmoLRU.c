@@ -11,7 +11,7 @@
 
 int memoriaEstaFull(t_list* lista) {
 	t_link_element* nodo = lista->head;
-	t_nodoLRU* nodoLRUAux = malloc(sizeof(t_nodoLRU));
+	t_nodoLRU* nodoLRUAux;
 
 	if (lista->elements_count == CANT_MAX_PAGINAS_EN_LISTA) {
 		while (nodo) {
@@ -29,7 +29,7 @@ int memoriaEstaFull(t_list* lista) {
 
 void mostrarlistaPaginasLRU(t_list* lista) { // SÓLO PARA PRUEBAS
 	t_link_element* nodo = lista->head;
-	t_nodoLRU* nodoLRUAux = malloc(sizeof(t_nodoLRU));
+	t_nodoLRU* nodoLRUAux;
 
 	if (lista->head == NULL)
 		printf("Lista LRU vacía\n");
@@ -64,7 +64,7 @@ void encolarPaginaExistente(t_list* lista, t_link_element* nodo) {
 void desencolarPrimerElementoNoModificado(t_list *lista) {
 	t_link_element* nodoActual = lista->head;
 	t_link_element* nodoAnterior = NULL;
-	t_nodoLRU* nodoLRUAux = malloc(sizeof(t_nodoLRU));
+	t_nodoLRU* nodoLRUAux;
 
 	if (nodoActual) {
 		nodoLRUAux = nodoActual->data;
@@ -80,14 +80,16 @@ void desencolarPrimerElementoNoModificado(t_list *lista) {
 				lista->head = nodoActual->next;
 			else
 				nodoAnterior->next = nodoActual->next;
+			lista->elements_count--;
 			free(nodoActual);
+			free(nodoLRUAux); // VER AL ADAPTAR
 		}
 	}
 }
 
 int estaEnListaDePaginas(t_list* lista, t_nodoLRU* nodo) {
 	t_link_element* nodoActual = lista->head;
-	t_nodoLRU* nodoLRUAux = malloc(sizeof(t_nodoLRU));
+	t_nodoLRU* nodoLRUAux;
 
 	if (nodoActual)
 		nodoLRUAux = nodoActual->data;
@@ -110,7 +112,7 @@ t_list* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
 		// Busca la página y actualiza su posición en la lista
 		t_link_element* nodoActual = lista->head;
 		t_link_element* nodoAnterior = NULL;
-		t_nodoLRU* nodoLRUAux = malloc(sizeof(t_nodoLRU));
+		t_nodoLRU* nodoLRUAux;
 
 		if (nodoActual)
 			nodoLRUAux = nodoActual->data;
@@ -125,19 +127,23 @@ t_list* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
 		}
 		if (nodoLRUAux->segmentoID == nodo->segmentoID
 				&& nodoLRUAux->paginaID == nodo->paginaID) {
+			nodoLRUAux->modificado = nodo->modificado; // El Flag Modificado puede haber cambiado
 			// Si nodoActual no está último en la lista reordeno, sino no hago nada
 			if (nodoActual->next) {
 				if (nodoAnterior)
 					nodoAnterior->next = nodoActual->next;
 				else
 					lista->head = nodoActual->next;
+
 				encolarPaginaExistente(lista, nodoActual);
 			}
 		}
 	} else {
 		if (lista->elements_count >= CANT_MAX_PAGINAS_EN_LISTA) {
-			desencolarPrimerElementoNoModificado(lista);
-			encolarNuevaPagina(lista, nodo);
+			if (!memoriaEstaFull(lista)) {
+				desencolarPrimerElementoNoModificado(lista);
+				encolarNuevaPagina(lista, nodo);
+			}
 		} else
 			encolarNuevaPagina(lista, nodo);
 	}
