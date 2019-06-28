@@ -157,68 +157,41 @@ int main(){
 		}
 
 	}
-
+	return 0;
 }
 
 //MAIN DE TESTS
-int main98(){
-	tablasLFS = list_create();
-	//logger = log_create(logFile, "LFS",true, LOG_LEVEL_INFO);
-	configuracion = malloc(sizeof(ConfiguracionLFS));
-	configurar(configuracion);
-	levantarFileSystem();
-
-	createFS("A", "SC", 5, 123);
-	createFS("A", "SC", 5, 123);
-	createFS("B", "SC", 2, 123);
-	createFS("C", "SC", 3, 123);
-
-	/*char* value = selectLFS("A", 1);
-	printf("value:%s key:1\n", value);
-	value = selectLFS("A", 19);
-	printf("value:%s key:19\n", value);
-	free(value);
-	value = selectLFS("A", 200);
-	printf("value:%s key:200\n", value);
-	free(value);*/
-
-	//crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS"); //LEVANTO API
-	//joinearHilo(hiloAPI, NULL, "LFS");
-
-	//limpiarMemtable();
-	//mostrarRegistros("A");
-	//mostrarRegistros("B");
-
-	/*Tabla* t = list_get(tablasLFS, 1);
-	char* registrosComprimidos = string_new();
-	for(int i = 0; i<t->registro->elements_count; i++){
-		RegistroLFS* reg = list_get(t->registro, i);
-		char* comprimido = comprimirRegistro(reg);
-		string_append(&registrosComprimidos, comprimido);
-		free(comprimido);
-	}
-	printf("Registros: \n%s", registrosComprimidos);
-	free(registrosComprimidos);*/
-
-	for(int i = 0; i<20; i++){
-		insertLFS("A", i, "value", 1);
-	}
-	//dump();
-	destruirLFS();
-	puts("TERMINE");
-	return 0;
-}
-int main97(){
+int main1(){
 	levantarLFS();
 	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS config");
 	crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS API");
 	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");
 	joinearHilo(hiloAPI, NULL, "LFS API");
 
+
 	destruirLFS();
 	puts("TERMINE");
 	return 0;
 
+}
+int main56(){
+	levantarLFS();
+
+	createLFS("A", "SC", 5, 50000);
+	insertLFS("A", 1, "value 1", 0);
+	insertLFS("A", 2, "value 2", 0);
+	insertLFS("A", 3, "value 3", 0);
+	dump();
+	insertLFS("A", 1, "value 1r", 0);
+	insertLFS("A", 2, "value 2r", 0);
+	insertLFS("A", 3, "value 3r", 0);
+	dump();
+	sem_wait(&tablaEncontrar("A")->semaforo);
+	compactar("A");
+
+	destruirLFS();
+	puts("TERMINE");
+	return 0;
 }
 
 //----------------- FUNCIONES DE ESTRUCTURAS -----------------//
@@ -428,7 +401,7 @@ void agregarRegistros(t_list* registros, char* array){
 			RegistroLFS* reg = registroEncontrarLista(registros, atoi(keyArray));
 			if(reg){
 				uint64_t timestamp = 0;
-				sprintf(timestampArray,"%" PRIu64 "", timestamp);
+				sscanf(timestampArray,"%" SCNu64, &timestamp);
 				if(timestamp > reg->timestamp){
 					reg->timestamp = timestamp;
 					free(reg->value);
@@ -676,4 +649,3 @@ void compactacion(char* nombreTabla){
 
 	}
 }
-
