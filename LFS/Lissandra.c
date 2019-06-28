@@ -21,7 +21,11 @@ void configurar(ConfiguracionLFS* configuracion) {
 
 	//strcpy(configuracion->PUERTO, archivoConfigSacarStringDe(archivoConfig, "PUERTO"));
 	configuracion->PUERTO_ESCUCHA = archivoConfigSacarIntDe(archivoConfig, "PUERTO_ESCUCHA");
-	strcpy(configuracion->PUNTO_MONTAJE, archivoConfigSacarStringDe(archivoConfig, "PUNTO_MONTAJE"));
+	char* montaje = string_duplicate(archivoConfigSacarStringDe(archivoConfig, "PUNTO_MONTAJE"));
+	if(!string_ends_with(montaje, "/"))
+		string_append(&montaje, "/");
+	strcpy(configuracion->PUNTO_MONTAJE, montaje);
+	free(montaje);
 	configuracion->RETARDO = archivoConfigSacarIntDe(archivoConfig, "RETARDO");
 	configuracion->TAMANIO_VALUE = archivoConfigSacarIntDe(archivoConfig, "TAMANIO_VALUE");
 	configuracion->TIEMPO_DUMP = archivoConfigSacarIntDe(archivoConfig, "TIEMPO_DUMP");
@@ -88,7 +92,7 @@ void destruirLFS(){
 	log_destroy(logger);
 }
 
-int main(){
+int main45(){
 	levantarLFS();
 
 	//servidor
@@ -174,7 +178,7 @@ int main1(){
 	return 0;
 
 }
-int main56(){
+int main(){
 	levantarLFS();
 
 	createLFS("A", "SC", 5, 50000);

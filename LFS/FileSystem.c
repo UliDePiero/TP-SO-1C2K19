@@ -13,8 +13,6 @@ void levantarFileSystem(){
 	sem_init(&configSemaforo, 1, 1);
 	sem_init(&metadataSemaforo, 1, 1);
 	char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
-	if(!string_ends_with(puntoMontaje, "/"))
-		string_append(&puntoMontaje, "/");
 	//Creo el punto de montaje en caso que no exista
 	mkdir(puntoMontaje, 0777);
 
@@ -234,8 +232,6 @@ void setBloqueLibre(int index){
 void guardarBitmap(){
 	sem_wait(&configSemaforo);
 	char *puntoMontaje= string_duplicate(configuracion->PUNTO_MONTAJE);
-	if(!string_ends_with(puntoMontaje, "/"))
-		string_append(&puntoMontaje, "/");
 	sem_post(&configSemaforo);
 	char *bitmapFile = string_from_format("%sMetadata/Bitmap.bin", puntoMontaje);
 	sem_wait(&metadataSemaforo);
@@ -282,8 +278,6 @@ void createFS(char* nombreTabla, char* consistencia, int particiones, long tiemp
 	sem_wait(&configSemaforo);
 	char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
 	sem_post(&configSemaforo);
-	if(!string_ends_with(puntoMontaje, "/"))
-		string_append(&puntoMontaje, "/");
 	char *pathTabla = string_from_format("%sTables/%s", puntoMontaje, nombreTabla);
 	free(puntoMontaje);
 	mkdir(pathTabla, 0777);
@@ -342,8 +336,6 @@ void selectFS(char* tabla, int particion, uint16_t key){
 	sem_wait(&configSemaforo);
 	char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
 	sem_post(&configSemaforo);
-	if(!string_ends_with(puntoMontaje, "/"))
-		string_append(&puntoMontaje, "/");
 	char *pathBloques = string_from_format("%sBloques", puntoMontaje);
 	Tabla* t = tablaEncontrar(tabla);
 	if(!t){
@@ -432,8 +424,6 @@ void dropFS(char* nombreTabla){
 	sem_wait(&configSemaforo);
 	char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
 	sem_post(&configSemaforo);
-	if(!string_ends_with(puntoMontaje, "/"))
-		string_append(&puntoMontaje, "/");
 	char *pathTabla = string_from_format("%sTables/%s", puntoMontaje, nombreTabla);
 	char *pathBloques = string_from_format("%sBloques", puntoMontaje);
 	char *metadataPath = string_from_format("%s/Metadata", pathTabla);
@@ -521,8 +511,6 @@ void dump(){
 void crearNuevosBloques(char* registrosComprimidos, char* nombre){
 	sem_wait(&configSemaforo);
 	char* puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
-	if(!string_ends_with(puntoMontaje, "/"))
-		string_append(&puntoMontaje, "/");
 	sem_post(&configSemaforo);
 	long sizeTotal = string_length(registrosComprimidos);
 	int bloques = calcularBloques(sizeTotal);
@@ -591,8 +579,6 @@ void compactar(char* nombreTabla){
 	sem_wait(&configSemaforo);
 	char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
 	sem_post(&configSemaforo);
-	if(!string_ends_with(puntoMontaje, "/"))
-		string_append(&puntoMontaje, "/");
 	char *pathTabla = string_from_format("%sTables/%s", puntoMontaje, nombreTabla);
 	char *pathBloques = string_from_format("%sBloques", puntoMontaje);
 	free(puntoMontaje);
@@ -748,8 +734,6 @@ void crearNuevosBloquesCompactacion(char* registrosComprimidos, char* particionP
 		sem_wait(&configSemaforo);
 		char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
 		sem_post(&configSemaforo);
-		if(!string_ends_with(puntoMontaje, "/"))
-			string_append(&puntoMontaje, "/");
 		char* pathNuevo = string_from_format("%sBloques/%d.bin", puntoMontaje, proxBloque);
 		FILE* nuevoBloque = fopen(pathNuevo, "w+");
 		free(pathNuevo);
