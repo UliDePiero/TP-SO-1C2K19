@@ -12,8 +12,7 @@ void levantarFileSystem(){
 	sem_init(&bitmapSemaforo, 1, 1);
 	sem_init(&configSemaforo, 1, 1);
 	sem_init(&metadataSemaforo, 1, 1);
-	char *puntoMontaje = string_from_format("%s", configuracion->PUNTO_MONTAJE);
-
+	char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
 	//Creo el punto de montaje en caso que no exista
 	mkdir(puntoMontaje, 0777);
 
@@ -28,7 +27,7 @@ void levantarFileSystem(){
 	obtenerTablas(puntoMontaje);
 
 	//Carpeta Bloques
-	char *bloquesPath = string_from_format("%s/Bloques", puntoMontaje);
+	char *bloquesPath = string_from_format("%sBloques", puntoMontaje);
 	mkdir(bloquesPath, 0777);
 	free(bloquesPath);
 
@@ -96,7 +95,7 @@ void obtenerBitmap(char* pathMetadata){
 	free(bitmapFile);
 }
 void obtenerTablas(char* puntoMontaje){
-	char *tablesPath = string_from_format("%s/Tables", puntoMontaje);
+	char *tablesPath = string_from_format("%sTables", puntoMontaje);
 	mkdir(tablesPath, 0777);
 
 	//Me fijo en la carpeta Tables por si ya hay tables en el filesystem y las agrego a la memtable
@@ -112,7 +111,7 @@ void obtenerTablas(char* puntoMontaje){
 		while ((dir = readdir(tables)) != NULL)
 		{
 			if(strcmp(dir->d_name, ".") && strcmp(dir->d_name, "..")){
-				char *tablaPath = string_from_format("%s/Tables/%s", puntoMontaje, dir->d_name);
+				char *tablaPath = string_from_format("%sTables/%s", puntoMontaje, dir->d_name);
 				char *tablaMetadataPath = string_from_format("%s/Metadata", tablaPath);
 				t_config* archivoConfig = archivoConfigCrear(tablaMetadataPath, camposMetadatas);
 				int particiones = archivoConfigSacarIntDe(archivoConfig, "PARTITIONS");
@@ -232,9 +231,9 @@ void setBloqueLibre(int index){
 }
 void guardarBitmap(){
 	sem_wait(&configSemaforo);
-	char *puntoMontaje= string_from_format("%s", configuracion->PUNTO_MONTAJE);
+	char *puntoMontaje= string_duplicate(configuracion->PUNTO_MONTAJE);
 	sem_post(&configSemaforo);
-	char *bitmapFile = string_from_format("%s/Metadata/Bitmap.bin", puntoMontaje);
+	char *bitmapFile = string_from_format("%sMetadata/Bitmap.bin", puntoMontaje);
 	sem_wait(&metadataSemaforo);
 	int Bytes = metadata->cantidadBloques/8;
 	if(metadata->cantidadBloques%8 != 0)
@@ -277,8 +276,10 @@ void mostrarBitmap(){
 
 void createFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion){
 	sem_wait(&configSemaforo);
-	char *pathTabla = string_from_format("%s/Tables/%s", configuracion->PUNTO_MONTAJE, nombreTabla);
+	char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
 	sem_post(&configSemaforo);
+	char *pathTabla = string_from_format("%sTables/%s", puntoMontaje, nombreTabla);
+	free(puntoMontaje);
 	mkdir(pathTabla, 0777);
 
 	//Creo la metadata
@@ -333,8 +334,9 @@ void createFS(char* nombreTabla, char* consistencia, int particiones, long tiemp
 }
 void selectFS(char* tabla, int particion, uint16_t key){
 	sem_wait(&configSemaforo);
-	char *pathBloques = string_from_format("%s/Bloques", configuracion->PUNTO_MONTAJE);
+	char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
 	sem_post(&configSemaforo);
+	char *pathBloques = string_from_format("%sBloques", puntoMontaje);
 	Tabla* t = tablaEncontrar(tabla);
 	if(!t){
 		sem_wait(&loggerSemaforo);
@@ -344,9 +346,9 @@ void selectFS(char* tabla, int particion, uint16_t key){
 	}
 	char* value = string_new();
 	uint64_t timestampMayor = 0;
-	char* pathTabla = string_from_format("%sTables/%s", configuracion->PUNTO_MONTAJE, tabla);
+	char* pathTabla = string_from_format("%sTables/%s", puntoMontaje, tabla);
 	char* pathParticion = string_from_format("%d.bin", particion);
-
+	free(puntoMontaje);
 
 	char* camposMetadatas[] = {
 							   "SIZE",
@@ -409,7 +411,6 @@ void selectFS(char* tabla, int particion, uint16_t key){
 		sem_wait(&loggerSemaforo);
 		log_error(logger, "Key \"%hi\" no encontrado para la tabla \"%s\"", key, tabla);
 		sem_post(&loggerSemaforo);
-		puts("Key no encontrado");
 		return;
 	}else{
 		sem_wait(&loggerSemaforo);
@@ -421,12 +422,14 @@ void selectFS(char* tabla, int particion, uint16_t key){
 }
 void dropFS(char* nombreTabla){
 	sem_wait(&configSemaforo);
-	char *pathTabla = string_from_format("%sTables/%s", configuracion->PUNTO_MONTAJE, nombreTabla);
-	char *pathBloques = string_from_format("%s/Bloques", configuracion->PUNTO_MONTAJE);
+	char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
 	sem_post(&configSemaforo);
+	char *pathTabla = string_from_format("%sTables/%s", puntoMontaje, nombreTabla);
+	char *pathBloques = string_from_format("%sBloques", puntoMontaje);
 	char *metadataPath = string_from_format("%s/Metadata", pathTabla);
 	remove(metadataPath);
 	free(metadataPath);
+	free(puntoMontaje);
 
 	char* camposParticion[] = {
 					   "SIZE",
@@ -574,29 +577,35 @@ void crearNuevosBloques(char* registrosComprimidos, char* nombre){
 void compactar(char* nombreTabla){
 	Tabla* tabla = tablaEncontrar(nombreTabla);
 	sem_wait(&configSemaforo);
-	char *pathTabla = string_from_format("%s/Tables/%s", configuracion->PUNTO_MONTAJE, nombreTabla);
-	char *pathBloques = string_from_format("%s/Bloques", configuracion->PUNTO_MONTAJE);
+	char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
 	sem_post(&configSemaforo);
+	char *pathTabla = string_from_format("%sTables/%s", puntoMontaje, nombreTabla);
+	char *pathBloques = string_from_format("%sBloques", puntoMontaje);
+	free(puntoMontaje);
+	t_list* direcciones = list_create();
 
 	//RENOMBRAR .temp A .tempc
 	struct dirent *dirTemp;
-	DIR *temporales = opendir(pathTabla);
-	if (temporales){
-		while ((dirTemp = readdir(temporales)) != NULL){
-			if(strcmp(dirTemp->d_name, ".") && strcmp(dirTemp->d_name, "..") && string_ends_with(dirTemp->d_name, ".temp")){
-				char *pathParticion = string_from_format("%s/%s", pathTabla, dirTemp->d_name);
-				char *nuevoNombre = string_from_format("%s/%sc", pathTabla, dirTemp->d_name);
-				int ret = rename(pathParticion, nuevoNombre);
-				if(ret != 0){
-					sem_wait(&loggerSemaforo);
-					log_error(logger, "Error al renombrar la particion %s de la tabla \"%s\"", dirTemp->d_name, nombreTabla);
-					sem_post(&loggerSemaforo);
+	DIR *archivos = opendir(pathTabla);
+	if (archivos){
+		while ((dirTemp = readdir(archivos)) != NULL){
+			if(strcmp(dirTemp->d_name, ".") && strcmp(dirTemp->d_name, "..") && strcmp(dirTemp->d_name, "Metadata")){
+				if(string_ends_with(dirTemp->d_name, ".temp")){
+					char *pathParticion = string_from_format("%s/%s", pathTabla, dirTemp->d_name);
+					char *nuevoNombre = string_from_format("%s/%sc", pathTabla, dirTemp->d_name);
+					if(rename(pathParticion, nuevoNombre)){
+						sem_wait(&loggerSemaforo);
+						log_error(logger, "Error al renombrar la particion %s de la tabla \"%s\"", dirTemp->d_name, nombreTabla);
+						sem_post(&loggerSemaforo);
+					}
+					free(pathParticion);
+					list_add(direcciones, nuevoNombre);
+				}else if(string_ends_with(dirTemp->d_name, ".bin")){
+					list_add(direcciones, string_from_format("%s/%s", pathTabla, dirTemp->d_name));
 				}
-				free(pathParticion);
-				free(nuevoNombre);
 			}
 		}
-		closedir(temporales);
+		closedir(archivos);
 		sem_post(&tabla->semaforo);
 	}
 
@@ -606,85 +615,72 @@ void compactar(char* nombreTabla){
 						   "BLOCKS"
 						 };
 	t_list* registros = list_create();
-	struct dirent *dirPart;
-	DIR *particiones = opendir(pathTabla);
-	if (particiones){
+	for(int i = 0; i<direcciones->elements_count; i++){
 		struct stat buffer;
 		int status;
-		while ((dirPart = readdir(particiones)) != NULL){
-			if(strcmp(dirPart->d_name, ".") && strcmp(dirPart->d_name, "..") && !string_ends_with(dirPart->d_name, ".temp")){
-				char* pathArchivo = string_from_format("%s/%s", pathTabla, dirPart->d_name);
-				status = stat(pathArchivo, &buffer);
-				if(status == 0 && buffer.st_size != 0){
-					t_config* archivoParticion = archivoConfigCrear(pathArchivo, camposParticion);
-					unsigned int size = archivoConfigSacarIntDe(archivoParticion, "SIZE");
-					if(size!=0){
-						char* bloquesJuntos = string_new();
-						char** bloques = archivoConfigSacarArrayDe(archivoParticion, "BLOCKS");
-						for(int i = 0; bloques[i]!=NULL;i++){
-							char* pathBloque = string_from_format("%s/%d.bin", pathBloques, atoi(bloques[i]));
-							char* buffer = fileToArray(pathBloque);
-							if(buffer){
-								string_append(&bloquesJuntos, buffer);
-								free(buffer);
-							}
-							free(pathBloque);
-							free(bloques[i]);
-						}
-						free(bloques);
-						free(pathBloques);
-						agregarRegistros(registros, bloquesJuntos);
-						free(bloquesJuntos);
+		char* pathArchivo = list_get(direcciones, i);
+		status = stat(pathArchivo, &buffer);
+		if(status == 0 && buffer.st_size != 0){
+			t_config* archivoParticion = archivoConfigCrear(pathArchivo, camposParticion);
+			unsigned int size = archivoConfigSacarIntDe(archivoParticion, "SIZE");
+			if(size!=0){
+				char* bloquesJuntos = string_new();
+				char** bloques = archivoConfigSacarArrayDe(archivoParticion, "BLOCKS");
+				for(int i = 0; bloques[i]!=NULL;i++){
+					char* pathBloque = string_from_format("%s/%d.bin", pathBloques, atoi(bloques[i]));
+					char* buffer = fileToArray(pathBloque);
+					if(buffer){
+						string_append(&bloquesJuntos, buffer);
+						free(buffer);
 					}
+					free(pathBloque);
+					free(bloques[i]);
 				}
-				free(pathArchivo);
+				free(bloques);
+				agregarRegistros(registros, bloquesJuntos);
+				free(bloquesJuntos);
 			}
+			archivoConfigDestruir(archivoParticion);
 		}
-		closedir(particiones);
 	}
 
 	if(list_is_empty(registros)){
 		list_destroy(registros);
+		list_destroy_and_destroy_elements(direcciones, (void*) free);
+		free(pathBloques);
+		free(pathTabla);
 		return;
 	}
 
 	//BORRAR .bin Y .tempc
 	clock_t t = clock();
 	sem_wait(&tabla->semaforo);
-	struct dirent *dir;
-	DIR *archivos = opendir(pathTabla);
-	if (archivos){
-		while ((dir = readdir(archivos)) != NULL){
-			if(strcmp(dir->d_name, ".") && strcmp(dir->d_name, "..") && (!string_ends_with(dir->d_name, ".bin") || !string_ends_with(dir->d_name, ".tempc"))){
-				char *particionPath = string_from_format("%s/%s", pathTabla, dir->d_name);
-				t_config* archivoConfig = archivoConfigCrear(particionPath, camposParticion);
-				if(archivoConfigSacarLongDe(archivoConfig, "SIZE") > 0){
-					char** blocks = archivoConfigSacarArrayDe(archivoConfig, "BLOCKS");
-					for(int i=0;blocks[i]!=NULL;i++){
-						int bloque = atoi(blocks[i]);
-						char *pathBloque = string_from_format("%s/%d.bin", pathBloques, bloque);
+	for(int i = 0; i<direcciones->elements_count; i++){
+		char *particionPath = list_get(direcciones, i);
+		t_config* archivoConfig = archivoConfigCrear(particionPath, camposParticion);
+		if(archivoConfigSacarLongDe(archivoConfig, "SIZE") > 0){
+			char** blocks = archivoConfigSacarArrayDe(archivoConfig, "BLOCKS");
+			for(int i=0;blocks[i]!=NULL;i++){
+				int bloque = atoi(blocks[i]);
+				char *pathBloque = string_from_format("%s/%d.bin", pathBloques, bloque);
 
-						if(remove(pathBloque)){
-							sem_wait(&loggerSemaforo);
-							log_error(logger, "Error al borrar el bloque \"%s\"", pathBloque);
-							sem_post(&loggerSemaforo);
-						}
-						setBloqueLibre(bloque);
-						free(pathBloque);
-						free(blocks[i]);
-					}
-					free(blocks);
-				}
-				archivoConfigDestruir(archivoConfig);
-				if(remove(particionPath)){
+				if(remove(pathBloque)){
 					sem_wait(&loggerSemaforo);
-					log_error(logger, "Error al borrar la particion \"%s\"", particionPath);
+					log_error(logger, "Error al borrar el bloque \"%s\"", pathBloque);
 					sem_post(&loggerSemaforo);
 				}
-				free(particionPath);
+				setBloqueLibre(bloque);
+				free(pathBloque);
+				free(blocks[i]);
 			}
+			free(blocks);
 		}
-		closedir(archivos);
+		archivoConfigDestruir(archivoConfig);
+		if(remove(particionPath)){
+			sem_wait(&loggerSemaforo);
+			log_error(logger, "Error al borrar la particion \"%s\"", particionPath);
+			sem_post(&loggerSemaforo);
+		}
 		guardarBitmap();
 	}
 	//GUARDAR LOS REGISTROS EN NUEVOS .BIN
@@ -693,6 +689,7 @@ void compactar(char* nombreTabla){
 		char* particionPath = string_from_format("%s/%d.bin", pathTabla, i);
 		if(registrosParticion){
 			crearNuevosBloquesCompactacion(registrosParticion, particionPath);
+			free(registrosParticion);
 		}else{
 			FILE* nuevoArchivo = fopen(particionPath, "w+");
 			int bloqueLibre = proximoBloqueLibre();
@@ -714,7 +711,10 @@ void compactar(char* nombreTabla){
 	sem_wait(&loggerSemaforo);
 	log_info(logger, "Tabla \"%s\" compactada. Tiempo bloqueada: %f", nombreTabla, ((double)t)/CLOCKS_PER_SEC);
 	sem_post(&loggerSemaforo);
+	free(pathBloques);
+	free(pathTabla);
 	list_destroy_and_destroy_elements(registros, (void*) RegistroLFSDestruir);
+	list_destroy_and_destroy_elements(direcciones, (void*) free);
 }
 void crearNuevosBloquesCompactacion(char* registrosComprimidos, char* particionPath){
 	long sizeTotal = string_length(registrosComprimidos);
@@ -732,10 +732,12 @@ void crearNuevosBloquesCompactacion(char* registrosComprimidos, char* particionP
 		}
 		blocks[i] = proxBloque;
 		sem_wait(&configSemaforo);
-		char* pathNuevo = string_from_format("%sBloques/%d.bin", configuracion->PUNTO_MONTAJE, proxBloque);
+		char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
 		sem_post(&configSemaforo);
+		char* pathNuevo = string_from_format("%sBloques/%d.bin", puntoMontaje, proxBloque);
 		FILE* nuevoBloque = fopen(pathNuevo, "w+");
 		free(pathNuevo);
+		free(puntoMontaje);
 
 		sem_wait(&metadataSemaforo);
 		unsigned long pos = i*metadata->tamanioBloque;
@@ -756,3 +758,4 @@ void crearNuevosBloquesCompactacion(char* registrosComprimidos, char* particionP
 	fprintf(nuevoArchivo, "]\n");
 	fclose(nuevoArchivo);
 }
+
