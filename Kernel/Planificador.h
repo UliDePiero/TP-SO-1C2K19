@@ -94,7 +94,7 @@ t_list* memoriasEC; // Listado de Memorias asignadas al criterio EC (Cantidad = 
 // Estructura para guardar las memorias que pertenecen al pool, datos de conexión y criterios asignados
 typedef struct {
 	int IDMemoria; // ID o Número de Memoria (Viene dado por el Archivo de Configuración de Memoria)
-	char* IPMemoria; // IP de la Memoria
+	char IPMemoria[20]; // IP de la Memoria
 	int puertoMemoria; // Puerto de la Memoria
 	unsigned char criterioSC; // Vale 1 si la Memoria está asignada al criterio SC, sino 0
 	unsigned char criterioSHC; // Vale 1 si la Memoria está asignada al criterio SHC, sino 0
