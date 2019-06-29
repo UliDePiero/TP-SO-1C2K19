@@ -156,7 +156,8 @@ void armarNodoMemoria(int nroMemoria) {
 	TablaGossip* nodoMem = malloc(sizeof(TablaGossip));
 	// Cargo datos el nodo
 	nodoMem->IDMemoria = nroMemoria;
-	nodoMem->IPMemoria = configuracion->IP_MEMORIA; // Cambiar por IP de la memoria a la que se conecta
+	//nodoMem->IPMemoria = configuracion->IP_MEMORIA; // Cambiar por IP de la memoria a la que se conecta
+	strcpy(nodoMem->IPMemoria, configuracion->IP_MEMORIA);
 	nodoMem->puertoMemoria = configuracion->PUERTO_MEMORIA; // Cambiar por puerto de la memoria a la que se conecta
 	nodoMem->criterioSC = 0;
 	nodoMem->criterioSHC = 0;
