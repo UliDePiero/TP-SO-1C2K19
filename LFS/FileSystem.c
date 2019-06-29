@@ -115,7 +115,7 @@ void obtenerTablas(char* puntoMontaje){
 				char *tablaMetadataPath = string_from_format("%s/Metadata", tablaPath);
 				t_config* archivoConfig = archivoConfigCrear(tablaMetadataPath, camposMetadatas);
 				int particiones = archivoConfigSacarIntDe(archivoConfig, "PARTITIONS");
-				int tiempoComp = archivoConfigSacarIntDe(archivoConfig, "COMPACTION_TIME");
+				long tiempoComp = archivoConfigSacarLongDe(archivoConfig, "COMPACTION_TIME");
 				list_add(tablasLFS, crearTabla(dir->d_name, archivoConfigSacarStringDe(archivoConfig, "CONSISTENCY"), particiones, tiempoComp));
 				free(tablaPath);
 				free(tablaMetadataPath);
@@ -366,8 +366,7 @@ void selectFS(char* tabla, int particion, uint16_t key){
 				status = stat(pathArchivo, &buffer);
 				if(status == 0 && buffer.st_size != 0) {
 					t_config* archivoParticion = archivoConfigCrear(pathArchivo, camposMetadatas);
-					unsigned int size = archivoConfigSacarIntDe(archivoParticion, "SIZE");
-					if(size!=0){
+					if(archivoConfigSacarLongDe(archivoParticion, "SIZE")){
 						char* bloquesJuntos = string_new();
 						char** bloques = archivoConfigSacarArrayDe(archivoParticion, "BLOCKS");
 						for(int i = 0; bloques[i]!=NULL;i++){
@@ -622,8 +621,7 @@ void compactar(char* nombreTabla){
 		status = stat(pathArchivo, &buffer);
 		if(status == 0 && buffer.st_size != 0){
 			t_config* archivoParticion = archivoConfigCrear(pathArchivo, camposParticion);
-			unsigned int size = archivoConfigSacarIntDe(archivoParticion, "SIZE");
-			if(size!=0){
+			if(archivoConfigSacarLongDe(archivoParticion, "SIZE")){
 				char* bloquesJuntos = string_new();
 				char** bloques = archivoConfigSacarArrayDe(archivoParticion, "BLOCKS");
 				for(int i = 0; bloques[i]!=NULL;i++){
@@ -658,23 +656,20 @@ void compactar(char* nombreTabla){
 	for(int i = 0; i<direcciones->elements_count; i++){
 		char *particionPath = list_get(direcciones, i);
 		t_config* archivoConfig = archivoConfigCrear(particionPath, camposParticion);
-		if(archivoConfigSacarLongDe(archivoConfig, "SIZE") > 0){
-			char** blocks = archivoConfigSacarArrayDe(archivoConfig, "BLOCKS");
-			for(int i=0;blocks[i]!=NULL;i++){
-				int bloque = atoi(blocks[i]);
-				char *pathBloque = string_from_format("%s/%d.bin", pathBloques, bloque);
-
-				if(remove(pathBloque)){
-					sem_wait(&loggerSemaforo);
-					log_error(logger, "Error al borrar el bloque \"%s\"", pathBloque);
-					sem_post(&loggerSemaforo);
-				}
-				setBloqueLibre(bloque);
-				free(pathBloque);
-				free(blocks[i]);
+		char** blocks = archivoConfigSacarArrayDe(archivoConfig, "BLOCKS");
+		for(int i=0;blocks[i]!=NULL;i++){
+			int bloque = atoi(blocks[i]);
+			char *pathBloque = string_from_format("%s/%d.bin", pathBloques, bloque);
+			if(remove(pathBloque)){
+				sem_wait(&loggerSemaforo);
+				log_error(logger, "Error al borrar el bloque \"%s\"", pathBloque);
+				sem_post(&loggerSemaforo);
 			}
-			free(blocks);
+			setBloqueLibre(bloque);
+			free(pathBloque);
+			free(blocks[i]);
 		}
+		free(blocks);
 		archivoConfigDestruir(archivoConfig);
 		if(remove(particionPath)){
 			sem_wait(&loggerSemaforo);

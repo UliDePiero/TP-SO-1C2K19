@@ -41,9 +41,9 @@ typedef struct {
 	//char PUERTO[10];
 	int PUERTO_ESCUCHA;
 	char PUNTO_MONTAJE[100];
-	int RETARDO;
+	long RETARDO;
 	int TAMANIO_VALUE;
-	unsigned int TIEMPO_DUMP;
+	long TIEMPO_DUMP;
 } ConfiguracionLFS;
 typedef struct{
    char consistencia[3]; //opción 1

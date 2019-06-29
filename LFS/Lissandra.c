@@ -26,9 +26,9 @@ void configurar(ConfiguracionLFS* configuracion) {
 		string_append(&montaje, "/");
 	strcpy(configuracion->PUNTO_MONTAJE, montaje);
 	free(montaje);
-	configuracion->RETARDO = archivoConfigSacarIntDe(archivoConfig, "RETARDO");
+	configuracion->RETARDO = archivoConfigSacarLongDe(archivoConfig, "RETARDO");
 	configuracion->TAMANIO_VALUE = archivoConfigSacarIntDe(archivoConfig, "TAMANIO_VALUE");
-	configuracion->TIEMPO_DUMP = archivoConfigSacarIntDe(archivoConfig, "TIEMPO_DUMP");
+	configuracion->TIEMPO_DUMP = archivoConfigSacarLongDe(archivoConfig, "TIEMPO_DUMP");
 
 	archivoConfigDestruir(archivoConfig);
 }
@@ -47,18 +47,18 @@ void cambiosConfigLFS(){
 						   "TIEMPO_DUMP"
 						 };
 			t_config* archivoConfig = archivoConfigCrear(RUTA_CONFIG, campos);
-			int retardoNuevo = archivoConfigSacarIntDe(archivoConfig, "RETARDO");
-			int dumpNuevo = archivoConfigSacarIntDe(archivoConfig, "TIEMPO_DUMP");
+			long retardoNuevo = archivoConfigSacarLongDe(archivoConfig, "RETARDO");
+			long dumpNuevo = archivoConfigSacarLongDe(archivoConfig, "TIEMPO_DUMP");
 			sem_wait(&configSemaforo);
 			if(configuracion->RETARDO != retardoNuevo){
 				sem_wait(&loggerSemaforo);
-				log_error(logger, "Retardo cambiado %d -> %d", configuracion->RETARDO, retardoNuevo);
+				log_error(logger, "Retardo cambiado %ld -> %ld", configuracion->RETARDO, retardoNuevo);
 				sem_post(&loggerSemaforo);
 				configuracion->RETARDO = retardoNuevo;
 			}
 			if(configuracion->TIEMPO_DUMP != dumpNuevo){
 				sem_wait(&loggerSemaforo);
-				log_error(logger, "Tiempo dump cambiado %d -> %d", configuracion->TIEMPO_DUMP, dumpNuevo);
+				log_error(logger, "Tiempo dump cambiado %ld -> %ld", configuracion->TIEMPO_DUMP, dumpNuevo);
 				sem_post(&loggerSemaforo);
 				configuracion->TIEMPO_DUMP = dumpNuevo;
 			}
@@ -95,6 +95,10 @@ void destruirLFS(){
 int main45(){
 	levantarLFS();
 
+	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS Config");
+	crearHiloIndependiente(&hiloAPI,(void*)API_LFS, NULL, "LFS API");
+	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");
+
 	//servidor
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
 
@@ -107,14 +111,6 @@ int main45(){
 	// Inicializacion de sockets y actualizacion del log
 
 	socketEscucha = crearSocketEscucha(configuracion->PUERTO_ESCUCHA, logger);
-
-	//crearHiloIndependiente(&hiloCompactador,(void*)compactacion, NULL, "LFS");
-	//pthread_create(&hiloCompactador, NULL, (void*)compactacion, NULL);
-	//pthread_join(hiloCompactador, NULL);
-
-	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS Config");
-	crearHiloIndependiente(&hiloAPI,(void*)API_LFS, NULL, "LFS API");
-	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");
 
 	//ESTO TIENE QUE IR EN UN HILO APARTE PARA QUE QUEDE EN LOOP  ???
 	FD_SET(socketEscucha, &setSocketsOrquestador);
@@ -165,7 +161,7 @@ int main45(){
 }
 
 //MAIN DE TESTS
-int main1(){
+int main3(){
 	levantarLFS();
 	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS config");
 	crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS API");
@@ -180,18 +176,19 @@ int main1(){
 }
 int main(){
 	levantarLFS();
+	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS config");
+	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");
 
 	createLFS("A", "SC", 5, 50000);
-	insertLFS("A", 1, "value 1", 0);
-	insertLFS("A", 2, "value 2", 0);
-	insertLFS("A", 3, "value 3", 0);
-	dump();
-	insertLFS("A", 1, "value 1r", 0);
-	insertLFS("A", 2, "value 2r", 0);
-	insertLFS("A", 3, "value 3r", 0);
-	dump();
-	sem_wait(&tablaEncontrar("A")->semaforo);
-	compactar("A");
+	for(int i = 0; i<500; i++)
+		insertLFS("A", i, "value 1", 0);
+	sleep(60);
+	for(int i = 0; i<500; i++)
+		insertLFS("A", i, "value 2", 0);
+	sleep(60);
+	for(int i = 0; i<500; i++)
+		insertLFS("A", i, "value 3", 0);
+	sleep(60);
 
 	destruirLFS();
 	puts("TERMINE");
@@ -621,7 +618,7 @@ void dropLFS(char* nombreTabla){
 }
 
 void dumpLFS(){
-	unsigned int tiempo;
+	long tiempo;
 	while(1){
 		sem_wait(&configSemaforo);
 		tiempo = configuracion->TIEMPO_DUMP/1000;
@@ -638,18 +635,13 @@ void dumpLFS(){
 
 void compactacion(char* nombreTabla){
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-	/*Tabla* t = tablaEncontrar(nombreTabla);
-	int tiempo = t->metadata->tiempoCompactacion;
+	Tabla* t = tablaEncontrar(nombreTabla);
+	long tiempo = t->metadata->tiempoCompactacion/1000;
 	while(1){
 		sleep(tiempo);
 		sem_wait(&t->semaforo);
 		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-		//compactar(nombreTabla);
-		//TODO: testear
+		compactar(nombreTabla);
 		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-	}*/
-
-	while(1){
-
 	}
 }
