@@ -30,7 +30,6 @@
 char* line = NULL;
 char* instruccion = NULL;
 
-void API_LFS();
 int ejecutarInstruccion();
 void ejecutarSelect();
 void ejecutarInsert();

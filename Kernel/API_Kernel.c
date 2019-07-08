@@ -7,21 +7,22 @@
 #include "API_Kernel.h"
 
 void API_Kernel(void){
-	char* linea;
-	char* linea2;
+	//char* linea;
+	//char* linea2;
 	int retornoRUN;
+	char* line = NULL;
+	char* instruccion_API = NULL;
 
-	linea = readline(">");
+	line = readline(">");
 
-	while(strncmp("EXIT", linea, 5)){
-		//linea2 = malloc(strlen(linea)+1);
-		//strcpy(linea2, linea);
-		linea2 = string_duplicate(linea);
-		switch(parser(linea)){
+	while(strncmp("EXIT", line, 5)){
+		//linea2 = string_duplicate(linea);
+		instruccion_API = string_duplicate(line);
+		switch(parser(line)){
 			case SELECT:
-				cargarNuevoLQL(linea2);
+				cargarNuevoLQL(instruccion_API);
 				sem_wait(&semEjecutarLQL);
-				ejecutarSelect(linea2);
+				ejecutarSelect(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
 				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
@@ -29,9 +30,9 @@ void API_Kernel(void){
 				sem_post(&semMultiprocesamiento);
 				break;
 			case INSERT:
-				cargarNuevoLQL(linea2);
+				cargarNuevoLQL(instruccion_API);
 				sem_wait(&semEjecutarLQL);
-				ejecutarInsert(linea2);
+				ejecutarInsert(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
 				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
@@ -39,9 +40,9 @@ void API_Kernel(void){
 				sem_post(&semMultiprocesamiento);
 				break;
 			case CREATE:
-				cargarNuevoLQL(linea2);
+				cargarNuevoLQL(instruccion_API);
 				sem_wait(&semEjecutarLQL);
-				ejecutarCreate(linea2);
+				ejecutarCreate(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
 				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
@@ -49,9 +50,9 @@ void API_Kernel(void){
 				sem_post(&semMultiprocesamiento);
 				break;
 			case DESCRIBE:
-				cargarNuevoLQL(linea2);
+				cargarNuevoLQL(instruccion_API);
 				sem_wait(&semEjecutarLQL);
-				ejecutarDescribe(linea2);
+				ejecutarDescribe(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
 				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
@@ -59,9 +60,9 @@ void API_Kernel(void){
 				sem_post(&semMultiprocesamiento);
 				break;
 			case DROP:
-				cargarNuevoLQL(linea2);
+				cargarNuevoLQL(instruccion_API);
 				sem_wait(&semEjecutarLQL);
-				ejecutarDrop(linea2);
+				ejecutarDrop(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
 				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
@@ -69,9 +70,9 @@ void API_Kernel(void){
 				sem_post(&semMultiprocesamiento);
 				break;
 			case JOURNAL:
-				cargarNuevoLQL(linea2);
+				cargarNuevoLQL(instruccion_API);
 				sem_wait(&semEjecutarLQL);
-				ejecutarJournal(linea2);
+				ejecutarJournal(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
 				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
@@ -79,9 +80,9 @@ void API_Kernel(void){
 				sem_post(&semMultiprocesamiento);
 				break;
 			case ADD:
-				cargarNuevoLQL(linea2);
+				cargarNuevoLQL(instruccion_API);
 				sem_wait(&semEjecutarLQL);
-				ejecutarAdd(linea2);
+				ejecutarAdd(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
 				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
@@ -89,9 +90,9 @@ void API_Kernel(void){
 				sem_post(&semMultiprocesamiento);
 				break;
 			case RUN:
-				cargarNuevoLQL(linea2);
+				cargarNuevoLQL(instruccion_API);
 				sem_wait(&semEjecutarLQL);
-				retornoRUN = ejecutarRun(linea2, 0);
+				retornoRUN = ejecutarRun(instruccion_API, 0);
 				if(retornoRUN == -1){
 					actualizarRequestEjecutadas();
 					moverLQL(Exec,Ready);
@@ -119,112 +120,108 @@ void API_Kernel(void){
 				printf("Ingrese un comando \n");
 				break;
 		}
-		free(linea2);
-		linea = readline(">");
+		free(line);
+		free(instruccion_API);
+		line = readline(">");
 	}
-	free(linea);
+	free(line);
 }
 
 void ejecutarSelect(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
-	puts("select ejecutado");
-	char** comando ;
-	comando = string_n_split(instruccion, 3, " ");
-	if(comandoValido(3, comando)){
-		puts("comando valido");
+	char** comando = validarComando(instruccion, 3);
+	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = SELECT;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando SELECT desde Kernel.");
 		liberarPaquete(mensaje);
+		for(int i = 0; i<3; i++)
+			free(comando[i]);
+		free(comando);
 	}
 
 }
 void ejecutarInsert(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
-	puts("insert ejecutado");
-	char** comando ;
-	comando = string_n_split(instruccion, 4, " ");
-	if(comandoValido(4, comando)){
-		puts("comando valido");
+	char** comando = validarComando(instruccion, 4);
+	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = INSERT;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando INSERT desde Kernel.");
 		liberarPaquete(mensaje);
+		for(int i = 0; i<4; i++)
+			free(comando[i]);
+		free(comando);
 	}
 }
 void ejecutarCreate(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
-	puts("create ejecutado");
-	char** comando ;
-	comando = string_n_split(instruccion, 5, " ");
-	if(comandoValido(5, comando)){
-		puts("comando valido");
+	char** comando = validarComando(instruccion, 5);
+	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = CREATE;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando CREATE desde Kernel.");
 		liberarPaquete(mensaje);
+		for(int i = 0; i<5; i++)
+			free(comando[i]);
+		free(comando);
 	}
 }
 void ejecutarDescribe(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
-	puts("describe ejecutado");
-	char** comando ;
-	comando = string_n_split(instruccion, 2, " ");
-	if(comandoValido(2, comando)){
-		puts("comando valido");
+	char** comando = validarComando(instruccion, 2);
+	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = DESCRIBE;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DESCRIBE desde Kernel.");
 		liberarPaquete(mensaje);
-
+		for(int i = 0; i<2; i++)
+			free(comando[i]);
+		free(comando);
 	}
 }
 void ejecutarDrop(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
-	puts("drop ejecutado");
-	char** comando ;
-	comando = string_n_split(instruccion, 2, " ");
-	if(comandoValido(2, comando)){
-		puts("comando valido");
+	char** comando = validarComando(instruccion, 2);
+	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = DROP;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DROP desde Kernel.");
 		liberarPaquete(mensaje);
+		for(int i = 0; i<2; i++)
+			free(comando[i]);
+		free(comando);
 	}
 }
 void ejecutarJournal(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
-	puts("journal ejecutado");
-	char** comando ;
-	comando = string_n_split(instruccion, 1, " ");
-	if(comandoValido(1, comando)){
-		puts("comando valido");
+	char** comando = validarComando(instruccion, 1);
+	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = JOURNAL;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando JOURNAL desde Kernel.");
 		liberarPaquete(mensaje);
+		free(comando[0]);
+		free(comando);
 	}
 }
 
 void ejecutarAdd(char* instruccion) {
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
-	puts("add ejecutado");
-	char** comando;
-	comando = string_n_split(instruccion, 5, " ");
-	if (comandoValido(5, comando)) {
-		puts("comando valido");
+	char** comando = validarComando(instruccion, 5);
+	if (comando){
 		if (validacionStringsFijosAdd(comando) && cadenaEsDigito(comando[2]) && validacionStringCriterios(comando[4])) {
 			printf("Comando ADD ejecutado correctamente\n");
 			int num = atoi(comando[2]);
@@ -238,30 +235,26 @@ void ejecutarAdd(char* instruccion) {
 		} else
 			printf("Error en el comando ADD. La sintaxis correcta es: ADD MEMORY [NÚMERO] TO [CRITERIO]\n");
 
-		/*
-		tPaquete* mensaje = malloc(sizeof(tPaquete));
-		mensaje->type = ADD;
-		strcpy(mensaje->payload,instruccion);
-		mensaje->length = sizeof(mensaje->payload);
-		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando ADD desde Kernel.");
-		liberarPaquete(mensaje);*/
+		for(int i = 0; i<5; i++)
+			free(comando[i]);
+		free(comando);
 	}
 }
 int ejecutarRun(char* instruccion, int requestEjecutadas){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
-	puts("run ejecutado");
-	char** comando ;
 	FILE *script;
 	char *stringLQL;
 	int quantum = configuracion->QUANTUM;
 
-	comando = string_n_split(instruccion, 2, " ");
-	if(comandoValido(2, comando)){
-		puts("comando valido");
+	char** comando = validarComando(instruccion, 2);
+	if(comando){
 		script = fopen(comando[1],"r");
 		//script = fopen(PATH_SCRIPT,"r"); //para hacer pruebas
 		if(script == NULL) {
 			  perror("Error al abrir el script.");
+			  for(int i = 0; i<2; i++)
+				  free(comando[i]);
+			  free(comando);
 			  return -2;
 		}
 		stringLQL = (char*)malloc(100);
@@ -332,6 +325,9 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 							informarComandoInvalido();
 							free(stringLQL);
 							fclose(script);
+							for(int i = 0; i<2; i++)
+								free(comando[i]);
+							free(comando);
 							return -2;
 							break;//creo que es innecesario pero por las dudas lo dejo
 						default:
@@ -342,11 +338,17 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 			else{
 				free(stringLQL);
 				fclose(script);
+				for(int i = 0; i<2; i++)
+					free(comando[i]);
+				free(comando);
 				return quantum;
 			}
 		}
 		free(stringLQL);
 		fclose(script);
+		for(int i = 0; i<2; i++)
+			free(comando[i]);
+		free(comando);
 		return quantum;
 	}
 	return -2;

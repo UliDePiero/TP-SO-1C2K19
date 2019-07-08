@@ -6,98 +6,113 @@
  */
 #include "API_Memoria.h"
 
-//void main(){
 void* API_Memoria(){
-	char* linea;
-	char* linea2;
+	//char* linea;
+	//char* linea2;
+	char* line = NULL;
+	char* instruccion_API = NULL;
 
-	linea = readline(">");
+	line = readline(">");
 
-	while(strncmp("EXIT", linea, 5)){
-		linea2 = malloc(strlen(linea)+1);
-		strcpy(linea2, linea);
-		switch(parser(linea)){
+	while(strncmp("EXIT", line, 5)){
+		//linea2 = malloc(strlen(linea)+1);
+		//strcpy(linea2, linea);
+		instruccion_API = string_duplicate(line);
+		switch(parser(line)){
 			case SELECT:
-				ejecutarSelect(linea2);
+				ejecutarSelect(instruccion_API);
 				break;
 			case INSERT:
-				ejecutarInsert(linea2);
+				ejecutarInsert(instruccion_API);
 				break;
 			case CREATE:
-				ejecutarCreate(linea2);
+				ejecutarCreate(instruccion_API);
 				break;
 			case DESCRIBE:
-				ejecutarDescribe(linea2);
+				ejecutarDescribe(instruccion_API);
 				break;
 			case DROP:
-				ejecutarDrop(linea2);
+				ejecutarDrop(instruccion_API);
 				break;
 			case JOURNAL:
-				ejecutarJournal(linea2);
+				ejecutarJournal(instruccion_API);
 				break;
 			case -1:
 				informarComandoInvalido();
 				break;
 			default:
-				//printf("Es un comentario o fin de linea \n");
+				printf("Ingrese un comando \n");
 				break;
 		}
-		free(linea2);
-		linea = readline(">");
+		free(line);
+		free(instruccion_API);
+		line = readline(">");
 	}
-	free(linea);
+	free(line);
 	return (void*)1;
 }
 void ejecutarSelect(char* instruccion){
-	char** comando ;
-	Registro* registro;
-	comando = string_n_split(instruccion, 3, " ");
-	if(comandoValido(3, comando)){
-		registro = selectMemoria(comando[1], atoi(comando[2]));
+	char** comando = validarComando(instruccion, 3);
+	if(comando){
+		Registro* registro = selectMemoria(comando[1], atoi(comando[2]));
 		sleep(configuracion->RETARDO_MEM / 1000);
 		if(registro != NULL) printf("value: %s\n", registro->value);
 		free(registro);
+		for(int i = 0; i<3; i++)
+			free(comando[i]);
+		free(comando);
 	}
 }
 void ejecutarInsert(char* instruccion){
-	char** comando ;
-	comando = string_n_split(instruccion, 4, " ");
-	if(comandoValido(4, comando)){
+	char** comando = validarComando(instruccion, 4);
+	if(comando){
 		sleep(configuracion->RETARDO_MEM / 1000);
-		insertMemoria(comando[1], atoi(comando[2]), comando[3], (int)time(NULL));
+		insertMemoria(comando[1], atoi(comando[2]), comando[3], getCurrentTime());
+		for(int i = 0; i<4; i++)
+			free(comando[i]);
+		free(comando);
 	}
 }
 void ejecutarCreate(char* instruccion){
-	puts("create ejecutado");
-	char** comando ;
-	comando = string_n_split(instruccion, 5, " ");
-	if(comandoValido(5, comando)){
+	char** comando = validarComando(instruccion, 5);
+	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = CREATE;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando CREATE desde Memoria.");
 		liberarPaquete(mensaje);
+		for(int i = 0; i<5; i++)
+			free(comando[i]);
+		free(comando);
 	}
 }
 void ejecutarDescribe(char* instruccion){
 	puts("describe ejecutado");
-	char** comando ;
-	comando = string_n_split(instruccion, 2, " ");
-	if(comandoValido(2, comando))
+	char** comando = validarComando(instruccion, 2);
+	if(comando){
 		puts("comando valido");
+		for(int i = 0; i<2; i++)
+			free(comando[i]);
+		free(comando);
+	}
 }
 void ejecutarDrop(char* instruccion){
 	puts("drop ejecutado");
-	char** comando ;
-	comando = string_n_split(instruccion, 2, " ");
-	if(comandoValido(2, comando))
+	char** comando = validarComando(instruccion, 2);
+	if(comando){
 		puts("comando valido");
+		for(int i = 0; i<2; i++)
+			free(comando[i]);
+		free(comando);
+	}
 }
 void ejecutarJournal(char* instruccion){
 	puts("journal ejecutado");
-	char** comando ;
-	comando = string_n_split(instruccion, 1, " ");
-	if(comandoValido(1, comando))
+	char** comando = validarComando(instruccion, 1);
+	if(comando){
 		puts("comando valido");
+		free(comando[0]);
+		free(comando);
+	}
 }

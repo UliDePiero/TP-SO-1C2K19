@@ -6,7 +6,7 @@
  */
 #include "API_LFS.h"
 
-void API_LFS(){
+void* API_LFS(){
 	line = readline(">");
 
 	while(strncmp("EXIT", line, 5)){
@@ -39,10 +39,11 @@ void API_LFS(){
 		line = readline(">");
 	}
 	free(line);
+	return (void*)1;
 }
 
 void ejecutarSelect(){
-	char** comando = validarComando(line, 3);
+	char** comando = validarComando(line, 3); //*************************************POR QUE LINE Y NO INSTRUCCION?*************************************
 	if(comando){
 		selectLFS(comando[1], atoi(comando[2]));
 		for(int i = 0; i<3; i++)

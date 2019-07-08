@@ -102,7 +102,7 @@ sem_t loggerSemaforo;
 
 //------------------------ FUNCIONES --------------------------------//
 void configurar(ConfiguracionLFS* configuracion);
-void API_LFS();
+void* API_LFS();
 
 void levantarLFS();
 void destruirLFS();

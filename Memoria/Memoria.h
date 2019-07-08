@@ -42,7 +42,6 @@ char* logFile;
 
 pthread_t hiloAPI;
 pthread_t hiloJournal;
-
 ///---------------------ESTRUCTURA DE CONFIGURACION DE LFS-------------------------
 
 //Estructura para datos del archivo de configuracion

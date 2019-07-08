@@ -90,13 +90,16 @@ void destruirLFS(){
 	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
 	log_info(logger, "Modulo LFS cerrado");
 	log_destroy(logger);
+	close(socketEscucha);
 }
 
 int main45(){
 	levantarLFS();
 
 	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS Config");
-	crearHiloIndependiente(&hiloAPI,(void*)API_LFS, NULL, "LFS API");
+	void* cierre;
+	crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS");
+	joinearHilo(hiloAPI, &cierre, "LFS");
 	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");
 
 	//servidor
@@ -117,7 +120,7 @@ int main45(){
 	maxSock = socketEscucha;
 	tMensaje tipoMensaje;
 	char * sPayload;
-	while (tipoMensaje != DESCONEXION) {
+	while ((int)cierre != 1) {
 
 		puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
@@ -146,7 +149,6 @@ int main45(){
 					break;
 				case DESCONEXION:
 					printf("\nSe desconecto un cliente, socket: %d\n", socketActivo);
-					destruirLFS();
 					break;
 				default:
 					sem_wait(&loggerSemaforo);
@@ -157,6 +159,7 @@ int main45(){
 		}
 
 	}
+	destruirLFS();
 	return 0;
 }
 
