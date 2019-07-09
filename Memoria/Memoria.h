@@ -29,6 +29,7 @@
 #include <configuraciones.h>
 #include <parser.h>
 #include <inotify.h>
+#include <time.h>
 #include "AlgoritmoLRU.h"
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
@@ -41,6 +42,8 @@ int seed;
 
 t_log* logger;
 char* logFile;
+
+sem_t mutexMemoria;
 
 pthread_t hiloAPI;
 pthread_t hiloJournal;
@@ -136,5 +139,9 @@ void ejecutarCreate(char*);
 void ejecutarDescribe(char*);
 void ejecutarDrop(char*);
 void ejecutarJournal(char*);
+void journalMemoria();
+void* journalAutomatico();
+void ejecutarInsertJournal();
+
 
 #endif /* MEMORIA_H_ */

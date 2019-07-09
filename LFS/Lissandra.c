@@ -147,6 +147,16 @@ int main45(){
 						free(comando);
 					}
 					break;
+				case INSERT:
+					comando = validarComandoInsert(sPayload);
+					if(comando){
+						insertLFS(comando[1], atoi(comando[2]), comando[3], atoi(comando[4]));
+						free(comando[4]);
+						for(int i = 0; i<4; i++)
+							free(comando[i]);
+							free(comando);
+						}
+					break;
 				case DESCONEXION:
 					printf("\nSe desconecto un cliente, socket: %d\n", socketActivo);
 					break;

@@ -80,6 +80,7 @@ int main()
 	recibirPaquete(socketLFS,mensaje_handshake,&tamanioValue,logger,"Maximo tamanio del value");
 	maxValueSize = atoi(tamanioValue);*/
 	levantarMemoria();
+	sem_init(&mutexMemoria, 0, 1);
 
 	//crearHiloIndependiente(&hiloJournal, (void*)journalization, NULL, "proceso Memoria");
 
@@ -98,6 +99,7 @@ int main()
 	tMensaje tipoMensaje;
 	char * sPayload;
 
+	crearHiloIndependiente(&hiloJournal,(void*)journalAutomatico, NULL, "proceso Memoria(Journal)");
 	void* cierre;
 	crearHilo(&hiloAPI,(void*)API_Memoria, NULL, "proceso Memoria");
 	joinearHilo(hiloAPI, &cierre, "proceso Memoria");
@@ -160,6 +162,7 @@ int main()
 			}
 		}
 	}
+	sem_destroy(&mutexMemoria);
 	terminar(seed);
 }
 
@@ -403,4 +406,54 @@ int buscarRegistro(t_nodoLRU* nodo_reemplazo){
 		if (getKey(granMalloc+i*tamanioRealDeUnRegistro) == key) return i;
 	}
 	return -1;
+}
+
+void journalMemoria (){
+	int j=0;
+	char *instruccion;
+	Registro *registro = malloc(sizeof(Registro));
+	//for revisando todas las páginas
+	sem_wait(&mutexMemoria);
+	if(cantidadDeSegmentos != 0){
+		while(tablaDeSegmentos[j]){
+			for(int i=0; i<tablaDeSegmentos[j]->cantidadDePaginas; i++){
+				if(tablaDeSegmentos[j]->tablaDePaginas[i]->modificado == 1){
+					instruccion = malloc(15+sizeof(tablaDeSegmentos[j]->tabla)+sizeof(registro->key)+sizeof(registro->value)+sizeof(registro->timestamp));
+					registro = getRegistro(tablaDeSegmentos[j]->tablaDePaginas[i]->frame);
+					sprintf (instruccion, "INSERT %s %hd %s %d \n", tablaDeSegmentos[j]->tabla, registro->key, registro->value, registro->timestamp);
+					ejecutarInsertJournal(instruccion);
+					free(instruccion);
+				}
+			}
+			segmentoDestruir(tablaDeSegmentos[j]);
+			j++;
+		}
+	}
+	sem_post(&mutexMemoria);
+	free(registro);
+}
+
+void ejecutarInsertJournal(char *instruccion){
+	tPaquete* mensaje = malloc(sizeof(tPaquete));
+	mensaje->type = INSERT;
+	strcpy(mensaje->payload,instruccion);
+	mensaje->length = sizeof(mensaje->payload);
+	enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando INSERT desde Memoria.");
+	liberarPaquete(mensaje);
+}
+
+void* journalAutomatico (){
+    clock_t start, diff;
+    int elapsedsec;
+    while (1) {
+    	start = clock();
+    	while (1) {
+    		diff = clock() - start;
+    		elapsedsec = diff / CLOCKS_PER_SEC;
+    		if (elapsedsec >= (configuracion->RETARDO_JOURNAL / 1000)){
+    			journalMemoria();
+    			break;
+    		}
+        }
+    }
 }

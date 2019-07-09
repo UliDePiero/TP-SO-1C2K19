@@ -111,7 +111,8 @@ void ejecutarJournal(char* instruccion){
 	puts("journal ejecutado");
 	char** comando = validarComando(instruccion, 1);
 	if(comando){
-		puts("comando valido");
+		sleep(configuracion->RETARDO_MEM / 1000);
+		journalMemoria();
 		free(comando[0]);
 		free(comando);
 	}
