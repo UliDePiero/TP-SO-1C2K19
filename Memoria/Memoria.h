@@ -27,7 +27,9 @@
 #include <arpa/inet.h>
 #include <sockets.h>
 #include <configuraciones.h>
+#include <parser.h>
 #include <inotify.h>
+#include "AlgoritmoLRU.h"
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
 int socketEscucha;
@@ -113,6 +115,7 @@ void registroDestruir(Registro* registro);
 uint16_t getKey(void* registro);
 int getTimestamp(void* registro);
 Registro* getRegistro(void* registro);
+void setValue(void* registro, char* value);
 void setTimestamp(void* registro, int timestamp);
 void setRegistro(void* registro, uint16_t key, int timestamp, char* value);
 Segmento* segmentoCrear(char*, Pagina**);
@@ -121,11 +124,11 @@ void levantarMemoria();
 void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nSegmento, int nRegistro);
 void asignarRegistroASegmentoExistente(uint16_t key, char* value, int timestamp, int nSegmento, int nPagina, int nRegistro);
 int buscarRegistroDisponible();
-int ejecutarLRU();
+int buscarRegistro(t_nodoLRU* nodo_reemplazo);
 void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp);
 Registro* selectMemoria(char* tabla, uint16_t key);
 
-void journalization();
+//void* journalization();
 void* API_Memoria();
 void ejecutarSelect(char*);
 void ejecutarInsert(char*);

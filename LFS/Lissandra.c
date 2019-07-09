@@ -150,6 +150,15 @@ int main45(){
 				case DESCONEXION:
 					printf("\nSe desconecto un cliente, socket: %d\n", socketActivo);
 					break;
+				case HANDSHAKE:
+					printf("\nMemoria y LFS realizan Handshake\n");
+					tPaquete* mensaje = malloc(sizeof(tPaquete));
+					mensaje->type = HANDSHAKE;
+					strcpy(mensaje->payload, string_itoa(configuracion->TAMANIO_VALUE));
+					mensaje->length = sizeof(mensaje->payload);
+					enviarPaquete(socketActivo, mensaje, logger, "Maximo tamanio del value");
+					liberarPaquete(mensaje);
+					break;
 				default:
 					sem_wait(&loggerSemaforo);
 					log_error(logger, "Comando desconocido \"%s\"", sPayload);

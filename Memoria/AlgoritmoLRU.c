@@ -61,7 +61,7 @@ void encolarPaginaExistente(t_list* lista, t_link_element* nodo) {
 	nodo->next = NULL;
 }
 
-void desencolarPrimerElementoNoModificado(t_list *lista) {
+t_nodoLRU* desencolarPrimerElementoNoModificado(t_list *lista) {
 	t_link_element* nodoActual = lista->head;
 	t_link_element* nodoAnterior = NULL;
 	t_nodoLRU* nodoLRUAux;
@@ -82,9 +82,10 @@ void desencolarPrimerElementoNoModificado(t_list *lista) {
 				nodoAnterior->next = nodoActual->next;
 			lista->elements_count--;
 			free(nodoActual);
-			free(nodoLRUAux); // VER AL ADAPTAR
+			return nodoLRUAux;
 		}
 	}
+	return NULL;
 }
 
 int estaEnListaDePaginas(t_list* lista, t_nodoLRU* nodo) {
@@ -107,7 +108,8 @@ int estaEnListaDePaginas(t_list* lista, t_nodoLRU* nodo) {
 		return 0;
 }
 
-t_list* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
+t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
+	t_nodoLRU* nodoLRU;
 	if (estaEnListaDePaginas(lista, nodo)) {
 		// Busca la página y actualiza su posición en la lista
 		t_link_element* nodoActual = lista->head;
@@ -141,11 +143,16 @@ t_list* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
 	} else {
 		if (lista->elements_count >= CANT_MAX_PAGINAS_EN_LISTA) {
 			if (!memoriaEstaFull(lista)) {
-				desencolarPrimerElementoNoModificado(lista);
+				nodoLRU = desencolarPrimerElementoNoModificado(lista);
 				encolarNuevaPagina(lista, nodo);
 			}
+			/*else{
+				journalMemoria();
+				list_clean(lista);
+				encolarNuevaPagina(lista, nodo);
+			}*/
 		} else
 			encolarNuevaPagina(lista, nodo);
 	}
-	return lista;
+	return nodoLRU;
 }
