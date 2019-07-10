@@ -146,11 +146,11 @@ t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
 				nodoLRU = desencolarPrimerElementoNoModificado(lista);
 				encolarNuevaPagina(lista, nodo);
 			}
-			/*else{
+			else{
 				journalMemoria();
 				list_clean(lista);
 				encolarNuevaPagina(lista, nodo);
-			}*/
+			}
 		} else
 			encolarNuevaPagina(lista, nodo);
 	}

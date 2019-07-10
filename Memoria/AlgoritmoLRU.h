@@ -11,29 +11,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <commons/collections/list.h>
-
-/* --------------------    Definición de Estructuras    -------------------- */
+#include "Memoria.h"
 
 #define CANT_MAX_PAGINAS_EN_LISTA 3
 
-typedef struct {
-	int segmentoID;
-	int paginaID;
-	int modificado;
-} t_nodoLRU;
 
-/* --------------------    Definición de Var. Globales    -------------------- */
-
-t_list* listaPaginasLRU;
-
-/* --------------------    Definición de Funciones    -------------------- */
-
-int memoriaEstaFull(t_list* lista);
-void mostrarlistaPaginasLRU(t_list* lista);
-void encolarNuevaPagina(t_list* lista, t_nodoLRU* nodo);
-void encolarPaginaExistente(t_list* lista, t_link_element* nodo);
-t_nodoLRU* desencolarPrimerElementoNoModificado(t_list *lista);
-int estaEnListaDePaginas(t_list* lista, t_nodoLRU* nodo);
-t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo);
 
 #endif /* ALGORITMOLRU_H_ */

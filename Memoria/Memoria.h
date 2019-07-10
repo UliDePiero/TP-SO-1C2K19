@@ -30,7 +30,6 @@
 #include <parser.h>
 #include <inotify.h>
 #include <time.h>
-#include "AlgoritmoLRU.h"
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
 int socketEscucha;
@@ -47,7 +46,7 @@ sem_t mutexMemoria;
 
 pthread_t hiloAPI;
 pthread_t hiloJournal;
-///---------------------ESTRUCTURA DE CONFIGURACION DE LFS-------------------------
+///---------------------ESTRUCTURA DE CONFIGURACION DE MEMORIA-------------------------
 
 //Estructura para datos del archivo de configuracion
 typedef struct {
@@ -85,6 +84,14 @@ MEMORY_NUMBER=1
 //Estructura para guardar la configuracion del proceso
 
 ConfiguracionMemoria* configuracion;
+
+typedef struct {
+	int segmentoID;
+	int paginaID;
+	int modificado;
+} t_nodoLRU;
+
+t_list* listaPaginasLRU;
 
 int maxValueSize; //Obtener de LISS en el handshake
 
@@ -131,7 +138,6 @@ int buscarRegistro(t_nodoLRU* nodo_reemplazo);
 void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp);
 Registro* selectMemoria(char* tabla, uint16_t key);
 
-//void* journalization();
 void* API_Memoria();
 void ejecutarSelect(char*);
 void ejecutarInsert(char*);
@@ -143,5 +149,12 @@ void journalMemoria();
 void* journalAutomatico();
 void ejecutarInsertJournal();
 
+int memoriaEstaFull(t_list* lista);
+void mostrarlistaPaginasLRU(t_list* lista);
+void encolarNuevaPagina(t_list* lista, t_nodoLRU* nodo);
+void encolarPaginaExistente(t_list* lista, t_link_element* nodo);
+t_nodoLRU* desencolarPrimerElementoNoModificado(t_list *lista);
+int estaEnListaDePaginas(t_list* lista, t_nodoLRU* nodo);
+t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo);
 
 #endif /* MEMORIA_H_ */

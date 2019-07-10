@@ -82,7 +82,7 @@ int main()
 	levantarMemoria();
 	sem_init(&mutexMemoria, 0, 1);
 
-	//crearHiloIndependiente(&hiloJournal, (void*)journalization, NULL, "proceso Memoria");
+	crearHiloIndependiente(&hiloJournal,(void*)journalAutomatico, NULL, "proceso Memoria(Journal)");
 
 	seed=0;
 	while(configuracion->PUERTO_SEEDS[seed] != 0 && seed<16){
@@ -99,10 +99,9 @@ int main()
 	tMensaje tipoMensaje;
 	char * sPayload;
 
-	crearHiloIndependiente(&hiloJournal,(void*)journalAutomatico, NULL, "proceso Memoria(Journal)");
 	void* cierre;
-	crearHilo(&hiloAPI,(void*)API_Memoria, NULL, "proceso Memoria");
-	joinearHilo(hiloAPI, &cierre, "proceso Memoria");
+	crearHilo(&hiloAPI,(void*)API_Memoria, NULL, "proceso Memoria(API)");
+	joinearHilo(hiloAPI, &cierre, "proceso Memoria(API)");
 
 	while ((int)cierre != 1) {
 
@@ -408,7 +407,7 @@ int buscarRegistro(t_nodoLRU* nodo_reemplazo){
 	return -1;
 }
 
-void journalMemoria (){
+void journalMemoria(){
 	int j=0;
 	char *instruccion;
 	Registro *registro = malloc(sizeof(Registro));
