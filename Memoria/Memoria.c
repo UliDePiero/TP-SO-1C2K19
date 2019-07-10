@@ -408,13 +408,12 @@ int buscarRegistro(t_nodoLRU* nodo_reemplazo){
 }
 
 void journalMemoria(){
-	int j=0;
 	char *instruccion;
 	Registro *registro = malloc(sizeof(Registro));
 	//for revisando todas las páginas
 	sem_wait(&mutexMemoria);
 	if(cantidadDeSegmentos != 0){
-		while(tablaDeSegmentos[j]){
+		for(int j=0; j<cantidadDeSegmentos; j++){
 			for(int i=0; i<tablaDeSegmentos[j]->cantidadDePaginas; i++){
 				if(tablaDeSegmentos[j]->tablaDePaginas[i]->modificado == 1){
 					instruccion = malloc(15+sizeof(tablaDeSegmentos[j]->tabla)+sizeof(registro->key)+sizeof(registro->value)+sizeof(registro->timestamp));
@@ -425,7 +424,6 @@ void journalMemoria(){
 				}
 			}
 			segmentoDestruir(tablaDeSegmentos[j]);
-			j++;
 		}
 	}
 	sem_post(&mutexMemoria);
