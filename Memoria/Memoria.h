@@ -10,8 +10,8 @@
 
 
 //Ruta del archivo de configuraciones
-#define RUTA_CONFIG "./Memoria.config" // Para correr desde Eclipse
-//#define RUTA_CONFIG "../Memoria.config" // Para correr desde Consola
+//#define RUTA_CONFIG "./Memoria.config" // Para correr desde Eclipse
+#define RUTA_CONFIG "../Memoria.config" // Para correr desde Consola
 #define BACKLOG 5 //Creo que se pueden conectar solo 2 clientes pero hay que verificar
 
 #include <stdio.h>
@@ -29,7 +29,6 @@
 #include <configuraciones.h>
 #include <parser.h>
 #include <inotify.h>
-#include <time.h>
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
 int socketEscucha;
@@ -117,7 +116,7 @@ unsigned int cantidadDeRegistros;
 unsigned int cantidadDeSegmentos;
 void* granMalloc;
 
-void terminar(int seed);
+void terminar();
 void memoriaPrincipalDestruir();
 void segmentoDestruir(Segmento*);
 void paginaDestruir(Pagina*);

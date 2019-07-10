@@ -25,6 +25,5 @@
 #include <commons/string.h>
 #include <parser.h>
 #include "Memoria.h"
-#include <time.h>
 
 #endif /* API_MEMORIA_H_ */

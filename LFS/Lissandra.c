@@ -85,21 +85,20 @@ void destruirLFS(){
 	destruirFileSystem();
 	sem_wait(&configSemaforo);
 	pthread_cancel(hiloConfig);
-	free(configuracion);
 	sem_wait(&memtableSemaforo);
 	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
 	log_info(logger, "Modulo LFS cerrado");
 	log_destroy(logger);
+	free(configuracion);
 	close(socketEscucha);
+	exit(0);
 }
 
 int main45(){
 	levantarLFS();
 
 	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS Config");
-	void* cierre;
-	crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS");
-	joinearHilo(hiloAPI, &cierre, "LFS");
+	crearHiloIndependiente(&hiloAPI,(void*)API_LFS, NULL, "LFS");
 	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");
 
 	//servidor
@@ -120,7 +119,7 @@ int main45(){
 	maxSock = socketEscucha;
 	tMensaje tipoMensaje;
 	char * sPayload;
-	while ((int)cierre != 1) {
+	while (1) {
 
 		puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
@@ -178,8 +177,6 @@ int main45(){
 		}
 
 	}
-	destruirLFS();
-	return 0;
 }
 
 //MAIN DE TESTS

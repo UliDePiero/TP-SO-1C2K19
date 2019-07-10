@@ -40,7 +40,8 @@ typedef enum {
 	METRICS,
 	SC,
 	HC,
-	EC
+	EC,
+	EXIT
 } tMensaje;
 
 /*

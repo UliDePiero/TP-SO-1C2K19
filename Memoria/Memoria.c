@@ -99,12 +99,9 @@ int main()
 	tMensaje tipoMensaje;
 	char * sPayload;
 
-	void* cierre;
-	crearHilo(&hiloAPI,(void*)API_Memoria, NULL, "proceso Memoria(API)");
-	joinearHilo(hiloAPI, &cierre, "proceso Memoria(API)");
+	crearHiloIndependiente(&hiloAPI,(void*)API_Memoria, NULL, "proceso Memoria(API)");
 
-	while ((int)cierre != 1) {
-
+	while (1) {
 		puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
 		printf("Socket comunicacion: %d \n", socketActivo); //CORREGIR getConnection
@@ -161,21 +158,23 @@ int main()
 			}
 		}
 	}
-	sem_destroy(&mutexMemoria);
-	terminar(seed);
 }
 
-void terminar(int seed){
-	free(configuracion);
+void terminar(){
 	memoriaPrincipalDestruir();
 	if(socketLFS!=0)desconectarseDe(socketLFS);
-	seed=0;
-	while(configuracion->PUERTO_SEEDS[seed] != 0 && seed<16){
-		desconectarseDe(socketSEED[seed]);
-		seed++;
+	int s=0;
+	while(configuracion->PUERTO_SEEDS[s] != 0 && s<seed){
+		desconectarseDe(socketSEED[s]);
+		s++;
 	}
+	pthread_cancel(hiloJournal);
+	log_info(logger, "Modulo Memoria cerrada");
+	log_destroy(logger);
+	sem_destroy(&mutexMemoria);
+	free(configuracion);
 	close(socketEscucha);
-	return;
+	exit(0);
 }
 
 void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
@@ -371,6 +370,7 @@ void memoriaPrincipalDestruir(){
 	for(int j=0; j < cantidadDeSegmentos; j++)
 		segmentoDestruir(tablaDeSegmentos[j]);
 	free(granMalloc);
+	list_destroy(listaPaginasLRU);
 }
 void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nSegmento, int nRegistro){
 	cantidadDeSegmentos++;

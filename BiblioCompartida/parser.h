@@ -13,6 +13,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <sys/time.h>
+#include <inttypes.h>
 
 /* --------------------    Definición de Funciones    -------------------- */
 

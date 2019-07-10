@@ -39,6 +39,7 @@ void* API_LFS(){
 		line = readline(">");
 	}
 	free(line);
+	destruirLFS();
 	return (void*)1;
 }
 

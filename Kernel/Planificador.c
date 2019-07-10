@@ -64,18 +64,31 @@ int main() {
 
 	// cliente
 	//int socketMEMORIA = conectarAUnServidor(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA);
-	socketMemoria = connectToServer(configuracion->IP_MEMORIA,
-			configuracion->PUERTO_MEMORIA, logger);
+	socketMemoria = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
 
 	realizarHandshakeConMemoria(); // Creo que esto después va a quedar dentro de Gossiping
 
-	free(configuracion);
-	//crearHiloIndependiente(&hiloAPI,(void*)API_Kernel, NULL, "Kernel");
-	crearHilo(&hiloAPI, (void*) API_Kernel, NULL, "Kernel");
-	crearHiloIndependiente(&hiloPlanificacion, (void*) planificacion, NULL,
-			"Kernel");
+	crearHiloIndependiente(&hiloPlanificacion, (void*) planificacion, NULL,"Kernel(Planificacion)");
+	crearHilo(&hiloAPI, (void*) API_Kernel, NULL, "Kernel(API)");
 
-	joinearHilo(hiloAPI, NULL, "Kernel");
+	joinearHilo(hiloAPI, NULL, "Kernel(API)");
+
+	log_destroy(logger);
+	pthread_cancel(hiloPlanificacion);
+	queue_destroy(New);
+	queue_destroy(Ready);
+	queue_destroy(Exec);
+	queue_destroy(Exit);
+	list_destroy(ListaLQL);
+	sem_destroy(&semContadorLQL);
+	sem_destroy(&semMultiprocesamiento);
+	sem_destroy(&semEjecutarLQL);
+	free(LQL);
+	list_destroy(memoriaSC);
+	list_destroy(memoriasSHC);
+	list_destroy(memoriasEC);
+	list_destroy(listaGossiping);
+	free(configuracion);
 	desconectarseDe(socketMemoria);
 }
 void planificacion() {

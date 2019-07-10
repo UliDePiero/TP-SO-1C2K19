@@ -49,6 +49,7 @@ void* API_Memoria(){
 		line = readline(">");
 	}
 	free(line);
+	terminar();
 	return (void*)1;
 }
 void ejecutarSelect(char* instruccion){
