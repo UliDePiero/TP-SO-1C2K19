@@ -13,7 +13,7 @@
 #include <commons/collections/list.h>
 #include "Memoria.h"
 
-#define CANT_MAX_PAGINAS_EN_LISTA 3
+//#define CANT_MAX_PAGINAS_EN_LISTA 3 //PARA PRUEBAS
 
 
 

@@ -73,7 +73,6 @@ int main() {
 
 	joinearHilo(hiloAPI, NULL, "Kernel(API)");
 
-	log_destroy(logger);
 	pthread_cancel(hiloPlanificacion);
 	queue_destroy(New);
 	queue_destroy(Ready);
@@ -88,6 +87,8 @@ int main() {
 	list_destroy(memoriasSHC);
 	list_destroy(memoriasEC);
 	list_destroy(listaGossiping);
+	log_info(logger, "Modulo Kernel cerrado");
+	log_destroy(logger);
 	free(configuracion);
 	desconectarseDe(socketMemoria);
 }

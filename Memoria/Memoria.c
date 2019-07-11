@@ -80,6 +80,7 @@ int main()
 	recibirPaquete(socketLFS,mensaje_handshake,&tamanioValue,logger,"Maximo tamanio del value");
 	maxValueSize = atoi(tamanioValue);*/
 	levantarMemoria();
+	listaPaginasLRU = list_create();
 	sem_init(&mutexMemoria, 0, 1);
 
 	crearHiloIndependiente(&hiloJournal,(void*)journalAutomatico, NULL, "proceso Memoria(Journal)");
@@ -111,32 +112,122 @@ int main()
 			case SELECT:
 				printf("\nRecibi %s\n", sPayload);
 				//funcion SELECT
-				ejecutarSelect(sPayload);
+				char* retornoS = ejecutarSelect(sPayload);
+				tPaquete* mensaje = malloc(sizeof(tPaquete));
+				if(retornoS != NULL)
+				{
+					mensaje->type = SELECT;
+					strcpy(mensaje->payload,retornoS);
+					free(retornoS);
+				}
+				else
+				{
+					mensaje->type = ERROR_EN_COMANDO;
+					strcpy(mensaje->payload,"");
+				}
+				mensaje->length = sizeof(mensaje->payload);
+				enviarPaquete(socketActivo, mensaje,logger,"Value del SELECT de MEMORIA.");
+				liberarPaquete(mensaje);
 				break;
 			case INSERT:
 				printf("\nRecibi %s\n", sPayload);
 				//funcion INSERT
-				ejecutarInsert(sPayload);
+				char* retornoI = ejecutarInsert(sPayload);
+				tPaquete* mensaje = malloc(sizeof(tPaquete));
+				if(retornoI != NULL)
+				{
+					mensaje->type = INSERT;
+					strcpy(mensaje->payload,retornoI);
+					free(retornoI);
+				}
+				else
+				{
+					mensaje->type = ERROR_EN_COMANDO;
+					strcpy(mensaje->payload,"");
+				}
+				mensaje->length = sizeof(mensaje->payload);
+				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del INSERT en MEMORIA.");
+				liberarPaquete(mensaje);
 				break;
 			case CREATE:
 				printf("\nRecibi %s\n", sPayload);
 				//funcion CREATE
-				ejecutarCreate(sPayload);
+				char* retornoC = ejecutarCreate(sPayload);
+				tPaquete* mensaje = malloc(sizeof(tPaquete));
+				if(retornoC != NULL)
+				{
+					mensaje->type = CREATE;
+					strcpy(mensaje->payload,retornoC);
+					free(retornoC);
+				}
+				else
+				{
+					mensaje->type = ERROR_EN_COMANDO;
+					strcpy(mensaje->payload,"");
+				}
+				mensaje->length = sizeof(mensaje->payload);
+				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del CREATE en MEMORIA.");
+				liberarPaquete(mensaje);
 				break;
 			case DESCRIBE:
 				printf("\nRecibi %s\n", sPayload);
 				//funcion DESCRIBE
 				ejecutarDescribe(sPayload);
+				/*tPaquete* mensaje = malloc(sizeof(tPaquete));
+				if(retorno != NULL)
+				{
+					mensaje->type = DESCRIBE;
+					strcpy(mensaje->payload,retorno);
+					free(retorno);
+				}
+				else
+				{
+					mensaje->type = ERROR_EN_COMANDO;
+					strcpy(mensaje->payload,"");
+				}
+				mensaje->length = sizeof(mensaje->payload);
+				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del DESCRIBE en MEMORIA.");
+				liberarPaquete(mensaje);*/
 				break;
 			case DROP:
 				printf("\nRecibi %s\n", sPayload);
 				//funcion DROP
-				ejecutarDrop(sPayload);
+				char* retornoD = ejecutarDrop(sPayload);
+				tPaquete* mensaje = malloc(sizeof(tPaquete));
+				if(retornoD != NULL)
+				{
+					mensaje->type = DROP;
+					strcpy(mensaje->payload,retornoD);
+					free(retornoD);
+				}
+				else
+				{
+					mensaje->type = ERROR_EN_COMANDO;
+					strcpy(mensaje->payload,"");
+				}
+				mensaje->length = sizeof(mensaje->payload);
+				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del DROP en MEMORIA.");
+				liberarPaquete(mensaje);
 				break;
 			case JOURNAL:
 				printf("\nRecibi %s\n", sPayload);
 				//funcion JOURNAL
-				ejecutarJournal(sPayload);
+				int retornoJ = ejecutarJournal(sPayload);
+				/*tPaquete* mensaje = malloc(sizeof(tPaquete));
+				if(retornoJ != 0)
+				{
+					mensaje->type = JOURNAL;
+					strcpy(mensaje->payload,retornoJ);
+					free(retornoJ);
+				}
+				else
+				{
+					mensaje->type = ERROR_EN_COMANDO;
+					strcpy(mensaje->payload,"");
+				}
+				mensaje->length = sizeof(mensaje->payload);
+				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del JOURNAL en MEMORIA.");
+				liberarPaquete(mensaje);*/
 				break;
 			case DESCONEXION:
 				printf("\nSe desconecto un cliente\n");
@@ -162,6 +253,7 @@ int main()
 
 void terminar(){
 	memoriaPrincipalDestruir();
+	list_destroy(listaPaginasLRU);
 	if(socketLFS!=0)desconectarseDe(socketLFS);
 	int s=0;
 	while(configuracion->PUERTO_SEEDS[s] != 0 && s<seed){
@@ -286,12 +378,10 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 			liberarPaquete(mensaje);
 			free(select_mensaje);
 			char* sPayload;
-			tMensaje* tipo_mensaje = NULL;
-			recibirPaquete(socketLFS,tipo_mensaje,&sPayload,logger,"Value del SELECT de LFS");
-			char* value = (char*) malloc(maxValueSize);
-			strcpy(value,sPayload);
-			insertMemoria(tabla, key, value, getCurrentTime());
-			free(value);
+			tMensaje tipo_mensaje;
+			recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Value del SELECT de LFS");
+			insertMemoria(tabla, key, sPayload, getCurrentTime());
+			free(sPayload);
 			Registro* registro = selectMemoria(tabla, key);
 			return registro;
 		}
@@ -301,6 +391,19 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 		return NULL;
 	}
 }
+
+void dropMemoria(char* tabla){
+
+}
+
+void describeMemoriaTabla(char* tabla){
+
+}
+
+void describeMemoria(){
+
+}
+
 void levantarMemoria(){
 #include <malloc.h>
 
@@ -370,7 +473,6 @@ void memoriaPrincipalDestruir(){
 	for(int j=0; j < cantidadDeSegmentos; j++)
 		segmentoDestruir(tablaDeSegmentos[j]);
 	free(granMalloc);
-	list_destroy(listaPaginasLRU);
 }
 void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nSegmento, int nRegistro){
 	cantidadDeSegmentos++;

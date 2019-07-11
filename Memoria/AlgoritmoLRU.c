@@ -13,7 +13,7 @@ int memoriaEstaFull(t_list* lista) {
 	t_link_element* nodo = lista->head;
 	t_nodoLRU* nodoLRUAux;
 
-	if (lista->elements_count == CANT_MAX_PAGINAS_EN_LISTA) {
+	if (lista->elements_count == cantidadDeRegistros) {
 		while (nodo) {
 			nodoLRUAux = nodo->data;
 			if (nodoLRUAux->modificado == 0)
@@ -141,7 +141,7 @@ t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
 			}
 		}
 	} else {
-		if (lista->elements_count >= CANT_MAX_PAGINAS_EN_LISTA) {
+		if (lista->elements_count >= cantidadDeRegistros) {
 			if (!memoriaEstaFull(lista)) {
 				nodoLRU = desencolarPrimerElementoNoModificado(lista);
 				encolarNuevaPagina(lista, nodo);

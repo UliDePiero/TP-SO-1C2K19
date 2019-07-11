@@ -11,6 +11,7 @@
 //Ruta del archivo de configuraciones
 //#define RUTA_CONFIG "./Kernel.config" // Para correr desde Eclipse
 #define RUTA_CONFIG "../Kernel.config" // Para correr desde Consola
+#define logFile "../Kernel.log"
 
 #include <stdio.h>
 
@@ -34,7 +35,6 @@
 int socketMemoria;
 
 t_log* logger;
-char* logFile;
 
 pthread_t hiloAPI;
 pthread_t hiloPlanificacion;

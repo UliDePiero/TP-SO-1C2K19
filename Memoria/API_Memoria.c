@@ -39,42 +39,56 @@ void* API_Memoria(){
 				break;
 			case -1:
 				informarComandoInvalido();
+				free(instruccion_API);
 				break;
 			default:
 				printf("Ingrese un comando \n");
+				free(instruccion_API);
 				break;
 		}
 		free(line);
-		free(instruccion_API);
 		line = readline(">");
 	}
 	free(line);
 	terminar();
 	return (void*)1;
 }
-void ejecutarSelect(char* instruccion){
+char* ejecutarSelect(char* instruccion){
+	char* retorno = NULL;
 	char** comando = validarComando(instruccion, 3);
 	if(comando){
 		Registro* registro = selectMemoria(comando[1], atoi(comando[2]));
 		sleep(configuracion->RETARDO_MEM / 1000);
-		if(registro != NULL) printf("value: %s\n", registro->value);
+		if(registro != NULL)
+		{
+			printf("value: %s\n", registro->value);
+			retorno = string_duplicate(registro->value);
+			free(registro->value);
+		}
 		free(registro);
 		for(int i = 0; i<3; i++)
 			free(comando[i]);
 		free(comando);
 	}
+	free(instruccion);
+	return retorno;
 }
-void ejecutarInsert(char* instruccion){
+char* ejecutarInsert(char* instruccion){
+	char* retorno = NULL;
 	char** comando = validarComando(instruccion, 4);
 	if(comando){
 		sleep(configuracion->RETARDO_MEM / 1000);
 		insertMemoria(comando[1], atoi(comando[2]), comando[3], getCurrentTime());
+		retorno = string_from_format("Tabla:%s Key:%d Value:%s",comando[1], atoi(comando[2]), comando[3]);
 		for(int i = 0; i<4; i++)
 			free(comando[i]);
 		free(comando);
 	}
+	free(instruccion);
+	return retorno;
 }
-void ejecutarCreate(char* instruccion){
+char* ejecutarCreate(char* instruccion){
+	char* retorno = NULL;
 	char** comando = validarComando(instruccion, 5);
 	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
@@ -83,10 +97,13 @@ void ejecutarCreate(char* instruccion){
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando CREATE desde Memoria.");
 		liberarPaquete(mensaje);
+		retorno = string_from_format("Tabla:%s Consistencia:%s Particiones:%d Tiempo compactacion:%d",comando[1], comando[2], atoi(comando[3]), atoi(comando[4]));
 		for(int i = 0; i<5; i++)
 			free(comando[i]);
 		free(comando);
 	}
+	free(instruccion);
+	return retorno;
 }
 void ejecutarDescribe(char* instruccion){
 	puts("describe ejecutado");
@@ -98,23 +115,31 @@ void ejecutarDescribe(char* instruccion){
 		free(comando);
 	}
 }
-void ejecutarDrop(char* instruccion){
+char* ejecutarDrop(char* instruccion){
+	char* retorno = NULL;
 	puts("drop ejecutado");
 	char** comando = validarComando(instruccion, 2);
 	if(comando){
-		puts("comando valido");
+		dropMemoria(comando[1]);
+		retorno = string_duplicate(comando[1]);
 		for(int i = 0; i<2; i++)
 			free(comando[i]);
 		free(comando);
 	}
+	free(instruccion);
+	return retorno;
 }
-void ejecutarJournal(char* instruccion){
+int ejecutarJournal(char* instruccion){
 	puts("journal ejecutado");
+	int retorno = 0;
 	char** comando = validarComando(instruccion, 1);
 	if(comando){
 		sleep(configuracion->RETARDO_MEM / 1000);
 		journalMemoria();
 		free(comando[0]);
 		free(comando);
+		retorno = 1;
 	}
+	free(instruccion);
+	return retorno;
 }

@@ -12,6 +12,7 @@
 //Ruta del archivo de configuraciones
 //#define RUTA_CONFIG "./Memoria.config" // Para correr desde Eclipse
 #define RUTA_CONFIG "../Memoria.config" // Para correr desde Consola
+#define logFile "../Memoria.log"
 #define BACKLOG 5 //Creo que se pueden conectar solo 2 clientes pero hay que verificar
 
 #include <stdio.h>
@@ -39,7 +40,6 @@ int	socketSEED[16];
 int seed;
 
 t_log* logger;
-char* logFile;
 
 sem_t mutexMemoria;
 
@@ -134,17 +134,22 @@ void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int t
 void asignarRegistroASegmentoExistente(uint16_t key, char* value, int timestamp, int nSegmento, int nPagina, int nRegistro);
 int buscarRegistroDisponible();
 int buscarRegistro(t_nodoLRU* nodo_reemplazo);
+
 void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp);
 Registro* selectMemoria(char* tabla, uint16_t key);
+void journalMemoria();
+void dropMemoria(char* tabla);
+void describeMemoriaTabla(char* tabla);
+void describeMemoria();
 
 void* API_Memoria();
-void ejecutarSelect(char*);
-void ejecutarInsert(char*);
-void ejecutarCreate(char*);
-void ejecutarDescribe(char*);
-void ejecutarDrop(char*);
-void ejecutarJournal(char*);
-void journalMemoria();
+char* ejecutarSelect(char*);
+char* ejecutarInsert(char*);
+char* ejecutarCreate(char*);
+void ejecutarDescribe(char*);//terminar
+char* ejecutarDrop(char*);
+int ejecutarJournal(char*);//terminar
+
 void* journalAutomatico();
 void ejecutarInsertJournal();
 
