@@ -58,6 +58,7 @@ dkms.conf
 
 # Log Files
 *.log
+*.bin
 
 [Dd]ebug*/
 [Rr]elease*/
