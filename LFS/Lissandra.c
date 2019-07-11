@@ -128,20 +128,11 @@ int main45(){
 
 			switch (tipoMensaje) {
 				char** comando;
-				case CREATE:
-					comando = validarComando(sPayload, 5);
+				case SELECT:
+					comando = validarComando(sPayload, 3);
 					if(comando){
-						createLFS(comando[1], comando[2], atoi(comando[3]), atol(comando[4]));
-						for(int i = 0; i<5; i++)
-							free(comando[i]);
-						free(comando);
-					}
-					break;
-				case DROP:
-					comando = validarComando(sPayload, 2);
-					if(comando){
-						dropLFS(comando[1]);
-						for(int i = 0; i<2; i++)
+						selectLFS(comando[1], atoi(comando[2]));
+						for(int i = 0; i<3; i++)
 							free(comando[i]);
 						free(comando);
 					}
@@ -155,6 +146,35 @@ int main45(){
 							free(comando[i]);
 							free(comando);
 						}
+					break;
+				case CREATE:
+					comando = validarComando(sPayload, 5);
+					if(comando){
+						createLFS(comando[1], comando[2], atoi(comando[3]), atol(comando[4]));
+						for(int i = 0; i<5; i++)
+							free(comando[i]);
+						free(comando);
+					}
+					break;
+				case DESCRIBE:
+					comando = string_n_split(sPayload, 2, " ");
+					if(comando[1]){
+						describeLFS(comando[1]);
+						free(comando[1]);
+					}else{
+						describeLFS(NULL);
+					}
+					free(comando[0]);
+					free(comando);
+					break;
+				case DROP:
+					comando = validarComando(sPayload, 2);
+					if(comando){
+						dropLFS(comando[1]);
+						for(int i = 0; i<2; i++)
+							free(comando[i]);
+						free(comando);
+					}
 					break;
 				case DESCONEXION:
 					printf("\nSe desconecto un cliente, socket: %d\n", socketActivo);

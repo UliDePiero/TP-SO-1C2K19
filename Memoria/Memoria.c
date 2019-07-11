@@ -388,11 +388,11 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
 Registro* selectMemoria(char* tabla, uint16_t key){
 	int segmento = 0, pagina = 0;
 	for(segmento=0; segmento<cantidadDeSegmentos; segmento++){
-		printf("tabla: %s\n", tablaDeSegmentos[segmento]->tabla);
+		//printf("tabla: %s\n", tablaDeSegmentos[segmento]->tabla);
 		if(strcmp(tablaDeSegmentos[segmento]->tabla, tabla) == 0){printf("encontre tabla\n"); break;}
 	}
 	if(segmento<cantidadDeSegmentos){
-		for(pagina=0; pagina<tablaDeSegmentos[segmento]->cantidadDePaginas ; pagina++){
+		for(pagina=0; pagina<tablaDeSegmentos[segmento]->cantidadDePaginas; pagina++){
 			if(getKey(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame) == key) {printf("encontre pagina\n"); break;}
 		}
 		if(pagina<tablaDeSegmentos[segmento]->cantidadDePaginas){
@@ -426,7 +426,39 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 }
 
 void dropMemoria(char* tabla){
-
+	int segmento = 0, pagina = 0, registro = 0, key = 0, *pKey;
+	for(segmento=0; segmento<cantidadDeSegmentos; segmento++){
+		if(strcmp(tablaDeSegmentos[segmento]->tabla, tabla) == 0)
+		{
+			printf("encontre tabla\n");
+			t_list* listaKeys = list_create();
+			for(pagina=0; pagina<tablaDeSegmentos[segmento]->cantidadDePaginas; pagina++){
+				pKey = malloc(sizeof(int));
+				*pKey = getKey(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
+				list_add(listaKeys,pKey);
+			}
+			for(key=0;key<listaPaginasLRU->elements_count; key++){
+				for(registro = 0; registro < cantidadDeRegistros; registro++){
+					if (getKey(granMalloc+registro*tamanioRealDeUnRegistro) == (int)listaPaginasLRU->head->data){
+						memset(granMalloc+registro*tamanioRealDeUnRegistro,0,tamanioRealDeUnRegistro);
+						break;
+					}
+				}
+			}
+			list_clean(listaKeys);
+			list_destroy(listaKeys);
+			segmentoDestruir(tablaDeSegmentos[segmento]);
+			tPaquete* mensaje = malloc(sizeof(tPaquete));
+			mensaje->type = DROP;
+			char* comando = string_from_format("DROP %s", tabla);
+			strcpy(mensaje->payload,comando);
+			mensaje->length = sizeof(mensaje->payload);
+			enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DROP desde Memoria.");
+			liberarPaquete(mensaje);
+			free(comando);
+			break;
+		}
+	}
 }
 
 void describeMemoriaTabla(char* tabla){
