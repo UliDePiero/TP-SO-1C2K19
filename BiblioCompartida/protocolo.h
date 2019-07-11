@@ -33,7 +33,6 @@ typedef enum {
 	INSERT,
 	CREATE,
 	DESCRIBE,
-	DESCRIBE_TABLA,
 	DROP,
 	JOURNAL,
 	ADD,

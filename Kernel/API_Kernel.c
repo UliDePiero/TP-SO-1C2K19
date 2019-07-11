@@ -144,10 +144,7 @@ void respuestas(void* socket_Mem){
 				printf("\nSe ejecuto corectamente el comando CREATE %s en MEMORIA",sPayload);
 				break;
 			case DESCRIBE:
-				printf("\nDESCRIBE: ");
-				break;
-			case DESCRIBE_TABLA:
-				printf("\nDESCRIBE: ");
+				printf("\nDESCRIBE:\n %s",sPayload);
 				break;
 			case DROP:
 				printf("\nSe elimino la tabla %s de MEMORIA", sPayload);

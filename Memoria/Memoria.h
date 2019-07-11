@@ -140,16 +140,16 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp);
 Registro* selectMemoria(char* tabla, uint16_t key);
 void journalMemoria();
 void dropMemoria(char* tabla);
-void describeMemoriaTabla(char* tabla);
-void describeMemoria();
+char* describeMemoriaTabla(char* tabla);
+t_list* describeMemoria();
 
 void* API_Memoria();
 char* ejecutarSelect(char*);
 char* ejecutarInsert(char*);
 char* ejecutarCreate(char*);
-void ejecutarDescribe(char*);//terminar
+t_list* ejecutarDescribe(char*);
 char* ejecutarDrop(char*);
-int ejecutarJournal(char*);//terminar
+int ejecutarJournal(char*);
 
 void* journalAutomatico();
 void ejecutarInsertJournal();

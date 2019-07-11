@@ -26,4 +26,6 @@
 #include <parser.h>
 #include "Memoria.h"
 
+void muestraLista(char* elemento);
+
 #endif /* API_MEMORIA_H_ */

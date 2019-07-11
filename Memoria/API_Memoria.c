@@ -11,6 +11,8 @@ void* API_Memoria(){
 	//char* linea2;
 	char* line = NULL;
 	char* instruccion_API = NULL;
+	char* retorno;
+	t_list* retornoLista;
 
 	line = readline(">");
 
@@ -20,19 +22,24 @@ void* API_Memoria(){
 		instruccion_API = string_duplicate(line);
 		switch(parser(line)){
 			case SELECT:
-				ejecutarSelect(instruccion_API);
+				retorno = ejecutarSelect(instruccion_API);
+				if(retorno!=NULL) free(retorno);
 				break;
 			case INSERT:
-				ejecutarInsert(instruccion_API);
+				retorno = ejecutarInsert(instruccion_API);
+				if(retorno!=NULL) free(retorno);
 				break;
 			case CREATE:
-				ejecutarCreate(instruccion_API);
+				retorno = ejecutarCreate(instruccion_API);
+				if(retorno!=NULL) free(retorno);
 				break;
 			case DESCRIBE:
-				ejecutarDescribe(instruccion_API);
+				retornoLista = ejecutarDescribe(instruccion_API);
+				list_destroy(retornoLista);
 				break;
 			case DROP:
-				ejecutarDrop(instruccion_API);
+				retorno =ejecutarDrop(instruccion_API);
+				if(retorno!=NULL) free(retorno);
 				break;
 			case JOURNAL:
 				ejecutarJournal(instruccion_API);
@@ -105,15 +112,26 @@ char* ejecutarCreate(char* instruccion){
 	free(instruccion);
 	return retorno;
 }
-void ejecutarDescribe(char* instruccion){
-	puts("describe ejecutado");
-	char** comando = validarComando(instruccion, 2);
-	if(comando){
-		puts("comando valido");
-		for(int i = 0; i<2; i++)
-			free(comando[i]);
-		free(comando);
+void muestraLista(char* elemento){
+	printf("\n%s", elemento);
+}
+t_list* ejecutarDescribe(char* instruccion){
+	t_list* retorno;
+	char** comando = string_n_split(instruccion, 2, " ");
+	if(comando[1]){
+		retorno = list_create();
+		char* metadata = describeMemoriaTabla(comando[1]);
+		list_add(retorno, metadata);
+		printf("\nMetadata: %s", (char*)retorno->head->data);
+		free(comando[1]);
+		free(metadata);
+	}else{
+		retorno = describeMemoria();
+		list_iterate(retorno,(void*)muestraLista);
 	}
+	free(comando[0]);
+	free(comando);
+	return retorno;
 }
 char* ejecutarDrop(char* instruccion){
 	char* retorno = NULL;

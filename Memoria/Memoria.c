@@ -103,7 +103,7 @@ int main()
 	tPaquete* mensaje;
 	char* retorno;
 	int retornoINT;
-
+	t_list* retornoLista;
 	crearHiloIndependiente(&hiloAPI,(void*)API_Memoria, NULL, "proceso Memoria(API)");
 
 	while (1) {
@@ -176,13 +176,21 @@ int main()
 			case DESCRIBE:
 				printf("\nRecibi %s\n", sPayload);
 				//funcion DESCRIBE
-				ejecutarDescribe(sPayload);
-				/*mensaje = malloc(sizeof(tPaquete));
-				if(retorno != NULL)
+				retornoLista = ejecutarDescribe(sPayload);
+				mensaje = malloc(sizeof(tPaquete));
+				if(retornoLista != NULL)
 				{
 					mensaje->type = DESCRIBE;
-					strcpy(mensaje->payload,retorno);
-					free(retorno);
+					char* ret = string_new();
+					t_link_element* nodo = retornoLista->head;
+					while (nodo) {
+						string_append(&ret,(char*)nodo->data);
+						nodo = nodo->next;
+					}
+					strcpy(mensaje->payload,ret);
+					free(ret);
+					free(nodo);
+					list_destroy(retornoLista);
 				}
 				else
 				{
@@ -191,27 +199,7 @@ int main()
 				}
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del DESCRIBE en MEMORIA.");
-				liberarPaquete(mensaje);*/
-				break;
-			case DESCRIBE_TABLA:
-				printf("\nRecibi %s\n", sPayload);
-				//funcion DESCRIBE
-				ejecutarDescribe(sPayload);
-				/*mensaje = malloc(sizeof(tPaquete));
-				if(retorno != NULL)
-				{
-					mensaje->type = DESCRIBE;
-					strcpy(mensaje->payload,retorno);
-					free(retorno);
-				}
-				else
-				{
-					mensaje->type = ERROR_EN_COMANDO;
-					strcpy(mensaje->payload,"DESCRIBE");
-				}
-				mensaje->length = sizeof(mensaje->payload);
-				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del DESCRIBE en MEMORIA.");
-				liberarPaquete(mensaje);*/
+				liberarPaquete(mensaje);
 				break;
 			case DROP:
 				printf("\nRecibi %s\n", sPayload);
@@ -445,7 +433,6 @@ void dropMemoria(char* tabla){
 					}
 				}
 			}
-			list_clean(listaKeys);
 			list_destroy(listaKeys);
 			segmentoDestruir(tablaDeSegmentos[segmento]);
 			tPaquete* mensaje = malloc(sizeof(tPaquete));
@@ -461,12 +448,48 @@ void dropMemoria(char* tabla){
 	}
 }
 
-void describeMemoriaTabla(char* tabla){
-
+char* describeMemoriaTabla(char* tabla){
+	char* retorno;
+	tPaquete* mensaje = malloc(sizeof(tPaquete));
+	mensaje->type = DESCRIBE;
+	char* comando = string_from_format("DESCRIBE %s", tabla);
+	strcpy(mensaje->payload,comando);
+	mensaje->length = sizeof(mensaje->payload);
+	enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DESCRIBE_TABLA desde Memoria.");
+	liberarPaquete(mensaje);
+	free(comando);
+	char* sPayload;
+	tMensaje tipo_mensaje;
+	recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Metadata de la tabla desde LFS");
+	retorno = string_duplicate(sPayload);
+	free(sPayload);
+	return retorno;
 }
 
-void describeMemoria(){
-
+t_list* describeMemoria(){
+	t_list* retorno = list_create();
+	tPaquete* mensaje = malloc(sizeof(tPaquete));
+	mensaje->type = DESCRIBE;
+	char* comando = string_from_format("DESCRIBE");
+	strcpy(mensaje->payload,comando);
+	mensaje->length = sizeof(mensaje->payload);
+	enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DESCRIBE desde Memoria.");
+	liberarPaquete(mensaje);
+	free(comando);
+	char* sPayload;
+	tMensaje tipo_mensaje;
+	recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Cantidad de tablas en LFS");
+	int cantidadTablas = atoi(sPayload);
+	free(sPayload);
+	char* metadata;
+	for(int i=0;i<cantidadTablas; i++){
+		recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Metadata de una tabla de LFS");
+		metadata = string_duplicate(sPayload);
+		list_add(retorno,metadata);
+		free(metadata);
+		free(sPayload);
+	}
+	return retorno;
 }
 
 void levantarMemoria(){

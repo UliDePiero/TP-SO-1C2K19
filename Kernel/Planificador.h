@@ -103,6 +103,18 @@ typedef struct {
 
 t_list* listaGossiping;
 
+typedef struct{
+   char consistencia[3];
+   int particiones;
+   long tiempoCompactacion;
+} Metadata;
+typedef struct{
+	char* nombreTabla;
+	Metadata* metadata;
+} Tabla;
+
+t_list* listaTablas;
+
 /* --------------------    Definición de Funciones    -------------------- */
 
 // Funciones de Configuración

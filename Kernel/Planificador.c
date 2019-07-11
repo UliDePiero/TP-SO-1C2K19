@@ -50,6 +50,7 @@ int main() {
 	configurar(configuracion);
 	crearListasDeCriteriosMemorias(); // Creación de listas de criterios de consistencia
 	listaGossiping = list_create(); // Creación de lista para Tabla de Gossip
+	listaTablas = list_create(); // Creación de lista para las tablas
 	New = queue_create();
 	Ready = queue_create();
 	Exec = queue_create();
@@ -86,17 +87,18 @@ int main() {
 	queue_destroy(Ready);
 	queue_destroy(Exec);
 	queue_destroy(Exit);
-	list_destroy(ListaLQL);
 	sem_destroy(&semContadorLQL);
 	sem_destroy(&semMultiprocesamiento);
 	sem_destroy(&semEjecutarLQL);
-	free(LQL);
+	list_destroy(ListaLQL);
 	list_destroy(memoriaSC);
 	list_destroy(memoriasSHC);
 	list_destroy(memoriasEC);
 	list_destroy(listaGossiping);
+	list_destroy(listaTablas);
 	log_info(logger, "Modulo Kernel cerrado");
 	log_destroy(logger);
+	free(LQL);
 	free(configuracion);
 	desconectarseDe(socketMemoria);
 }
