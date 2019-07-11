@@ -13,6 +13,8 @@ void API_Kernel(void){
 	char* line = NULL;
 	char* instruccion_API = NULL;
 
+	//logger = log_create(logFile, "Planificador", true, LOG_LEVEL_INFO);
+
 	line = readline(">");
 
 	while(strncmp("EXIT", line, 5)){
@@ -169,14 +171,19 @@ void respuestas(void* socket_Mem){
 }
 void ejecutarSelect(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	int resultado = 0;
 	char** comando = validarComando(instruccion, 3);
 	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = SELECT;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
-		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando SELECT desde Kernel.");
+		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando SELECT desde Kernel.");
 		liberarPaquete(mensaje);
+
+		if (resultado > 0)
+			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+
 		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Value del SELECT de MEMORIA");
@@ -193,14 +200,18 @@ void ejecutarSelect(char* instruccion){
 }
 void ejecutarInsert(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	int resultado = 0;
 	char** comando = validarComando(instruccion, 4);
 	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = INSERT;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
-		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando INSERT desde Kernel.");
+		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando INSERT desde Kernel.");
 		liberarPaquete(mensaje);
+
+		if (resultado > 0)
+			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
 		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del INSERT en MEMORIA");
@@ -216,14 +227,18 @@ void ejecutarInsert(char* instruccion){
 }
 void ejecutarCreate(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	int resultado = 0;
 	char** comando = validarComando(instruccion, 5);
 	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = CREATE;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
-		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando CREATE desde Kernel.");
+		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando CREATE desde Kernel.");
 		liberarPaquete(mensaje);
+
+		if (resultado > 0)
+			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
 		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del CREATE en MEMORIA");
@@ -239,14 +254,18 @@ void ejecutarCreate(char* instruccion){
 }
 void ejecutarDescribe(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	int resultado = 0;
 	char** comando = validarComando(instruccion, 2);
 	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = DESCRIBE;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
-		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DESCRIBE desde Kernel.");
+		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DESCRIBE desde Kernel.");
 		liberarPaquete(mensaje);
+
+		if (resultado > 0)
+			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
 		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del DESCRIBE en MEMORIA");
@@ -265,14 +284,18 @@ void ejecutarDescribe(char* instruccion){
 }
 void ejecutarDrop(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	int resultado = 0;
 	char** comando = validarComando(instruccion, 2);
 	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = DROP;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
-		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DROP desde Kernel.");
+		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DROP desde Kernel.");
 		liberarPaquete(mensaje);
+
+		if (resultado > 0)
+			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
 		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del DROP en MEMORIA");
@@ -288,14 +311,18 @@ void ejecutarDrop(char* instruccion){
 }
 void ejecutarJournal(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	int resultado = 0;
 	char** comando = validarComando(instruccion, 1);
 	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = JOURNAL;
 		strcpy(mensaje->payload,instruccion);
 		mensaje->length = sizeof(mensaje->payload);
-		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando JOURNAL desde Kernel.");
+		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando JOURNAL desde Kernel.");
 		liberarPaquete(mensaje);
+
+		if (resultado > 0)
+			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
 		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del JOURNAL en MEMORIA");
@@ -317,7 +344,8 @@ void ejecutarAdd(char* instruccion) {
 	char** comando = validarComando(instruccion, 5);
 	if (comando){
 		if (validacionStringsFijosAdd(comando) && cadenaEsDigito(comando[2]) && validacionStringCriterios(comando[4])) {
-			printf("Comando ADD ejecutado correctamente\n");
+			//printf("Comando ADD ejecutado correctamente\n");
+			log_info(logFile, "'%s' ejecutado correctamente", instruccion);
 			int num = atoi(comando[2]);
 			if (!strcmp("SC", comando[4])) {
 				asociarACriterioSC(num);
@@ -327,8 +355,8 @@ void ejecutarAdd(char* instruccion) {
 				asociarACriterioEC(num);
 			}
 		} else
-			printf("Error en el comando ADD. La sintaxis correcta es: ADD MEMORY [NÚMERO] TO [CRITERIO]\n");
-
+			//printf("Error en el comando ADD. La sintaxis correcta es: ADD MEMORY [NÚMERO] TO [CRITERIO]\n");
+			log_error(logFile, "Error en el comando ADD. La sintaxis correcta es: ADD MEMORY [NÚMERO] TO [CRITERIO]");
 		for(int i = 0; i<5; i++)
 			free(comando[i]);
 		free(comando);
@@ -345,7 +373,8 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 		script = fopen(comando[1],"r");
 		//script = fopen(PATH_SCRIPT,"r"); //para hacer pruebas
 		if(script == NULL) {
-			  perror("Error al abrir el script.");
+			  //perror("Error al abrir el script.");
+			  log_error(logFile, "Error al abrir el script.");
 			  for(int i = 0; i<2; i++)
 				  free(comando[i]);
 			  free(comando);

@@ -212,12 +212,12 @@ void asociarACriterioSC(int nroMemoria) {
 			list_add(memoriaSC, (void*) nroMemoria); // Asignar la memoria al criterio
 			// Agregar el criterio en la Tabla de Gossip de la memoria:
 			nodoMemoria->criterioSC = 1; // Como la memoria está asignada al criterio SC, ponemos este campo en 1
-			printf("Se asignó la memoria %d al criterio SC \n", nroMemoria);
+			log_info(logFile,"Se asignó la memoria %d al criterio SC", nroMemoria);
 		} else
-			printf("La memoria %d no se encuentra conectada\n", nroMemoria);
+			log_error(logFile, "No se pudo asociar la memoria %d al criterio SC: Dicha memoria no se encuentra conectada", nroMemoria);
 	} else {
 		// Si ya hay una memoria asignada al criterio SC, informarlo y no hacer nada más
-		printf("Ya existe una memoria asignada al criterio SC \n");
+		log_error(logFile, "No se pudo asociar la memoria %d al criterio SC: Ya existe una memoria asignada al criterio SC", nroMemoria);
 	}
 }
 
@@ -240,9 +240,9 @@ void asociarACriterioEC(int nroMemoria) {
 	if (nodoMemoria) {
 		list_add(memoriasEC, (void*) nroMemoria);
 		nodoMemoria->criterioEC = 1;
-		printf("Se asignó la memoria %d al criterio EC \n", nroMemoria);
+		log_info(logFile, "Se asignó la memoria %d al criterio EC", nroMemoria);
 	} else
-		printf("La memoria %d no se encuentra conectada\n", nroMemoria);
+		log_error(logFile, "No se pudo asociar la memoria %d al criterio EC: Dicha memoria no se encuentra conectada", nroMemoria);
 }
 
 void desasociarDeCriterioSC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES PARA DESASOCIAR
@@ -251,10 +251,10 @@ void desasociarDeCriterioSC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES
 		// Eliminar el criterio en la Tabla de Gossip de la memoria:
 		TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria); // Buscar nodo correspondiente a la memoria en cuestión
 		nodoMemoria->criterioSC = 0; // Como la memoria ya no está asignada al criterio SC, ponemos este campo en 0
-		printf("Se desasoció la memoria %d del criterio SC \n", nroMemoria);
+		log_info(logFile, "Se desasoció la memoria %d del criterio SC", nroMemoria);
 	} else {
 		// Si no existe memoria asignada al criterio, informarlo y no hacer nada más
-		printf("No existe ninguna memoria asignada al criterio SC \n");
+		log_error(logFile, "No se pudo desasociar la memoria %d del criterio SC: No existe ninguna memoria asignada al criterio SC", nroMemoria);
 	}
 }
 
@@ -294,11 +294,11 @@ void desasociarDeCriterioEC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES
 			list_remove(memoriasEC, indice);
 			TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria);
 			nodoMemoria->criterioEC = 0;
-			printf("Se desasoció la memoria %d del criterio EC \n", nroMemoria);
+			log_info(logFile, "Se desasoció la memoria %d del criterio EC", nroMemoria);
 		}
 	} else {
 		// Si no existe memoria asignada al criterio, informarlo y no hacer nada más
-		printf("No existe ninguna memoria asignada al criterio EC \n");
+		log_error(logFile, "No se desasoció a la memoria %d del criterio EC: No existe ninguna memoria asignada al criterio EC", nroMemoria);
 	}
 }
 
@@ -308,7 +308,7 @@ TablaGossip* elegirMemoriaCriterioSC() {
 		TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
 		return memoriaElegida;
 	} else {
-		printf("No existe ninguna memoria asignada al criterio SC \n");
+		log_error("No se pudo elegir una memoria con criterio SC: No existe ninguna memoria asignada al criterio SC");
 	}
 	return NULL;
 }
@@ -328,7 +328,7 @@ TablaGossip* elegirMemoriaCriterioSHC(int key) {
 		TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
 		return memoriaElegida;
 	} else {
-		printf("No existe ninguna memoria asignada al criterio SHC \n");
+		printf("No se pudo elegir una memoria con criterio SHC: No existe ninguna memoria asignada al criterio SHC \n");
 	}
 	return NULL;
 }
@@ -350,7 +350,7 @@ TablaGossip* elegirMemoriaCriterioEC() {
 		TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
 		return memoriaElegida;
 	} else {
-		printf("No existe ninguna memoria asignada al criterio EC \n");
+		log_error(logFile, "No se pudo elegir una memoria con criterio EC: No existe ninguna memoria asignada al criterio EC");
 	}
 	return NULL;
 }
