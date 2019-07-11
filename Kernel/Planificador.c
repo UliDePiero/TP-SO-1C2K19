@@ -69,6 +69,14 @@ int main() {
 	realizarHandshakeConMemoria(); // Creo que esto después va a quedar dentro de Gossiping
 
 	crearHiloIndependiente(&hiloPlanificacion, (void*) planificacion, NULL,"Kernel(Planificacion)");
+
+	//Hacer siempre esto para cada memoria nueva agregada
+	if(socketMemoria!=1){
+		int *socket_m = malloc(sizeof(*socket_m));
+		*socket_m = socketMemoria;//Solo cambia el socket de la memoria nueva
+		crearHiloIndependiente(&hiloRespuestasRequest, (void*) respuestas, (void*)socket_m,"Kernel(Respuestas)");
+	}
+
 	crearHilo(&hiloAPI, (void*) API_Kernel, NULL, "Kernel(API)");
 
 	joinearHilo(hiloAPI, NULL, "Kernel(API)");
@@ -155,7 +163,7 @@ void realizarHandshakeConMemoria() {
 	liberarPaquete(msjeEnviado);
 
 	tPaquete* msjeRecibido = malloc(sizeof(tPaquete));
-	recv(socketMemoria, msjeRecibido, sizeof(tPaquete), 0);
+	recv(socketMemoria, msjeRecibido, sizeof(tPaquete), MSG_WAITALL);
 	armarNodoMemoria(atoi(msjeRecibido->payload));
 	liberarPaquete(msjeRecibido);
 }

@@ -31,7 +31,6 @@
 /* --------------------    Definición de Funciones    -------------------- */
 
 void API_Kernel(void);
-//int ejecutarInstruccion(char * instruccion);
 void ejecutarSelect(char* instruccion);
 void ejecutarInsert(char* instruccion);
 void ejecutarCreate(char* instruccion);
@@ -40,5 +39,6 @@ void ejecutarDrop(char* instruccion);
 void ejecutarJournal(char* instruccion);
 void ejecutarAdd(char* instruccion);
 int ejecutarRun(char* instruccion, int requestEjecutadas);
+void respuestas(void* socket_Mem);
 
 #endif /* API_KERNEL_H_ */

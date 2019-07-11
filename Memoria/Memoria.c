@@ -64,7 +64,6 @@ int main()
 	logger = log_create(logFile, "Memoria",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionMemoria));
 	for(int i=0;i<16;i++) configuracion->PUERTO_SEEDS[i]=0;
-	socketLFS=0;
 	configurar(configuracion);
 
 	// cliente
@@ -97,8 +96,13 @@ int main()
 	FD_ZERO(&setSocketsOrquestador);
 	FD_SET(socketEscucha, &setSocketsOrquestador);
 	maxSock = socketEscucha;
+	//Recepcion de mensajes
 	tMensaje tipoMensaje;
 	char * sPayload;
+	//Envio de mensajes
+	tPaquete* mensaje;
+	char* retorno;
+	int retornoINT;
 
 	crearHiloIndependiente(&hiloAPI,(void*)API_Memoria, NULL, "proceso Memoria(API)");
 
@@ -112,18 +116,18 @@ int main()
 			case SELECT:
 				printf("\nRecibi %s\n", sPayload);
 				//funcion SELECT
-				char* retornoS = ejecutarSelect(sPayload);
-				tPaquete* mensaje = malloc(sizeof(tPaquete));
-				if(retornoS != NULL)
+				retorno = ejecutarSelect(sPayload);
+				mensaje = malloc(sizeof(tPaquete));
+				if(retorno != NULL)
 				{
 					mensaje->type = SELECT;
-					strcpy(mensaje->payload,retornoS);
-					free(retornoS);
+					strcpy(mensaje->payload,retorno);
+					free(retorno);
 				}
 				else
 				{
 					mensaje->type = ERROR_EN_COMANDO;
-					strcpy(mensaje->payload,"");
+					strcpy(mensaje->payload,"SELECT");
 				}
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Value del SELECT de MEMORIA.");
@@ -132,18 +136,18 @@ int main()
 			case INSERT:
 				printf("\nRecibi %s\n", sPayload);
 				//funcion INSERT
-				char* retornoI = ejecutarInsert(sPayload);
-				tPaquete* mensaje = malloc(sizeof(tPaquete));
-				if(retornoI != NULL)
+				retorno = ejecutarInsert(sPayload);
+				mensaje = malloc(sizeof(tPaquete));
+				if(retorno != NULL)
 				{
 					mensaje->type = INSERT;
-					strcpy(mensaje->payload,retornoI);
-					free(retornoI);
+					strcpy(mensaje->payload,retorno);
+					free(retorno);
 				}
 				else
 				{
 					mensaje->type = ERROR_EN_COMANDO;
-					strcpy(mensaje->payload,"");
+					strcpy(mensaje->payload,"INSERT");
 				}
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del INSERT en MEMORIA.");
@@ -152,18 +156,18 @@ int main()
 			case CREATE:
 				printf("\nRecibi %s\n", sPayload);
 				//funcion CREATE
-				char* retornoC = ejecutarCreate(sPayload);
-				tPaquete* mensaje = malloc(sizeof(tPaquete));
-				if(retornoC != NULL)
+				retorno = ejecutarCreate(sPayload);
+				mensaje = malloc(sizeof(tPaquete));
+				if(retorno != NULL)
 				{
 					mensaje->type = CREATE;
-					strcpy(mensaje->payload,retornoC);
-					free(retornoC);
+					strcpy(mensaje->payload,retorno);
+					free(retorno);
 				}
 				else
 				{
 					mensaje->type = ERROR_EN_COMANDO;
-					strcpy(mensaje->payload,"");
+					strcpy(mensaje->payload,"CREATE");
 				}
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del CREATE en MEMORIA.");
@@ -173,7 +177,7 @@ int main()
 				printf("\nRecibi %s\n", sPayload);
 				//funcion DESCRIBE
 				ejecutarDescribe(sPayload);
-				/*tPaquete* mensaje = malloc(sizeof(tPaquete));
+				/*mensaje = malloc(sizeof(tPaquete));
 				if(retorno != NULL)
 				{
 					mensaje->type = DESCRIBE;
@@ -183,7 +187,27 @@ int main()
 				else
 				{
 					mensaje->type = ERROR_EN_COMANDO;
-					strcpy(mensaje->payload,"");
+					strcpy(mensaje->payload,"DESCRIBE");
+				}
+				mensaje->length = sizeof(mensaje->payload);
+				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del DESCRIBE en MEMORIA.");
+				liberarPaquete(mensaje);*/
+				break;
+			case DESCRIBE_TABLA:
+				printf("\nRecibi %s\n", sPayload);
+				//funcion DESCRIBE
+				ejecutarDescribe(sPayload);
+				/*mensaje = malloc(sizeof(tPaquete));
+				if(retorno != NULL)
+				{
+					mensaje->type = DESCRIBE;
+					strcpy(mensaje->payload,retorno);
+					free(retorno);
+				}
+				else
+				{
+					mensaje->type = ERROR_EN_COMANDO;
+					strcpy(mensaje->payload,"DESCRIBE");
 				}
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del DESCRIBE en MEMORIA.");
@@ -192,18 +216,18 @@ int main()
 			case DROP:
 				printf("\nRecibi %s\n", sPayload);
 				//funcion DROP
-				char* retornoD = ejecutarDrop(sPayload);
-				tPaquete* mensaje = malloc(sizeof(tPaquete));
-				if(retornoD != NULL)
+				retorno = ejecutarDrop(sPayload);
+				mensaje = malloc(sizeof(tPaquete));
+				if(retorno != NULL)
 				{
 					mensaje->type = DROP;
-					strcpy(mensaje->payload,retornoD);
-					free(retornoD);
+					strcpy(mensaje->payload,retorno);
+					free(retorno);
 				}
 				else
 				{
 					mensaje->type = ERROR_EN_COMANDO;
-					strcpy(mensaje->payload,"");
+					strcpy(mensaje->payload,"DROP");
 				}
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del DROP en MEMORIA.");
@@ -212,29 +236,28 @@ int main()
 			case JOURNAL:
 				printf("\nRecibi %s\n", sPayload);
 				//funcion JOURNAL
-				int retornoJ = ejecutarJournal(sPayload);
-				/*tPaquete* mensaje = malloc(sizeof(tPaquete));
-				if(retornoJ != 0)
+				retornoINT = ejecutarJournal(sPayload);
+				mensaje = malloc(sizeof(tPaquete));
+				if(retornoINT != 0)
 				{
 					mensaje->type = JOURNAL;
-					strcpy(mensaje->payload,retornoJ);
-					free(retornoJ);
+					itoa(retornoINT,mensaje->payload,10);
 				}
 				else
 				{
 					mensaje->type = ERROR_EN_COMANDO;
-					strcpy(mensaje->payload,"");
+					strcpy(mensaje->payload,"JOURNAL");
 				}
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del JOURNAL en MEMORIA.");
-				liberarPaquete(mensaje);*/
+				liberarPaquete(mensaje);
 				break;
 			case DESCONEXION:
 				printf("\nSe desconecto un cliente\n");
 				break;
 			case HANDSHAKE:
 				printf("\nKernel y Memoria realizan Handshake\n");
-				tPaquete* mensaje = malloc(sizeof(tPaquete));
+				mensaje = malloc(sizeof(tPaquete));
 				mensaje->type = HANDSHAKE;
 				strcpy(mensaje->payload, string_itoa(configuracion->MEMORY_NUMBER));
 				mensaje->length = sizeof(mensaje->payload);
@@ -254,7 +277,7 @@ int main()
 void terminar(){
 	memoriaPrincipalDestruir();
 	list_destroy(listaPaginasLRU);
-	if(socketLFS!=0)desconectarseDe(socketLFS);
+	if(socketLFS!=1)desconectarseDe(socketLFS);
 	int s=0;
 	while(configuracion->PUERTO_SEEDS[s] != 0 && s<seed){
 		desconectarseDe(socketSEED[s]);
@@ -307,10 +330,43 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
 					t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 					nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 					t_nodoLRU* nodo_reemplazo = insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
-					registro = buscarRegistro(nodo_reemplazo);
+					if(nodo_reemplazo->segmentoID != -1)
+						registro = buscarRegistro(nodo_reemplazo);
+					else
+						registro = -2;
 				}
-				if(registro == -1){
-				asignarRegistroASegmentoExistente(key, value, timestamp, segmento, pagina, registro);
+				if(registro != -1 && registro != -2){
+					asignarRegistroASegmentoExistente(key, value, timestamp, segmento, pagina, registro);
+					t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
+					nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
+					insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
+					/*
+					Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
+					Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
+					printf("\nInserto: %s %d %s %d", tabla,reg->key,reg->value,reg->timestamp );
+					printf("\nInserto2: %s %d %s %d", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
+					free(reg);
+					free(reg2);
+					*/
+				}
+				else if(registro == -2)
+					insertMemoria(tabla, key,value, timestamp);
+			}
+		}
+		else{
+			registro = buscarRegistroDisponible();
+			if(registro == -1){
+				printf("Memoria sin frames vacios\n");
+				t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
+				nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
+				t_nodoLRU* nodo_reemplazo = insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
+				if(nodo_reemplazo->segmentoID != -1)
+					registro = buscarRegistro(nodo_reemplazo);
+				else
+					registro = -2;
+			}
+			if(registro != -1 && registro != -2){
+				asignarRegistroANuevoSegmento(tabla, key, value, timestamp, segmento, registro);
 				t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 				nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 				insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
@@ -322,32 +378,9 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
 				free(reg);
 				free(reg2);
 				*/
-				}
 			}
-		}
-		else{
-			registro = buscarRegistroDisponible();
-			if(registro == -1){
-				printf("Memoria sin frames vacios\n");
-				t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
-				nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
-				t_nodoLRU* nodo_reemplazo = insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
-				registro = buscarRegistro(nodo_reemplazo);
-			}
-			if(registro == -1){
-			asignarRegistroANuevoSegmento(tabla, key, value, timestamp, segmento, registro);
-			t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
-			nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
-			insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
-			/*
-			Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
-			Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
-			printf("\nInserto: %s %d %s %d", tabla,reg->key,reg->value,reg->timestamp );
-			printf("\nInserto2: %s %d %s %d", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
-			free(reg);
-			free(reg2);
-			*/
-			}
+			else if(registro == -2)
+				insertMemoria(tabla, key,value, timestamp);
 		}
 	}
 }
@@ -413,10 +446,14 @@ void levantarMemoria(){
 	cantidadDeRegistros = configuracion->TAM_MEM / tamanioRealDeUnRegistro;
 	granMalloc = malloc(cantidadDeRegistros*tamanioRealDeUnRegistro);
 	for(int i=0; i <cantidadDeRegistros; i++)
-			setTimestamp(granMalloc+i*tamanioRealDeUnRegistro,-1);
+			//setTimestamp(granMalloc+i*tamanioRealDeUnRegistro,-1);
+			vaciarMemoria();
 	printf("tamanio granMalloc: %d\n", malloc_usable_size(granMalloc));
 }
 
+void vaciarMemoria(){
+	memset(granMalloc,0,cantidadDeRegistros*tamanioRealDeUnRegistro);
+}
 uint16_t getKey(void* registro){
 	uint16_t key = *(uint16_t*)registro;
 	return key;
@@ -497,15 +534,19 @@ void asignarRegistroASegmentoExistente(uint16_t key, char* value, int timestamp,
 }
 int buscarRegistroDisponible(){
 	for(int i = 0; i < cantidadDeRegistros; i++){
-		if (getTimestamp(granMalloc+i*tamanioRealDeUnRegistro) < 0) return i;
+		if (getTimestamp(granMalloc+i*tamanioRealDeUnRegistro) == 0) return i;
 	}
 	return -1;
 }
 int buscarRegistro(t_nodoLRU* nodo_reemplazo){
 	uint16_t key = getKey(tablaDeSegmentos[nodo_reemplazo->segmentoID]->tablaDePaginas[nodo_reemplazo->paginaID]->frame);
 	for(int i = 0; i < cantidadDeRegistros; i++){
-		if (getKey(granMalloc+i*tamanioRealDeUnRegistro) == key) return i;
+		if (getKey(granMalloc+i*tamanioRealDeUnRegistro) == key){
+			free(nodo_reemplazo);
+			return i;
+		}
 	}
+	free(nodo_reemplazo);
 	return -1;
 }
 
@@ -527,6 +568,8 @@ void journalMemoria(){
 			}
 			segmentoDestruir(tablaDeSegmentos[j]);
 		}
+		cantidadDeSegmentos = 0;
+		tablaDeSegmentos = (Segmento**) realloc(tablaDeSegmentos, 1);
 	}
 	sem_post(&mutexMemoria);
 	free(registro);

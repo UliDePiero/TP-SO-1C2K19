@@ -144,15 +144,19 @@ t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
 		if (lista->elements_count >= cantidadDeRegistros) {
 			if (!memoriaEstaFull(lista)) {
 				nodoLRU = desencolarPrimerElementoNoModificado(lista);
-				encolarNuevaPagina(lista, nodo);
+				//encolarNuevaPagina(lista, nodo);
 			}
 			else{
 				journalMemoria();
+				vaciarMemoria();
 				list_clean(lista);
-				encolarNuevaPagina(lista, nodo);
+				nodoLRU = malloc(sizeof(t_nodoLRU));
+				nodoLRU->segmentoID = -1;
+				//encolarNuevaPagina(lista, nodo);
 			}
 		} else
 			encolarNuevaPagina(lista, nodo);
 	}
+	free(nodo);
 	return nodoLRU;
 }

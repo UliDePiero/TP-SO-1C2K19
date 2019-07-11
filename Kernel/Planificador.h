@@ -38,6 +38,7 @@ t_log* logger;
 
 pthread_t hiloAPI;
 pthread_t hiloPlanificacion;
+pthread_t hiloRespuestasRequest;
 
 //Colas de procesos
 t_queue *New;

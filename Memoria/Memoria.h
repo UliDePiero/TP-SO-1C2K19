@@ -130,6 +130,7 @@ void setRegistro(void* registro, uint16_t key, int timestamp, char* value);
 Segmento* segmentoCrear(char*, Pagina**);
 Pagina* paginaCrear(int modificado, int nRegistro);
 void levantarMemoria();
+void vaciarMemoria();
 void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nSegmento, int nRegistro);
 void asignarRegistroASegmentoExistente(uint16_t key, char* value, int timestamp, int nSegmento, int nPagina, int nRegistro);
 int buscarRegistroDisponible();

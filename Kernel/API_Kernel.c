@@ -127,6 +127,49 @@ void API_Kernel(void){
 	free(line);
 }
 
+void respuestas(void* socket_Mem){
+	int socket_Memoria = *((int *) socket_Mem);
+	char* sPayload;
+	tMensaje tipo_mensaje;
+	while(1){
+		recibirPaquete(socket_Memoria,&tipo_mensaje,&sPayload,logger,"Respuesta de MEMORIA");
+		switch (tipo_mensaje) {
+			case SELECT:
+				printf("\nValue: %s",sPayload);
+				break;
+			case INSERT:
+				printf("\nSe inserto corectamente en MEMORIA: %s",sPayload);
+				break;
+			case CREATE:
+				printf("\nSe ejecuto corectamente el comando CREATE %s en MEMORIA",sPayload);
+				break;
+			case DESCRIBE:
+				printf("\nDESCRIBE: ");
+				break;
+			case DESCRIBE_TABLA:
+				printf("\nDESCRIBE: ");
+				break;
+			case DROP:
+				printf("\nSe elimino la tabla %s de MEMORIA", sPayload);
+				break;
+			case JOURNAL:
+				if(atoi(sPayload)==1)
+					printf("\nJOURNAL de MEMORIA correctamente ejecutado.");
+				else
+					printf("\nError en el JOURNAL de MEMORIA.");
+				break;
+			case ERROR_EN_COMANDO:
+				printf("\nHubo un error en la ejecucion del comando %s en MEMORIA", sPayload);
+				break;
+
+			default:
+				printf("Tipo de mensaje desconocido \n");
+				break;
+		}
+		free(sPayload);
+	}
+	free(socket_Mem);
+}
 void ejecutarSelect(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	char** comando = validarComando(instruccion, 3);
@@ -137,14 +180,14 @@ void ejecutarSelect(char* instruccion){
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando SELECT desde Kernel.");
 		liberarPaquete(mensaje);
-		char* sPayload;
+		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Value del SELECT de MEMORIA");
 		if(tipo_mensaje == ERROR_EN_COMANDO)
 			printf("\nHubo un error en la ejecucion del comando SELECT en MEMORIA");
 		else
 			printf("\nValue: %s",sPayload);
-		free(sPayload);
+		free(sPayload);*/
 		for(int i = 0; i<3; i++)
 			free(comando[i]);
 		free(comando);
@@ -161,14 +204,14 @@ void ejecutarInsert(char* instruccion){
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando INSERT desde Kernel.");
 		liberarPaquete(mensaje);
-		char* sPayload;
+		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del INSERT en MEMORIA");
 		if(tipo_mensaje == ERROR_EN_COMANDO)
 			printf("\nHubo un error en la ejecucion del comando INSERT en MEMORIA");
 		else
 			printf("\nSe inserto corectamente en MEMORIA: %s",sPayload);
-		free(sPayload);
+		free(sPayload);*/
 		for(int i = 0; i<4; i++)
 			free(comando[i]);
 		free(comando);
@@ -184,14 +227,14 @@ void ejecutarCreate(char* instruccion){
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando CREATE desde Kernel.");
 		liberarPaquete(mensaje);
-		char* sPayload;
+		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del CREATE en MEMORIA");
 		if(tipo_mensaje == ERROR_EN_COMANDO)
 			printf("\nHubo un error en la ejecucion del comando CREATE en MEMORIA");
 		else
 			printf("\nSe ejecuto corectamente el comando CREATE %s en MEMORIA",sPayload);
-		free(sPayload);
+		free(sPayload);*/
 		for(int i = 0; i<5; i++)
 			free(comando[i]);
 		free(comando);
@@ -207,7 +250,7 @@ void ejecutarDescribe(char* instruccion){
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DESCRIBE desde Kernel.");
 		liberarPaquete(mensaje);
-		char* sPayload;
+		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del DESCRIBE en MEMORIA");
 		if(tipo_mensaje == ERROR_EN_COMANDO)
@@ -217,7 +260,7 @@ void ejecutarDescribe(char* instruccion){
 
 
 
-		}
+		}*/
 		for(int i = 0; i<2; i++)
 			free(comando[i]);
 		free(comando);
@@ -233,13 +276,14 @@ void ejecutarDrop(char* instruccion){
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DROP desde Kernel.");
 		liberarPaquete(mensaje);
-		char* sPayload;
+		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del DROP en MEMORIA");
 		if(tipo_mensaje == ERROR_EN_COMANDO)
 			printf("\nHubo un error en la ejecucion del comando DROP en MEMORIA");
 		else
 			printf("\nSe elimino la tabla %s de MEMORIA", sPayload);
+		*/
 		for(int i = 0; i<2; i++)
 			free(comando[i]);
 		free(comando);
@@ -255,17 +299,17 @@ void ejecutarJournal(char* instruccion){
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando JOURNAL desde Kernel.");
 		liberarPaquete(mensaje);
-		char* sPayload;
+		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del JOURNAL en MEMORIA");
 		if(tipo_mensaje == ERROR_EN_COMANDO)
 			printf("\nHubo un error en la ejecucion del comando JOURNAL en MEMORIA");
 		else{
-			printf("\JOURNAL: ");
+			printf("\nJOURNAL: ");
 
 
 
-		}
+		}*/
 		free(comando[0]);
 		free(comando);
 	}
