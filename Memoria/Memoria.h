@@ -30,6 +30,7 @@
 #include <configuraciones.h>
 #include <parser.h>
 #include <inotify.h>
+#include <malloc.h>
 
 ///---------------------VARIABLES A UTILIZAR-------------------------
 int socketEscucha;
@@ -130,6 +131,7 @@ void setRegistro(void* registro, uint16_t key, int timestamp, char* value);
 Segmento* segmentoCrear(char*, Pagina**);
 Pagina* paginaCrear(int modificado, int nRegistro);
 void levantarMemoria();
+void resetearMemoria(void* punteroMemoria);
 void vaciarMemoria();
 void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nSegmento, int nRegistro);
 void asignarRegistroASegmentoExistente(uint16_t key, char* value, int timestamp, int nSegmento, int nPagina, int nRegistro);
@@ -161,5 +163,6 @@ void encolarPaginaExistente(t_list* lista, t_link_element* nodo);
 t_nodoLRU* desencolarPrimerElementoNoModificado(t_list *lista);
 int estaEnListaDePaginas(t_list* lista, t_nodoLRU* nodo);
 t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo);
+void removerElemento(t_list* lista, t_nodoLRU* nodo);
 
 #endif /* MEMORIA_H_ */

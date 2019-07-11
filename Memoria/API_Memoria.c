@@ -35,7 +35,7 @@ void* API_Memoria(){
 				break;
 			case DESCRIBE:
 				retornoLista = ejecutarDescribe(instruccion_API);
-				list_destroy(retornoLista);
+				if(retornoLista)list_destroy(retornoLista);
 				break;
 			case DROP:
 				retorno =ejecutarDrop(instruccion_API);
@@ -119,13 +119,15 @@ t_list* ejecutarDescribe(char* instruccion){
 	t_list* retorno;
 	char** comando = string_n_split(instruccion, 2, " ");
 	if(comando[1]){
+		sleep(configuracion->RETARDO_MEM / 1000);
 		retorno = list_create();
 		char* metadata = describeMemoriaTabla(comando[1]);
 		list_add(retorno, metadata);
 		printf("\nMetadata: %s", (char*)retorno->head->data);
 		free(comando[1]);
-		free(metadata);
+		if(metadata) free(metadata);
 	}else{
+		sleep(configuracion->RETARDO_MEM / 1000);
 		retorno = describeMemoria();
 		list_iterate(retorno,(void*)muestraLista);
 	}
@@ -138,6 +140,7 @@ char* ejecutarDrop(char* instruccion){
 	puts("drop ejecutado");
 	char** comando = validarComando(instruccion, 2);
 	if(comando){
+		sleep(configuracion->RETARDO_MEM / 1000);
 		dropMemoria(comando[1]);
 		retorno = string_duplicate(comando[1]);
 		for(int i = 0; i<2; i++)

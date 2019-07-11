@@ -390,21 +390,26 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 			return getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
 		}
 		else{
-			char* select_mensaje = string_from_format("SELECT %s %d",tabla,key);
-			tPaquete* mensaje = malloc(sizeof(tPaquete));
-			mensaje->type = SELECT;
-			strcpy(mensaje->payload,select_mensaje);
-			mensaje->length = sizeof(mensaje->payload);
-			enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando SELECT desde Memoria.");
-			liberarPaquete(mensaje);
-			free(select_mensaje);
-			char* sPayload;
-			tMensaje tipo_mensaje;
-			recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Value del SELECT de LFS");
-			insertMemoria(tabla, key, sPayload, getCurrentTime());
-			free(sPayload);
-			Registro* registro = selectMemoria(tabla, key);
-			return registro;
+			if(socketLFS!=1){
+				char* select_mensaje = string_from_format("SELECT %s %d",tabla,key);
+				tPaquete* mensaje = malloc(sizeof(tPaquete));
+				mensaje->type = SELECT;
+				strcpy(mensaje->payload,select_mensaje);
+				mensaje->length = sizeof(mensaje->payload);
+				enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando SELECT desde Memoria.");
+				liberarPaquete(mensaje);
+				free(select_mensaje);
+				char* sPayload;
+				tMensaje tipo_mensaje;
+				recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Value del SELECT de LFS");
+				insertMemoria(tabla, key, sPayload, getCurrentTime());
+				free(sPayload);
+				Registro* registro = selectMemoria(tabla, key);
+				return registro;
+			}else{
+				perror("LFS no conectado.");
+				return NULL;
+			}
 		}
 	}
 	else{
@@ -414,35 +419,45 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 }
 
 void dropMemoria(char* tabla){
-	int segmento = 0, pagina = 0, registro = 0, key = 0, *pKey;
+	int segmento = 0, pagina = 0;
+	void *pKey;
+	t_nodoLRU* nodo;
 	for(segmento=0; segmento<cantidadDeSegmentos; segmento++){
 		if(strcmp(tablaDeSegmentos[segmento]->tabla, tabla) == 0)
 		{
 			printf("encontre tabla\n");
-			t_list* listaKeys = list_create();
+			t_list* listaPunteros = list_create();
 			for(pagina=0; pagina<tablaDeSegmentos[segmento]->cantidadDePaginas; pagina++){
-				pKey = malloc(sizeof(int));
-				*pKey = getKey(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
-				list_add(listaKeys,pKey);
+				pKey = tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame;
+				list_add(listaPunteros,pKey);
+				nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
+				nodo->modificado=-1;nodo->paginaID=pagina;nodo->segmentoID=segmento;
+				removerElemento(listaPaginasLRU,nodo);
 			}
-			for(key=0;key<listaPaginasLRU->elements_count; key++){
-				for(registro = 0; registro < cantidadDeRegistros; registro++){
-					if (getKey(granMalloc+registro*tamanioRealDeUnRegistro) == (int)listaPaginasLRU->head->data){
-						memset(granMalloc+registro*tamanioRealDeUnRegistro,0,tamanioRealDeUnRegistro);
-						break;
-					}
-				}
+			list_iterate(listaPunteros,(void*)resetearMemoria);
+			free(listaPunteros);
+			cantidadDeSegmentos--;
+			if(cantidadDeSegmentos == 0)
+				tablaDeSegmentos = (Segmento**) realloc(tablaDeSegmentos, 1);
+			else
+				tablaDeSegmentos = (Segmento**) realloc(tablaDeSegmentos, cantidadDeSegmentos*sizeof(Segmento*));
+			if(segmento!=cantidadDeSegmentos)
+			{
+				segmentoDestruir(tablaDeSegmentos[segmento]);
+				tablaDeSegmentos[segmento] = tablaDeSegmentos[cantidadDeSegmentos];
 			}
-			list_destroy(listaKeys);
-			segmentoDestruir(tablaDeSegmentos[segmento]);
-			tPaquete* mensaje = malloc(sizeof(tPaquete));
-			mensaje->type = DROP;
-			char* comando = string_from_format("DROP %s", tabla);
-			strcpy(mensaje->payload,comando);
-			mensaje->length = sizeof(mensaje->payload);
-			enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DROP desde Memoria.");
-			liberarPaquete(mensaje);
-			free(comando);
+			else
+				segmentoDestruir(tablaDeSegmentos[segmento]);
+			if(socketLFS!=1){
+				tPaquete* mensaje = malloc(sizeof(tPaquete));
+				mensaje->type = DROP;
+				char* comando = string_from_format("DROP %s", tabla);
+				strcpy(mensaje->payload,comando);
+				mensaje->length = sizeof(mensaje->payload);
+				enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DROP desde Memoria.");
+				liberarPaquete(mensaje);
+				free(comando);
+			}
 			break;
 		}
 	}
@@ -450,51 +465,54 @@ void dropMemoria(char* tabla){
 
 char* describeMemoriaTabla(char* tabla){
 	char* retorno;
-	tPaquete* mensaje = malloc(sizeof(tPaquete));
-	mensaje->type = DESCRIBE;
-	char* comando = string_from_format("DESCRIBE %s", tabla);
-	strcpy(mensaje->payload,comando);
-	mensaje->length = sizeof(mensaje->payload);
-	enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DESCRIBE_TABLA desde Memoria.");
-	liberarPaquete(mensaje);
-	free(comando);
-	char* sPayload;
-	tMensaje tipo_mensaje;
-	recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Metadata de la tabla desde LFS");
-	retorno = string_duplicate(sPayload);
-	free(sPayload);
+	if(socketLFS!=1){
+		tPaquete* mensaje = malloc(sizeof(tPaquete));
+		mensaje->type = DESCRIBE;
+		char* comando = string_from_format("DESCRIBE %s", tabla);
+		strcpy(mensaje->payload,comando);
+		mensaje->length = sizeof(mensaje->payload);
+		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DESCRIBE_TABLA desde Memoria.");
+		liberarPaquete(mensaje);
+		free(comando);
+		char* sPayload;
+		tMensaje tipo_mensaje;
+		recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Metadata de la tabla desde LFS");
+		retorno = string_duplicate(sPayload);
+		free(sPayload);
+
+	}
 	return retorno;
 }
 
 t_list* describeMemoria(){
 	t_list* retorno = list_create();
-	tPaquete* mensaje = malloc(sizeof(tPaquete));
-	mensaje->type = DESCRIBE;
-	char* comando = string_from_format("DESCRIBE");
-	strcpy(mensaje->payload,comando);
-	mensaje->length = sizeof(mensaje->payload);
-	enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DESCRIBE desde Memoria.");
-	liberarPaquete(mensaje);
-	free(comando);
-	char* sPayload;
-	tMensaje tipo_mensaje;
-	recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Cantidad de tablas en LFS");
-	int cantidadTablas = atoi(sPayload);
-	free(sPayload);
-	char* metadata;
-	for(int i=0;i<cantidadTablas; i++){
-		recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Metadata de una tabla de LFS");
-		metadata = string_duplicate(sPayload);
-		list_add(retorno,metadata);
-		free(metadata);
+	if(socketLFS!=1){
+		tPaquete* mensaje = malloc(sizeof(tPaquete));
+		mensaje->type = DESCRIBE;
+		char* comando = string_from_format("DESCRIBE");
+		strcpy(mensaje->payload,comando);
+		mensaje->length = sizeof(mensaje->payload);
+		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DESCRIBE desde Memoria.");
+		liberarPaquete(mensaje);
+		free(comando);
+		char* sPayload;
+		tMensaje tipo_mensaje;
+		recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Cantidad de tablas en LFS");
+		int cantidadTablas = atoi(sPayload);
 		free(sPayload);
+		char* metadata;
+		for(int i=0;i<cantidadTablas; i++){
+			recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Metadata de una tabla de LFS");
+			metadata = string_duplicate(sPayload);
+			list_add(retorno,metadata);
+			free(metadata);
+			free(sPayload);
+		}
 	}
 	return retorno;
 }
 
 void levantarMemoria(){
-#include <malloc.h>
-
 	tablaDeSegmentos = malloc(1);
 	maxValueSize = 20; //ESTO TIENE QUE VENIR DE LFS
 	tamanioRealDeUnRegistro = sizeof(int) + sizeof(uint16_t) + maxValueSize ;
@@ -505,7 +523,9 @@ void levantarMemoria(){
 			vaciarMemoria();
 	printf("tamanio granMalloc: %d\n", malloc_usable_size(granMalloc));
 }
-
+void resetearMemoria(void* punteroMemoria){
+	memset(punteroMemoria,0,tamanioRealDeUnRegistro);
+}
 void vaciarMemoria(){
 	memset(granMalloc,0,cantidadDeRegistros*tamanioRealDeUnRegistro);
 }

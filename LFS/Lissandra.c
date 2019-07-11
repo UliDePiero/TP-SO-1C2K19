@@ -94,7 +94,7 @@ void destruirLFS(){
 	exit(0);
 }
 
-int main45(){
+int main(){
 	levantarLFS();
 
 	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS Config");
@@ -104,9 +104,6 @@ int main45(){
 	//servidor
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
 
-	/*socketEscucha= levantarServidorIPautomatica(configuracion->PUERTO_ESCUCHA, BACKLOG); //BACKLOG es la cantidad de clientes que pueden conectarse a este servidor
-	socketActivo = aceptarComunicaciones(socketEscucha);*/
-
 	fd_set setSocketsOrquestador;
 	FD_ZERO(&setSocketsOrquestador);
 
@@ -114,7 +111,6 @@ int main45(){
 
 	socketEscucha = crearSocketEscucha(configuracion->PUERTO_ESCUCHA, logger);
 
-	//ESTO TIENE QUE IR EN UN HILO APARTE PARA QUE QUEDE EN LOOP  ???
 	FD_SET(socketEscucha, &setSocketsOrquestador);
 	maxSock = socketEscucha;
 	tMensaje tipoMensaje;
@@ -200,7 +196,7 @@ int main45(){
 }
 
 //MAIN DE TESTS
-int main3(){
+int main2(){
 	levantarLFS();
 	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS config");
 	crearHilo(&hiloAPI,(void*)API_LFS, NULL, "LFS API");
@@ -213,7 +209,7 @@ int main3(){
 	return 0;
 
 }
-int main(){
+int main1(){
 	levantarLFS();
 	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigLFS, NULL, "LFS config");
 	crearHiloIndependiente(&hiloDump,(void*)dumpLFS, NULL, "LFS Dump");

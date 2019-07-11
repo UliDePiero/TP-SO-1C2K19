@@ -61,6 +61,29 @@ void encolarPaginaExistente(t_list* lista, t_link_element* nodo) {
 	nodo->next = NULL;
 }
 
+void removerElemento(t_list* lista, t_nodoLRU* nodo) {
+	t_link_element* nodoActual = lista->head;
+	t_link_element* nodoAnterior = NULL;
+	t_nodoLRU* nodoLRUAux;
+
+	while (nodoActual && (nodoLRUAux->segmentoID != nodo->segmentoID || nodoLRUAux->paginaID != nodo->paginaID))
+	{
+		nodoAnterior = nodoActual;
+		nodoActual = nodoActual->next;
+		if (nodoActual)
+			nodoLRUAux = nodoActual->data;
+	}
+	if (nodoActual && (nodoLRUAux->segmentoID == nodo->segmentoID && nodoLRUAux->paginaID == nodo->paginaID)) {
+		if (!nodoAnterior)
+			lista->head = nodoActual->next;
+		else
+			nodoAnterior->next = nodoActual->next;
+		lista->elements_count--;
+		free(nodoActual);
+	}
+	free(nodo);
+}
+
 t_nodoLRU* desencolarPrimerElementoNoModificado(t_list *lista) {
 	t_link_element* nodoActual = lista->head;
 	t_link_element* nodoAnterior = NULL;
