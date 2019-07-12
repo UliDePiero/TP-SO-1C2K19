@@ -130,11 +130,12 @@ void API_Kernel(void){
 }
 
 void respuestas(void* socket_Mem){
-	int socket_Memoria = *((int *) socket_Mem);
+	int socket_Memoria = *((int *) socket_Mem), conexion = 1;
 	char* sPayload;
 	tMensaje tipo_mensaje;
-	while(1){
-		recibirPaquete(socket_Memoria,&tipo_mensaje,&sPayload,logger,"Respuesta de MEMORIA");
+	while(conexion != 0){
+		conexion=recibirPaquete(socket_Memoria,&tipo_mensaje,&sPayload,logger,"Respuesta de MEMORIA");
+		if(conexion !=0)
 		switch (tipo_mensaje) {
 			case SELECT:
 				printf("\nValue: %s",sPayload);
@@ -173,9 +174,10 @@ void respuestas(void* socket_Mem){
 				puts("\n>");
 				break;
 		}
-		free(sPayload);
+		if(sPayload != NULL) free(sPayload);
 	}
 	free(socket_Mem);
+	pthread_cancel(hiloAPI);
 }
 void ejecutarSelect(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
