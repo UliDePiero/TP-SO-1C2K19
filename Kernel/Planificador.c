@@ -102,7 +102,6 @@ int main() {
 	sem_post(&loggerSemaforo);
 	log_destroy(logger);
 	sem_destroy(&loggerSemaforo);
-	free(LQL);
 	free(configuracion);
 	desconectarseDe(socketMemoria);
 }
@@ -135,7 +134,7 @@ void planificacion() {
 	}
 }
 void cargarNuevoLQL(char* ScriptLQL) {
-	EstructuraLQL* NuevoLQL = malloc(sizeof(EstructuraLQL)); //FALTA FREE//FALTA FREE//FALTA FREE//FALTA FREE//FALTA FREE//FALTA FREE moverLQL(Exec,Exit);
+	EstructuraLQL* NuevoLQL = malloc(sizeof(EstructuraLQL));
 	queue_push(New, NuevoLQL);
 	NuevoLQL->FlagIncializado = 0;
 	NuevoLQL->requestEjecutadas = 0;
@@ -149,10 +148,6 @@ void cargarNuevoLQL(char* ScriptLQL) {
 	sem_post(&semContadorLQL);
 }
 void moverLQL(t_queue *colaOrigen, t_queue *colaDestino) {
-	/*
-	 EstructuraLQL* LQL;
-	 EstructuraLQL* LQL_Elegido = list_find(ListaLQL, (void*) (LQL->ID == ID)); //puede romper duramente
-	 */
 	queue_push(colaDestino, queue_pop(colaOrigen));
 }
 void actualizarRequestEjecutadas() {

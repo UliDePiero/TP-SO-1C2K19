@@ -283,7 +283,7 @@ void terminar(){
 	exit(0);
 }
 
-void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
+void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp){
 	int segmento = 0, pagina = 0, registro = -1;
 	if(cantidadDeSegmentos == 0){
 		registro = 0;
@@ -291,14 +291,14 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
 		t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 		nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 		insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
-		/*
+/*
 		Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
 		Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
-		printf("\nInserto: %s %d %s %d", tabla,reg->key,reg->value,reg->timestamp );
-		printf("\nInserto2: %s %d %s %d", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
+		printf("\nInserto: %s %d %s %llu", tabla,reg->key,reg->value,reg->timestamp );
+		printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
 		free(reg);
 		free(reg2);
-		*/
+*/
 	}
 	else{
 		for(segmento=0; segmento<cantidadDeSegmentos; segmento++){
@@ -331,14 +331,14 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
 					t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 					nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 					insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
-					/*
+/*
 					Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
 					Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
-					printf("\nInserto: %s %d %s %d", tabla,reg->key,reg->value,reg->timestamp );
-					printf("\nInserto2: %s %d %s %d", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
+					printf("\nInserto: %s %d %s %llu", tabla,reg->key,reg->value,reg->timestamp );
+					printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
 					free(reg);
 					free(reg2);
-					*/
+*/
 				}
 				else if(registro == -2)
 					insertMemoria(tabla, key,value, timestamp);
@@ -361,14 +361,14 @@ void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp){
 				t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 				nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 				insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
-				/*
+/*
 				Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
 				Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
-				printf("\nInserto: %s %d %s %d", tabla,reg->key,reg->value,reg->timestamp );
-				printf("\nInserto2: %s %d %s %d", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
+				printf("\nInserto: %s %d %s %llu", tabla,reg->key,reg->value,reg->timestamp );
+				printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
 				free(reg);
 				free(reg2);
-				*/
+*/
 			}
 			else if(registro == -2)
 				insertMemoria(tabla, key,value, timestamp);
@@ -518,7 +518,7 @@ t_list* describeMemoria(){
 void levantarMemoria(){
 	tablaDeSegmentos = malloc(1);
 	maxValueSize = 20; //ESTO TIENE QUE VENIR DE LFS
-	tamanioRealDeUnRegistro = sizeof(int) + sizeof(uint16_t) + maxValueSize ;
+	tamanioRealDeUnRegistro = sizeof(uint64_t) + sizeof(uint16_t) + maxValueSize ;
 	cantidadDeRegistros = configuracion->TAM_MEM / tamanioRealDeUnRegistro;
 	granMalloc = malloc(cantidadDeRegistros*tamanioRealDeUnRegistro);
 	for(int i=0; i <cantidadDeRegistros; i++)
@@ -536,28 +536,28 @@ uint16_t getKey(void* registro){
 	uint16_t key = *(uint16_t*)registro;
 	return key;
 }
-int getTimestamp(void* registro){
-	int timestamp = *(int*)(registro+sizeof(uint16_t));
+uint64_t getTimestamp(void* registro){
+	uint64_t timestamp = *(uint64_t*)(registro+sizeof(uint16_t));
 	return timestamp;
 }
 Registro* getRegistro(void* registro){
 	Registro* reg = (Registro*) malloc(sizeof(Registro));
 	reg->value = (char*) malloc(maxValueSize);
 	reg->key = *(uint16_t*)registro;
-	reg->timestamp = *(int*)(registro+sizeof(uint16_t));
-	strcpy(reg->value,(char*)(registro+sizeof(uint16_t)+sizeof(int)));
+	reg->timestamp = *(uint64_t*)(registro+sizeof(uint16_t));
+	strcpy(reg->value,(char*)(registro+sizeof(uint16_t)+sizeof(uint64_t)));
 	return reg;
 }
 void setValue(void* registro, char* value){
-	memcpy(registro+sizeof(uint16_t)+sizeof(int),value,maxValueSize);
+	memcpy(registro+sizeof(uint16_t)+sizeof(uint64_t),value,maxValueSize);
 }
-void setTimestamp(void* registro, int timestamp){
-	memcpy(registro+sizeof(uint16_t),&timestamp,sizeof(int));
+void setTimestamp(void* registro, uint64_t timestamp){
+	memcpy(registro+sizeof(uint16_t),&timestamp,sizeof(uint64_t));
 }
-void setRegistro(void* registro, uint16_t key, int timestamp, char* value){
+void setRegistro(void* registro, uint16_t key, uint64_t timestamp, char* value){
 	memcpy(registro,&key,sizeof(uint16_t));
 	memcpy(registro+sizeof(uint16_t),&timestamp,sizeof(int));
-	memcpy(registro+sizeof(uint16_t)+sizeof(int),value,maxValueSize);
+	memcpy(registro+sizeof(uint16_t)+sizeof(uint64_t),value,maxValueSize);
 }
 Segmento* segmentoCrear(char* tabla, Pagina** tablaDePaginas){
 	Segmento* segmento = (Segmento*)malloc(sizeof(Segmento));
@@ -589,7 +589,7 @@ void memoriaPrincipalDestruir(){
 		segmentoDestruir(tablaDeSegmentos[j]);
 	free(granMalloc);
 }
-void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nSegmento, int nRegistro){
+void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nRegistro){
 	cantidadDeSegmentos++;
 	tablaDeSegmentos = (Segmento**) realloc(tablaDeSegmentos, cantidadDeSegmentos*sizeof(Segmento*));
 	Pagina* paginaDelSegmento = paginaCrear(0, nRegistro);
@@ -602,7 +602,7 @@ void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int t
 	tablaDeSegmentos[nSegmento]->tablaDePaginas[tablaDeSegmentos[nSegmento]->cantidadDePaginas - 1] = paginaDelSegmento;
 	setRegistro(granMalloc+nRegistro*tamanioRealDeUnRegistro,key,timestamp,value);
 }
-void asignarRegistroASegmentoExistente(uint16_t key, char* value, int timestamp, int nSegmento, int nPagina, int nRegistro){
+void asignarRegistroASegmentoExistente(uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nPagina, int nRegistro){
 	Pagina* paginaDelSegmento = paginaCrear(0, nRegistro);
 	tablaDeSegmentos[nSegmento]->cantidadDePaginas ++;
 	tablaDeSegmentos[nSegmento]->tablaDePaginas = (Pagina**) realloc(tablaDeSegmentos[nSegmento]->tablaDePaginas, tablaDeSegmentos[nSegmento]->cantidadDePaginas*sizeof(Pagina*));
@@ -639,7 +639,7 @@ void journalMemoria(){
 				if(tablaDeSegmentos[j]->tablaDePaginas[i]->modificado == 1){
 					instruccion = malloc(15+sizeof(tablaDeSegmentos[j]->tabla)+sizeof(registro->key)+sizeof(registro->value)+sizeof(registro->timestamp));
 					registro = getRegistro(tablaDeSegmentos[j]->tablaDePaginas[i]->frame);
-					sprintf (instruccion, "INSERT %s %hd %s %d \n", tablaDeSegmentos[j]->tabla, registro->key, registro->value, registro->timestamp);
+					sprintf (instruccion, "INSERT %s %hd %s %llu \n", tablaDeSegmentos[j]->tabla, registro->key, registro->value, registro->timestamp);
 					ejecutarInsertJournal(instruccion);
 					free(instruccion);
 				}

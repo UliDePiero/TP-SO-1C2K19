@@ -15,7 +15,7 @@ void API_Kernel(void){
 
 	//logger = log_create(logFile, "Planificador", true, LOG_LEVEL_INFO);
 
-	line = readline(">");
+	line = readline(">\n");
 
 	while(strncmp("EXIT", line, 5)){
 		//linea2 = string_duplicate(linea);
@@ -124,7 +124,7 @@ void API_Kernel(void){
 		}
 		free(line);
 		free(instruccion_API);
-		line = readline(">");
+		line = readline(">\n");
 	}
 	free(line);
 }
@@ -138,31 +138,39 @@ void respuestas(void* socket_Mem){
 		switch (tipo_mensaje) {
 			case SELECT:
 				printf("\nValue: %s",sPayload);
+				puts("\n>");
 				break;
 			case INSERT:
 				printf("\nSe inserto corectamente en MEMORIA: %s",sPayload);
+				puts("\n>");
 				break;
 			case CREATE:
 				printf("\nSe ejecuto corectamente el comando CREATE %s en MEMORIA",sPayload);
+				puts("\n>");
 				break;
 			case DESCRIBE:
 				printf("\nDESCRIBE:\n %s",sPayload);
+				puts("\n>");
 				break;
 			case DROP:
 				printf("\nSe elimino la tabla %s de MEMORIA", sPayload);
+				puts("\n>");
 				break;
 			case JOURNAL:
 				if(atoi(sPayload)==1)
 					printf("\nJOURNAL de MEMORIA correctamente ejecutado.");
 				else
 					printf("\nError en el JOURNAL de MEMORIA.");
+					puts("\n>");
 				break;
 			case ERROR_EN_COMANDO:
 				printf("\nHubo un error en la ejecucion del comando %s en MEMORIA", sPayload);
+				puts("\n>");
 				break;
 
 			default:
 				printf("Tipo de mensaje desconocido \n");
+				puts("\n>");
 				break;
 		}
 		free(sPayload);

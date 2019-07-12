@@ -96,7 +96,7 @@ t_list* listaPaginasLRU;
 int maxValueSize; //Obtener de LISS en el handshake
 
 typedef struct {
-		int timestamp;
+		uint64_t timestamp;
 		uint16_t key;
 		char* value;
 } Registro;
@@ -123,22 +123,22 @@ void segmentoDestruir(Segmento*);
 void paginaDestruir(Pagina*);
 void registroDestruir(Registro* registro);
 uint16_t getKey(void* registro);
-int getTimestamp(void* registro);
+uint64_t getTimestamp(void* registro);
 Registro* getRegistro(void* registro);
 void setValue(void* registro, char* value);
-void setTimestamp(void* registro, int timestamp);
-void setRegistro(void* registro, uint16_t key, int timestamp, char* value);
+void setTimestamp(void* registro, uint64_t timestamp);
+void setRegistro(void* registro, uint16_t key, uint64_t timestamp, char* value);
 Segmento* segmentoCrear(char*, Pagina**);
 Pagina* paginaCrear(int modificado, int nRegistro);
 void levantarMemoria();
 void resetearMemoria(void* punteroMemoria);
 void vaciarMemoria();
-void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, int timestamp, int nSegmento, int nRegistro);
-void asignarRegistroASegmentoExistente(uint16_t key, char* value, int timestamp, int nSegmento, int nPagina, int nRegistro);
+void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nRegistro);
+void asignarRegistroASegmentoExistente(uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nPagina, int nRegistro);
 int buscarRegistroDisponible();
 int buscarRegistro(t_nodoLRU* nodo_reemplazo);
 
-void insertMemoria(char* tabla, uint16_t key, char* value, int timestamp);
+void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp);
 Registro* selectMemoria(char* tabla, uint16_t key);
 void journalMemoria();
 void dropMemoria(char* tabla);
