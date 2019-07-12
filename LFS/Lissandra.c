@@ -121,7 +121,7 @@ int main(){
 
 		puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
-		printf("Socket comunicacion: %d \n", socketActivo);//CORREGIR getConnection
+		log_info(logger, "Socket comunicacion: %d", socketActivo);//CORREGIR getConnection
 		if (socketActivo != -1) {
 
 			switch (tipoMensaje) {
@@ -190,10 +190,10 @@ int main(){
 					}
 					break;
 				case DESCONEXION:
-					printf("\nSe desconecto un cliente, socket: %d\n", socketActivo);
+					log_info(logger, "Se desconecto un cliente, socket: %d", socketActivo);
 					break;
 				case HANDSHAKE:
-					printf("\nMemoria y LFS realizan Handshake\n");
+					log_info(logger, "Memoria y LFS realizan Handshake");
 					tPaquete* mensaje = malloc(sizeof(tPaquete));
 					mensaje->type = HANDSHAKE;
 					strcpy(mensaje->payload, string_itoa(configuracion->TAMANIO_VALUE));

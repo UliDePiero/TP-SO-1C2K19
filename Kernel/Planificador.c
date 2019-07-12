@@ -60,6 +60,7 @@ int main() {
 	sem_init(&semContadorLQL, 0, 0);
 	sem_init(&semMultiprocesamiento, 0, configuracion->MULTIPROCESAMIENTO);
 	sem_init(&semEjecutarLQL, 0, 0);
+	sem_init(&loggerSemaforo, 1, 1);
 
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
 
@@ -96,8 +97,11 @@ int main() {
 	list_destroy(memoriasEC);
 	list_destroy(listaGossiping);
 	list_destroy(listaTablas);
+	sem_wait(&loggerSemaforo);
 	log_info(logger, "Modulo Kernel cerrado");
+	sem_post(&loggerSemaforo);
 	log_destroy(logger);
+	sem_destroy(&loggerSemaforo);
 	free(LQL);
 	free(configuracion);
 	desconectarseDe(socketMemoria);
@@ -212,12 +216,20 @@ void asociarACriterioSC(int nroMemoria) {
 			list_add(memoriaSC, (void*) nroMemoria); // Asignar la memoria al criterio
 			// Agregar el criterio en la Tabla de Gossip de la memoria:
 			nodoMemoria->criterioSC = 1; // Como la memoria está asignada al criterio SC, ponemos este campo en 1
+			sem_wait(&loggerSemaforo);
 			log_info(logger,"Se asignó la memoria %d al criterio SC", nroMemoria);
-		} else
+			sem_post(&loggerSemaforo);
+		} else{
+			sem_wait(&loggerSemaforo);
 			log_error(logger, "No se pudo asociar la memoria %d al criterio SC: Dicha memoria no se encuentra conectada", nroMemoria);
+			sem_post(&loggerSemaforo);
+		}
+
 	} else {
 		// Si ya hay una memoria asignada al criterio SC, informarlo y no hacer nada más
+		sem_wait(&loggerSemaforo);
 		log_error(logger, "No se pudo asociar la memoria %d al criterio SC: Ya existe una memoria asignada al criterio SC", nroMemoria);
+		sem_post(&loggerSemaforo);
 	}
 }
 
@@ -240,9 +252,14 @@ void asociarACriterioEC(int nroMemoria) {
 	if (nodoMemoria) {
 		list_add(memoriasEC, (void*) nroMemoria);
 		nodoMemoria->criterioEC = 1;
+		sem_wait(&loggerSemaforo);
 		log_info(logger, "Se asignó la memoria %d al criterio EC", nroMemoria);
-	} else
+		sem_post(&loggerSemaforo);
+	} else{
+		sem_wait(&loggerSemaforo);
 		log_error(logger, "No se pudo asociar la memoria %d al criterio EC: Dicha memoria no se encuentra conectada", nroMemoria);
+		sem_post(&loggerSemaforo);
+	}
 }
 
 void desasociarDeCriterioSC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES PARA DESASOCIAR
@@ -251,10 +268,14 @@ void desasociarDeCriterioSC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES
 		// Eliminar el criterio en la Tabla de Gossip de la memoria:
 		TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria); // Buscar nodo correspondiente a la memoria en cuestión
 		nodoMemoria->criterioSC = 0; // Como la memoria ya no está asignada al criterio SC, ponemos este campo en 0
+		sem_wait(&loggerSemaforo);
 		log_info(logger, "Se desasoció la memoria %d del criterio SC", nroMemoria);
+		sem_post(&loggerSemaforo);
 	} else {
 		// Si no existe memoria asignada al criterio, informarlo y no hacer nada más
+		sem_wait(&loggerSemaforo);
 		log_error(logger, "No se pudo desasociar la memoria %d del criterio SC: No existe ninguna memoria asignada al criterio SC", nroMemoria);
+		sem_post(&loggerSemaforo);
 	}
 }
 
@@ -294,11 +315,15 @@ void desasociarDeCriterioEC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES
 			list_remove(memoriasEC, indice);
 			TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria);
 			nodoMemoria->criterioEC = 0;
+			sem_wait(&loggerSemaforo);
 			log_info(logger, "Se desasoció la memoria %d del criterio EC", nroMemoria);
+			sem_post(&loggerSemaforo);
 		}
 	} else {
 		// Si no existe memoria asignada al criterio, informarlo y no hacer nada más
+		sem_wait(&loggerSemaforo);
 		log_error(logger, "No se desasoció a la memoria %d del criterio EC: No existe ninguna memoria asignada al criterio EC", nroMemoria);
+		sem_post(&loggerSemaforo);
 	}
 }
 
@@ -308,7 +333,9 @@ TablaGossip* elegirMemoriaCriterioSC() {
 		TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
 		return memoriaElegida;
 	} else {
+		sem_wait(&loggerSemaforo);
 		log_error(logger, "No se pudo elegir una memoria con criterio SC: No existe ninguna memoria asignada al criterio SC");
+		sem_post(&loggerSemaforo);
 	}
 	return NULL;
 }
@@ -350,7 +377,9 @@ TablaGossip* elegirMemoriaCriterioEC() {
 		TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
 		return memoriaElegida;
 	} else {
+		sem_wait(&loggerSemaforo);
 		log_error(logger, "No se pudo elegir una memoria con criterio EC: No existe ninguna memoria asignada al criterio EC");
+		sem_post(&loggerSemaforo);
 	}
 	return NULL;
 }

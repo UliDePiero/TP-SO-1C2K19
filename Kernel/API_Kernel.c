@@ -181,8 +181,11 @@ void ejecutarSelect(char* instruccion){
 		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando SELECT desde Kernel.");
 		liberarPaquete(mensaje);
 
-		if (resultado > 0)
+		if (resultado > 0){
+			sem_wait(&loggerSemaforo);
 			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+			sem_post(&loggerSemaforo);
+		}
 
 		/*char* sPayload;
 		tMensaje tipo_mensaje;
@@ -210,8 +213,12 @@ void ejecutarInsert(char* instruccion){
 		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando INSERT desde Kernel.");
 		liberarPaquete(mensaje);
 
-		if (resultado > 0)
+		if (resultado > 0){
+			sem_wait(&loggerSemaforo);
 			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+			sem_post(&loggerSemaforo);
+		}
+
 		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del INSERT en MEMORIA");
@@ -237,8 +244,12 @@ void ejecutarCreate(char* instruccion){
 		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando CREATE desde Kernel.");
 		liberarPaquete(mensaje);
 
-		if (resultado > 0)
+		if (resultado > 0){
+			sem_wait(&loggerSemaforo);
 			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+			sem_post(&loggerSemaforo);
+		}
+
 		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del CREATE en MEMORIA");
@@ -264,8 +275,12 @@ void ejecutarDescribe(char* instruccion){
 		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DESCRIBE desde Kernel.");
 		liberarPaquete(mensaje);
 
-		if (resultado > 0)
+		if (resultado > 0){
+			sem_wait(&loggerSemaforo);
 			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+			sem_post(&loggerSemaforo);
+		}
+
 		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del DESCRIBE en MEMORIA");
@@ -294,8 +309,12 @@ void ejecutarDrop(char* instruccion){
 		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DROP desde Kernel.");
 		liberarPaquete(mensaje);
 
-		if (resultado > 0)
+		if (resultado > 0){
+			sem_wait(&loggerSemaforo);
 			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+			sem_post(&loggerSemaforo);
+		}
+
 		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del DROP en MEMORIA");
@@ -321,8 +340,12 @@ void ejecutarJournal(char* instruccion){
 		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando JOURNAL desde Kernel.");
 		liberarPaquete(mensaje);
 
-		if (resultado > 0)
+		if (resultado > 0){
+			sem_wait(&loggerSemaforo);
 			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+			sem_post(&loggerSemaforo);
+		}
+
 		/*char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del JOURNAL en MEMORIA");
@@ -344,8 +367,9 @@ void ejecutarAdd(char* instruccion) {
 	char** comando = validarComando(instruccion, 5);
 	if (comando){
 		if (validacionStringsFijosAdd(comando) && cadenaEsDigito(comando[2]) && validacionStringCriterios(comando[4])) {
-			//printf("Comando ADD ejecutado correctamente\n");
-			log_info(logFile, "'%s' ejecutado correctamente", instruccion);
+			sem_wait(&loggerSemaforo);
+			log_info(logger, "'%s' ejecutado correctamente", instruccion);
+			sem_post(&loggerSemaforo);
 			int num = atoi(comando[2]);
 			if (!strcmp("SC", comando[4])) {
 				asociarACriterioSC(num);
@@ -354,9 +378,12 @@ void ejecutarAdd(char* instruccion) {
 			} else if (!strcmp("EC", comando[4])) {
 				asociarACriterioEC(num);
 			}
-		} else
-			//printf("Error en el comando ADD. La sintaxis correcta es: ADD MEMORY [NÚMERO] TO [CRITERIO]\n");
-			log_error(logFile, "Error en el comando ADD. La sintaxis correcta es: ADD MEMORY [NÚMERO] TO [CRITERIO]");
+		} else{
+			sem_wait(&loggerSemaforo);
+			log_error(logger, "Error en el comando ADD. La sintaxis correcta es: ADD MEMORY [NÚMERO] TO [CRITERIO]");
+			sem_post(&loggerSemaforo);
+		}
+
 		for(int i = 0; i<5; i++)
 			free(comando[i]);
 		free(comando);
@@ -373,8 +400,9 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 		script = fopen(comando[1],"r");
 		//script = fopen(PATH_SCRIPT,"r"); //para hacer pruebas
 		if(script == NULL) {
-			  //perror("Error al abrir el script.");
-			  log_error(logFile, "Error al abrir el script.");
+			  sem_wait(&loggerSemaforo);
+			  log_error(logger, "Error al abrir el script.");
+			  sem_post(&loggerSemaforo);
 			  for(int i = 0; i<2; i++)
 				  free(comando[i]);
 			  free(comando);

@@ -49,6 +49,7 @@ t_list *ListaLQL;
 sem_t semContadorLQL;
 sem_t semMultiprocesamiento;
 sem_t semEjecutarLQL;
+sem_t loggerSemaforo;
 
 int LQLEnEjecucion;
 int IDLQL; //autoincremental
