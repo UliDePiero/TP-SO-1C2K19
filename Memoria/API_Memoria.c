@@ -54,6 +54,12 @@ void* API_Memoria(){
 				break;
 		}
 		free(line);
+/*
+		int s, p;
+		for(s=0; s<cantidadDeSegmentos; s++)
+			for(p=0; p<tablaDeSegmentos[s]->cantidadDePaginas; p++)
+				printf("\n%s %d %llu", tablaDeSegmentos[s]->tabla,getKey(tablaDeSegmentos[s]->tablaDePaginas[p]->frame),getTimestamp(tablaDeSegmentos[s]->tablaDePaginas[p]->frame));
+*/
 		line = readline(">");
 	}
 	free(line);
