@@ -115,6 +115,8 @@ int main(){
 	maxSock = socketEscucha;
 	tMensaje tipoMensaje;
 	char * sPayload;
+	tPaquete* mensaje;
+	char* retorno;
 	while (1) {
 
 		puts("Escuchando");
@@ -127,7 +129,22 @@ int main(){
 				case SELECT:
 					comando = validarComando(sPayload, 3);
 					if(comando){
-						selectLFS(comando[1], atoi(comando[2]));
+						retorno = selectLFS(comando[1], atoi(comando[2]));
+						mensaje = malloc(sizeof(tPaquete));
+						if(retorno != NULL)
+						{
+							mensaje->type = SELECT;
+							strcpy(mensaje->payload,retorno);
+							free(retorno);
+						}
+						else
+						{
+							mensaje->type = ERROR_EN_COMANDO;
+							strcpy(mensaje->payload,"SELECT");
+						}
+						mensaje->length = sizeof(mensaje->payload);
+						enviarPaquete(socketActivo, mensaje,logger,"Value del SELECT de LFS.");
+						liberarPaquete(mensaje);
 						for(int i = 0; i<3; i++)
 							free(comando[i]);
 						free(comando);
@@ -586,14 +603,14 @@ void insertLFS(char* nombreTabla, uint16_t key, char* value, uint64_t timestamp)
 	log_info(logger, "Insertado registro tabla \"%s\" key %hd value \"%s\"", nombreTabla, key, value);
 	sem_post(&loggerSemaforo);
 }
-void selectLFS(char* nombreTabla, uint16_t key){
+char* selectLFS(char* nombreTabla, uint16_t key){
 	sleep(configuracion->RETARDO / 1000);
 	Tabla* tabla = tablaEncontrar(nombreTabla);
 	if(!tabla){
 		sem_wait(&loggerSemaforo);
 		log_error(logger, "Tabla \"%s\" no encontrada", nombreTabla);
 		sem_post(&loggerSemaforo);
-		return;
+		return NULL;
 	}
 
 	RegistroLFS* registro = registroEncontrar(tabla, key);
@@ -602,10 +619,11 @@ void selectLFS(char* nombreTabla, uint16_t key){
 		sem_wait(&loggerSemaforo);
 		log_info(logger, "Select tabla \"%s\" key %hd value \"%s\"", nombreTabla, key, value);
 		sem_post(&loggerSemaforo);
-		free(value);
+		//free(value);
+		return value;
 	}
 	else{
-		selectFS(tabla->nombreTabla, key%tabla->metadata->particiones, key);
+		return selectFS(tabla->nombreTabla, key%tabla->metadata->particiones, key);
 	}
 }
 void describeLFS(char* nombreTabla){

@@ -332,7 +332,7 @@ void createFS(char* nombreTabla, char* consistencia, int particiones, long tiemp
 	log_info(logger, "Create tabla \"%s\" consistencia %s particiones %d tiempo compactacion %ld", nombreTabla, consistencia, particiones, tiempoCompactacion);
 	sem_post(&loggerSemaforo);
 }
-void selectFS(char* tabla, int particion, uint16_t key){
+char* selectFS(char* tabla, int particion, uint16_t key){
 	sem_wait(&configSemaforo);
 	char *puntoMontaje = string_duplicate(configuracion->PUNTO_MONTAJE);
 	sem_post(&configSemaforo);
@@ -342,7 +342,7 @@ void selectFS(char* tabla, int particion, uint16_t key){
 		sem_wait(&loggerSemaforo);
 		log_error(logger, "Tabla \"%s\" no encontrada", tabla);
 		sem_post(&loggerSemaforo);
-		return;
+		return NULL;
 	}
 	char* value = string_new();
 	uint64_t timestampMayor = 0;
@@ -410,13 +410,13 @@ void selectFS(char* tabla, int particion, uint16_t key){
 		sem_wait(&loggerSemaforo);
 		log_error(logger, "Key \"%hi\" no encontrado para la tabla \"%s\"", key, tabla);
 		sem_post(&loggerSemaforo);
-		return;
+		return NULL;
 	}else{
 		sem_wait(&loggerSemaforo);
 		log_info(logger, "Select tabla \"%s\" key %hd value \"%s\"", tabla, key, value);
 		sem_post(&loggerSemaforo);
-		free(value);
-		return;
+		//free(value);
+		return value;
 	}
 }
 void dropFS(char* nombreTabla){

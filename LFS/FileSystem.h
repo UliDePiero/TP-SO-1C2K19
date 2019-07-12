@@ -45,7 +45,7 @@ int proximoBloqueLibre();
 void mostrarBitmap();
 
 void createFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
-void selectFS(char* nombreTabla, int particiones, uint16_t key);
+char* selectFS(char* nombreTabla, int particiones, uint16_t key);
 void dropFS(char* nombreTabla);
 
 void dump();

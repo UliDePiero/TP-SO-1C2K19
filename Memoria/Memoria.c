@@ -240,6 +240,9 @@ int main()
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del JOURNAL en MEMORIA.");
 				liberarPaquete(mensaje);
 				break;
+			case ERROR_EN_COMANDO:
+				printf("\nHubo un error en la ejecucion del comando %s en LFS", sPayload);
+				break;
 			case DESCONEXION:
 				printf("\nSe desconecto un cliente\n");
 				break;
