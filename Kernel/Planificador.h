@@ -117,7 +117,9 @@ typedef struct{
 t_list* listaTablas;
 
 /* --------------------    Definición de Funciones    -------------------- */
-
+//Funciones usadas en API
+void limpiarListaTablas(Tabla* tabla);
+Tabla* encontrarTabla(char* nombreTabla);
 // Funciones de Configuración
 void configurar(ConfiguracionKernel* configuracion);
 void cambiosConfigKernel();

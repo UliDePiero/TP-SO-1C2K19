@@ -117,6 +117,7 @@ int main(){
 	char * sPayload;
 	tPaquete* mensaje;
 	char* retorno;
+	t_list* retornoLista;
 	while (1) {
 
 		puts("Escuchando");
@@ -172,13 +173,32 @@ int main(){
 				case DESCRIBE:
 					comando = string_n_split(sPayload, 2, " ");
 					if(comando[1]){
-						describeLFS(comando[1]);
+						retornoLista = describeLFS(comando[1]);
 						free(comando[1]);
 					}else{
-						describeLFS(NULL);
+						retornoLista = describeLFS(NULL);
 					}
 					free(comando[0]);
 					free(comando);
+					mensaje = malloc(sizeof(tPaquete));
+					if(retornoLista != NULL)
+					{
+						mensaje->type = DESCRIBE;
+						itoa(retornoLista->elements_count,mensaje->payload,10);
+						mensaje->length = sizeof(mensaje->payload);
+						enviarPaquete(socketActivo, mensaje,logger,"Cantidad de tablas en LFS");
+						liberarPaquete(mensaje);
+						list_iterate(retornoLista,(void*)enviarMensajesDESCRIBE);
+						list_destroy(retornoLista);
+					}
+					else
+					{
+						mensaje->type = ERROR_EN_COMANDO;
+						strcpy(mensaje->payload,"0");
+						mensaje->length = sizeof(mensaje->payload);
+						enviarPaquete(socketActivo, mensaje,logger,"Cantidad de tablas en LFS");
+						liberarPaquete(mensaje);
+					}
 					break;
 				case DROP:
 					comando = validarComando(sPayload, 2);
@@ -211,7 +231,14 @@ int main(){
 
 	}
 }
-
+void enviarMensajesDESCRIBE(char* tabla){
+	tPaquete* mensaje = malloc(sizeof(tPaquete));
+	mensaje->type = DESCRIBE;
+	strcpy(mensaje->payload,tabla);
+	mensaje->length = sizeof(mensaje->payload);
+	enviarPaquete(socketActivo, mensaje,logger,"Metadata de una tabla de LFS");
+	liberarPaquete(mensaje);
+}
 //MAIN DE TESTS
 int main2(){
 	levantarLFS();
@@ -626,15 +653,19 @@ char* selectLFS(char* nombreTabla, uint16_t key){
 		return selectFS(tabla->nombreTabla, key%tabla->metadata->particiones, key);
 	}
 }
-void describeLFS(char* nombreTabla){
+t_list* describeLFS(char* nombreTabla){
 	sleep(configuracion->RETARDO / 1000);
+	t_list* listaTablas = list_create();
+	char* tabla_s;
 	if(nombreTabla){
-		Tabla* tabla = tablaEncontrar("A");
+		Tabla* tabla = tablaEncontrar(nombreTabla);
 		if(tabla){
 			sem_wait(&tabla->semaforo);
 			sem_wait(&loggerSemaforo);
-			log_info(logger, "Describe tabla %s: consistencia %s particiones %d tiempo compactacion %ld", nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
+			log_info(logger, "Describe Tabla %s: consistencia %s particiones %d tiempo compactacion %ld", nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
 			sem_post(&loggerSemaforo);
+			tabla_s = string_from_format("%s,%s,%d,%ld;",nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
+			list_add(listaTablas,tabla_s);
 			sem_post(&tabla->semaforo);
 		}else{
 			sem_wait(&loggerSemaforo);
@@ -647,12 +678,15 @@ void describeLFS(char* nombreTabla){
 			Tabla* tabla = list_get(tablasLFS, i);
 			sem_wait(&tabla->semaforo);
 			sem_wait(&loggerSemaforo);
-			log_info(logger, "Describe tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tabla->nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
+			log_info(logger, "Describe Tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tabla->nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
+			tabla_s = string_from_format("%s,%s,%d,%ld;",nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
+			list_add(listaTablas,tabla_s);
 			sem_post(&loggerSemaforo);
 			sem_post(&tabla->semaforo);
 		}
 		sem_post(&memtableSemaforo);
 	}
+	return listaTablas;
 }
 void dropLFS(char* nombreTabla){
 	sleep(configuracion->RETARDO / 1000);

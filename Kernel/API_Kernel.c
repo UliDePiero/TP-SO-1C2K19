@@ -131,7 +131,10 @@ void API_Kernel(void){
 
 void respuestas(void* socket_Mem){
 	int socket_Memoria = *((int *) socket_Mem), conexion = 1;
-	char* sPayload;
+	char *sPayload;
+	char **tablas;
+	char **tabla;
+	int numeroTabla;
 	tMensaje tipo_mensaje;
 	while(conexion != 0){
 		conexion=recibirPaquete(socket_Memoria,&tipo_mensaje,&sPayload,logger,"Respuesta de MEMORIA");
@@ -150,7 +153,45 @@ void respuestas(void* socket_Mem){
 				puts("\n>");
 				break;
 			case DESCRIBE:
-				printf("\nDESCRIBE:\n %s",sPayload);
+				tablas = string_n_split(sPayload, 100, ";");
+				numeroTabla = 0;
+				puts("\nDESCRIBE:");
+				while(tablas[numeroTabla]!=NULL)
+				{
+					printf("\n%s",tablas[numeroTabla]);
+					numeroTabla++;
+				}
+				if(numeroTabla>1)
+				{
+					numeroTabla = 0;
+					while(tablas[numeroTabla]!=NULL)
+					{
+						list_clean_and_destroy_elements(listaTablas,(void*)limpiarListaTablas);
+						tabla = string_n_split(tablas[numeroTabla], 4, ",");
+						Metadata* metadata = malloc(sizeof(Metadata));
+						strcpy(metadata->consistencia,tabla[1]);
+						metadata->particiones = atoi(tabla[2]);
+						metadata->tiempoCompactacion = atol(tabla[3]);
+						Tabla* tab = malloc(sizeof(Tabla));
+						tab->nombreTabla = malloc(sizeof(tabla[0]));
+						strcpy(tab->nombreTabla,tabla[0]);
+						tab->metadata = metadata;
+						list_add(listaTablas,tab);
+						numeroTabla++;
+						free(tabla);//???
+					}
+				}
+				else
+				{
+					tabla = string_n_split(tablas[0], 4, ",");
+					Tabla* tab = encontrarTabla(tabla[0]);
+					strcpy(tab->metadata->consistencia,tabla[1]);
+					tab->metadata->particiones = atoi(tabla[2]);
+					tab->metadata->tiempoCompactacion = atol(tabla[3]);
+					free(tabla);//???
+				}
+
+				free(tablas);
 				puts("\n>");
 				break;
 			case DROP:
@@ -179,6 +220,19 @@ void respuestas(void* socket_Mem){
 	free(socket_Mem);
 	pthread_cancel(hiloAPI);
 }
+Tabla* encontrarTabla(char* nombreTabla){
+	int encuentraTabla(Tabla* t) {
+		return string_equals_ignore_case(t->nombreTabla, nombreTabla);
+	}
+
+	return list_find(listaTablas, (void*)encuentraTabla);
+}
+void limpiarListaTablas(Tabla* tabla){
+	free(tabla->metadata);
+	free(tabla->nombreTabla);
+	free(tabla);
+}
+
 void ejecutarSelect(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	int resultado = 0;

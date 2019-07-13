@@ -480,9 +480,9 @@ char* describeMemoriaTabla(char* tabla){
 		char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Metadata de la tabla desde LFS");
+		printf("\n%s",sPayload);
 		retorno = string_duplicate(sPayload);
 		free(sPayload);
-
 	}
 	return retorno;
 }
@@ -506,9 +506,9 @@ t_list* describeMemoria(){
 		char* metadata;
 		for(int i=0;i<cantidadTablas; i++){
 			recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Metadata de una tabla de LFS");
+			printf("\n%s",sPayload);
 			metadata = string_duplicate(sPayload);
 			list_add(retorno,metadata);
-			free(metadata);
 			free(sPayload);
 		}
 	}

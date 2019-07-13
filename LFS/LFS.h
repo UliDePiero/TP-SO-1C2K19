@@ -108,7 +108,7 @@ void levantarLFS();
 void destruirLFS();
 
 void asd(char* a);
-
+void enviarMensajesDESCRIBE(char* tabla);
 //------------------------ ESTRUCTURAS --------------------------------//
 Tabla* crearTabla(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
 void tablaDestruir(Tabla* tabla);
@@ -136,7 +136,7 @@ void compactacion(char* nombreTabla);
 void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiempoCompactacion);
 void insertLFS(char* nombreTabla, uint16_t key, char* value, uint64_t timestamp);
 char* selectLFS(char* nombreTabla, uint16_t key);
-void describeLFS(char* nombreTabla);
+t_list* describeLFS(char* nombreTabla);
 void dropLFS(char* nombreTabla);
 
 #endif /* LFS_H_ */
