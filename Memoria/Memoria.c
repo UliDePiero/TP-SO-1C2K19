@@ -81,6 +81,7 @@ int main()
 	levantarMemoria();
 	listaPaginasLRU = list_create();
 	sem_init(&mutexMemoria, 0, 1);
+	sem_init(&loggerSemaforo, 1, 1);
 
 	crearHiloIndependiente(&hiloJournal,(void*)journalAutomatico, NULL, "proceso Memoria(Journal)");
 
@@ -114,7 +115,9 @@ int main()
 
 			switch (tipoMensaje) {
 			case SELECT:
-				printf("\nRecibi %s\n", sPayload);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Memoria recibió '%s'", sPayload);
+				sem_post(&loggerSemaforo);
 				//funcion SELECT
 				retorno = ejecutarSelect(sPayload);
 				mensaje = malloc(sizeof(tPaquete));
@@ -132,9 +135,14 @@ int main()
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Value del SELECT de MEMORIA.");
 				liberarPaquete(mensaje);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Resultado de '%s' enviado a Kernel", sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 			case INSERT:
-				printf("\nRecibi %s\n", sPayload);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Memoria recibió '%s'", sPayload);
+				sem_post(&loggerSemaforo);
 				//funcion INSERT
 				retorno = ejecutarInsert(sPayload);
 				mensaje = malloc(sizeof(tPaquete));
@@ -152,9 +160,14 @@ int main()
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del INSERT en MEMORIA.");
 				liberarPaquete(mensaje);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Resultado de '%s' enviado a Kernel", sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 			case CREATE:
-				printf("\nRecibi %s\n", sPayload);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Memoria recibió '%s'", sPayload);
+				sem_post(&loggerSemaforo);
 				//funcion CREATE
 				retorno = ejecutarCreate(sPayload);
 				mensaje = malloc(sizeof(tPaquete));
@@ -170,11 +183,16 @@ int main()
 					strcpy(mensaje->payload,"CREATE");
 				}
 				mensaje->length = sizeof(mensaje->payload);
-				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del CREATE en MEMORIA.");
+				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del CREATE en MEMORIA.");
 				liberarPaquete(mensaje);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Resultado de '%s' enviado a Kernel", sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 			case DESCRIBE:
-				printf("\nRecibi %s\n", sPayload);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Memoria recibió '%s'", sPayload);
+				sem_post(&loggerSemaforo);
 				//funcion DESCRIBE
 				retornoLista = ejecutarDescribe(sPayload);
 				mensaje = malloc(sizeof(tPaquete));
@@ -200,9 +218,14 @@ int main()
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del DESCRIBE en MEMORIA.");
 				liberarPaquete(mensaje);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Resultado de '%s' enviado a Kernel", sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 			case DROP:
-				printf("\nRecibi %s\n", sPayload);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Memoria recibió '%s'", sPayload);
+				sem_post(&loggerSemaforo);
 				//funcion DROP
 				retorno = ejecutarDrop(sPayload);
 				mensaje = malloc(sizeof(tPaquete));
@@ -220,9 +243,14 @@ int main()
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del DROP en MEMORIA.");
 				liberarPaquete(mensaje);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Resultado de '%s' enviado a Kernel", sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 			case JOURNAL:
-				printf("\nRecibi %s\n", sPayload);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Memoria recibió '%s'", sPayload);
+				sem_post(&loggerSemaforo);
 				//funcion JOURNAL
 				retornoINT = ejecutarJournal(sPayload);
 				mensaje = malloc(sizeof(tPaquete));
@@ -239,15 +267,24 @@ int main()
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del JOURNAL en MEMORIA.");
 				liberarPaquete(mensaje);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Resultado de '%s' enviado a Kernel", sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 			case ERROR_EN_COMANDO:
-				printf("\nHubo un error en la ejecucion del comando %s en LFS", sPayload);
+				sem_wait(&loggerSemaforo);
+				log_error(logger, "Hubo un error en la ejecucion del comando %s en LFS", sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 			case DESCONEXION:
-				printf("\nSe desconecto un cliente\n");
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Se desconecto un cliente");
+				sem_post(&loggerSemaforo);
 				break;
 			case HANDSHAKE:
-				printf("\nKernel y Memoria realizan Handshake\n");
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Kernel y Memoria realizan Handshake");
+				sem_post(&loggerSemaforo);
 				mensaje = malloc(sizeof(tPaquete));
 				mensaje->type = HANDSHAKE;
 				strcpy(mensaje->payload, string_itoa(configuracion->MEMORY_NUMBER));
@@ -275,8 +312,11 @@ void terminar(){
 		s++;
 	}
 	pthread_cancel(hiloJournal);
+	sem_wait(&loggerSemaforo);
 	log_info(logger, "Modulo Memoria cerrada");
+	sem_post(&loggerSemaforo);
 	log_destroy(logger);
+	sem_destroy(&loggerSemaforo);
 	sem_destroy(&mutexMemoria);
 	free(configuracion);
 	close(socketEscucha);
@@ -291,6 +331,9 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp){
 		t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 		nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 		insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
+		sem_wait(&loggerSemaforo);
+		log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente", tabla, key, value, timestamp);
+		sem_post(&loggerSemaforo);
 /*
 		Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
 		Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
@@ -314,10 +357,13 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp){
 				t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 				nodo->modificado=1;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 				insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente", tabla, key, value, timestamp);
+				sem_post(&loggerSemaforo);
 			}else{
 				registro = buscarRegistroDisponible();
 				if(registro == -1){
-					printf("Memoria sin frames vacios\n");
+					//printf("Memoria sin frames vacios\n");
 					t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 					nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 					t_nodoLRU* nodo_reemplazo = insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
@@ -331,6 +377,9 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp){
 					t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 					nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 					insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
+					sem_wait(&loggerSemaforo);
+					log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente", tabla, key, value, timestamp);
+					sem_post(&loggerSemaforo);
 /*
 					Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
 					Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
@@ -347,7 +396,7 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp){
 		else{
 			registro = buscarRegistroDisponible();
 			if(registro == -1){
-				printf("Memoria sin frames vacios\n");
+				//printf("Memoria sin frames vacios\n");
 				t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 				nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 				t_nodoLRU* nodo_reemplazo = insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
@@ -361,6 +410,9 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp){
 				t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 				nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 				insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente", tabla, key, value, timestamp);
+				sem_post(&loggerSemaforo);
 /*
 				Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
 				Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
@@ -380,16 +432,19 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 	int segmento = 0, pagina = 0;
 	for(segmento=0; segmento<cantidadDeSegmentos; segmento++){
 		//printf("tabla: %s\n", tablaDeSegmentos[segmento]->tabla);
-		if(strcmp(tablaDeSegmentos[segmento]->tabla, tabla) == 0){printf("encontre tabla\n"); break;}
+		if(strcmp(tablaDeSegmentos[segmento]->tabla, tabla) == 0){/*printf("encontre tabla\n");*/ break;}
 	}
 	if(segmento<cantidadDeSegmentos){
 		for(pagina=0; pagina<tablaDeSegmentos[segmento]->cantidadDePaginas; pagina++){
-			if(getKey(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame) == key) {printf("encontre pagina\n"); break;}
+			if(getKey(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame) == key) {/*printf("encontre pagina\n");*/ break;}
 		}
 		if(pagina<tablaDeSegmentos[segmento]->cantidadDePaginas){
 			t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 			nodo->modificado=0;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 			insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
+			sem_wait(&loggerSemaforo);
+			log_info(logger, "'SELECT %s %hd' ejecutado exitosamente", tabla, key);
+			sem_post(&loggerSemaforo);
 			return getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
 		}
 		else{
@@ -410,13 +465,17 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 				Registro* registro = selectMemoria(tabla, key);
 				return registro;
 			}else{
-				perror("LFS no conectado.");
+				sem_wait(&loggerSemaforo);
+				log_error(logger, "No se pudo encontrar la key %d: LFS no conectado", key);
+				sem_post(&loggerSemaforo);
 				return NULL;
 			}
 		}
 	}
 	else{
-		perror("No se encontro el segmento que contiene la tabla solicitada.");
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "No se encontro el segmento que contiene la tabla %s", tabla);
+		sem_post(&loggerSemaforo);
 		return NULL;
 	}
 }
@@ -428,7 +487,7 @@ void dropMemoria(char* tabla){
 	for(segmento=0; segmento<cantidadDeSegmentos; segmento++){
 		if(strcmp(tablaDeSegmentos[segmento]->tabla, tabla) == 0)
 		{
-			printf("encontre tabla\n");
+			//printf("encontre tabla\n");
 			t_list* listaPunteros = list_create();
 			for(pagina=0; pagina<tablaDeSegmentos[segmento]->cantidadDePaginas; pagina++){
 				pKey = tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame;
@@ -444,8 +503,7 @@ void dropMemoria(char* tabla){
 				tablaDeSegmentos = (Segmento**) realloc(tablaDeSegmentos, 1);
 			else
 				tablaDeSegmentos = (Segmento**) realloc(tablaDeSegmentos, cantidadDeSegmentos*sizeof(Segmento*));
-			if(segmento!=cantidadDeSegmentos)
-			{
+			if(segmento!=cantidadDeSegmentos){
 				segmentoDestruir(tablaDeSegmentos[segmento]);
 				tablaDeSegmentos[segmento] = tablaDeSegmentos[cantidadDeSegmentos];
 			}
@@ -459,6 +517,9 @@ void dropMemoria(char* tabla){
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DROP desde Memoria.");
 				liberarPaquete(mensaje);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "'DROP %s' ejecutado exitosamente", tabla);
+				sem_post(&loggerSemaforo);
 				free(comando);
 			}
 			break;
@@ -475,12 +536,18 @@ char* describeMemoriaTabla(char* tabla){
 		strcpy(mensaje->payload,comando);
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DESCRIBE_TABLA desde Memoria.");
+		sem_wait(&loggerSemaforo);
+		log_info(logger, "'DESCRIBE %s' enviado a Memoria", tabla);
+		sem_post(&loggerSemaforo);
 		liberarPaquete(mensaje);
 		free(comando);
 		char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Metadata de la tabla desde LFS");
-		printf("\n%s",sPayload);
+		sem_wait(&loggerSemaforo);
+		log_info(logger, "'DESCRIBE %s' ejecutado exitosamente", tabla);
+		sem_post(&loggerSemaforo);
+		//printf("\n%s",sPayload);
 		retorno = string_duplicate(sPayload);
 		free(sPayload);
 	}
@@ -497,6 +564,9 @@ t_list* describeMemoria(){
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DESCRIBE desde Memoria.");
 		liberarPaquete(mensaje);
+		sem_wait(&loggerSemaforo);
+		log_info(logger, "'DESCRIBE' enviado a Memoria");
+		sem_post(&loggerSemaforo);
 		free(comando);
 		char* sPayload;
 		tMensaje tipo_mensaje;
@@ -506,11 +576,14 @@ t_list* describeMemoria(){
 		char* metadata;
 		for(int i=0;i<cantidadTablas; i++){
 			recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Metadata de una tabla de LFS");
-			printf("\n%s",sPayload);
+			//printf("\n%s",sPayload);
 			metadata = string_duplicate(sPayload);
 			list_add(retorno,metadata);
 			free(sPayload);
 		}
+		sem_wait(&loggerSemaforo);
+		log_info(logger, "'DESCRIBE' ejecutado exitosamente");
+		sem_post(&loggerSemaforo);
 	}
 	return retorno;
 }
@@ -524,7 +597,9 @@ void levantarMemoria(){
 	for(int i=0; i <cantidadDeRegistros; i++)
 			//setTimestamp(granMalloc+i*tamanioRealDeUnRegistro,-1);
 			vaciarMemoria();
-	printf("tamanio granMalloc: %d\n", malloc_usable_size(granMalloc));
+	sem_wait(&loggerSemaforo);
+	log_info(logger, "Tamanio granMalloc: %d", malloc_usable_size(granMalloc));
+	sem_post(&loggerSemaforo);
 }
 void resetearMemoria(void* punteroMemoria){
 	memset(punteroMemoria,0,tamanioRealDeUnRegistro);
@@ -650,6 +725,9 @@ void journalMemoria(){
 		tablaDeSegmentos = (Segmento**) realloc(tablaDeSegmentos, 1);
 	}
 	sem_post(&mutexMemoria);
+	sem_wait(&loggerSemaforo);
+	log_info(logger, "'JOURNAL' ejecutado exitosamente");
+	sem_post(&loggerSemaforo);
 	free(registro);
 }
 
@@ -671,6 +749,9 @@ void* journalAutomatico (){
     		diff = clock() - start;
     		elapsedsec = diff / CLOCKS_PER_SEC;
     		if (elapsedsec >= (configuracion->RETARDO_JOURNAL / 1000)){
+    			sem_wait(&loggerSemaforo);
+    			log_info(logger, "Journal automático ejecutando");
+    			sem_post(&loggerSemaforo);
     			journalMemoria();
     			break;
     		}

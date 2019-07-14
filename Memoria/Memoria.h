@@ -43,6 +43,7 @@ int seed;
 t_log* logger;
 
 sem_t mutexMemoria;
+sem_t loggerSemaforo;
 
 pthread_t hiloAPI;
 pthread_t hiloJournal;

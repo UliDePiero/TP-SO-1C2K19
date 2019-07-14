@@ -110,6 +110,9 @@ char* ejecutarCreate(char* instruccion){
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando CREATE desde Memoria.");
 		liberarPaquete(mensaje);
+		sem_wait(&loggerSemaforo);
+		log_info(logger, "'%s' enviado a memoria", instruccion);
+		sem_post(&loggerSemaforo);
 		retorno = string_from_format("Tabla:%s Consistencia:%s Particiones:%d Tiempo compactacion:%d",comando[1], comando[2], atoi(comando[3]), atoi(comando[4]));
 		for(int i = 0; i<5; i++)
 			free(comando[i]);
@@ -143,7 +146,7 @@ t_list* ejecutarDescribe(char* instruccion){
 }
 char* ejecutarDrop(char* instruccion){
 	char* retorno = NULL;
-	puts("drop ejecutado");
+	//puts("drop ejecutado");
 	char** comando = validarComando(instruccion, 2);
 	if(comando){
 		sleep(configuracion->RETARDO_MEM / 1000);
@@ -157,7 +160,7 @@ char* ejecutarDrop(char* instruccion){
 	return retorno;
 }
 int ejecutarJournal(char* instruccion){
-	puts("journal ejecutado");
+	//puts("journal ejecutado");
 	int retorno = 0;
 	char** comando = validarComando(instruccion, 1);
 	if(comando){
