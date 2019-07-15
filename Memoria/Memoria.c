@@ -108,9 +108,12 @@ int main()
 	crearHiloIndependiente(&hiloAPI,(void*)API_Memoria, NULL, "proceso Memoria(API)");
 
 	while (1) {
-		puts("Escuchando");
+		//puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
-		printf("Socket comunicacion: %d \n", socketActivo); //CORREGIR getConnection
+		//printf("Socket comunicacion: %d \n", socketActivo); //CORREGIR getConnection
+		sem_wait(&loggerSemaforo);
+		log_info(logger, "Comunicacion establecida en el socket %d", socketActivo);
+		sem_post(&loggerSemaforo);
 		if (socketActivo != -1) {
 
 			switch (tipoMensaje) {
@@ -294,7 +297,10 @@ int main()
 				break;
 
 			default:
-				printf("Tipo de mensaje desconocido \n");
+				//printf("Tipo de mensaje desconocido \n");
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "El tipo de mensaje ingresado es desconocido", sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 
 			}

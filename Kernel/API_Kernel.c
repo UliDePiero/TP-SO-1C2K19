@@ -27,7 +27,10 @@ void API_Kernel(void){
 				ejecutarSelect(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
-				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
@@ -37,7 +40,10 @@ void API_Kernel(void){
 				ejecutarInsert(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
-				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
@@ -47,7 +53,10 @@ void API_Kernel(void){
 				ejecutarCreate(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
-				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
@@ -57,7 +66,10 @@ void API_Kernel(void){
 				ejecutarDescribe(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
-				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
@@ -67,7 +79,10 @@ void API_Kernel(void){
 				ejecutarDrop(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
-				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
@@ -77,7 +92,10 @@ void API_Kernel(void){
 				ejecutarJournal(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
-				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
@@ -87,7 +105,10 @@ void API_Kernel(void){
 				ejecutarAdd(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
-				printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
 				break;
@@ -99,16 +120,25 @@ void API_Kernel(void){
 					actualizarRequestEjecutadas();
 					moverLQL(Exec,Ready);
 					LQL = queue_peek(Ready);
-					printf("\nLQL en Ready: %s\n", LQL->Instruccion);
+					//printf("\nLQL en Ready: %s\n", LQL->Instruccion);
+					sem_wait(&loggerSemaforo);
+					log_info(logger, "LQL en Ready: %s", LQL->Instruccion);
+					sem_post(&loggerSemaforo);
 					sem_post(&semContadorLQL);
 				}
 				else{
 					moverLQL(Exec,Exit);
 					LQL = queue_peek(Exit);
-					printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+					//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
+					sem_wait(&loggerSemaforo);
+					log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+					sem_post(&loggerSemaforo);
 					free(queue_pop(Exit));
 				}
-				printf("\nRetorno de la ejecucion: %d\n",retornoRUN);
+				//printf("\nRetorno de la ejecucion: %d\n",retornoRUN);
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Retorno de la ejecucion: %d", retornoRUN);
+				sem_post(&loggerSemaforo);
 				sem_post(&semMultiprocesamiento);
 				break;
 			case METRICS:
@@ -141,20 +171,32 @@ void respuestas(void* socket_Mem){
 		if(conexion !=0)
 		switch (tipo_mensaje) {
 			case SELECT:
-				printf("\nValue: %s",sPayload);
-				puts("\n>");
+				//printf("\nValue: %s",sPayload);
+				//puts("\n>");
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Value: %s",sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 			case INSERT:
-				printf("\nSe inserto corectamente en MEMORIA: %s",sPayload);
-				puts("\n>");
+				//printf("\nSe inserto corectamente en MEMORIA: %s",sPayload);
+				//puts("\n>");
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Se inserto corectamente en MEMORIA: %s",sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 			case CREATE:
-				printf("\nSe ejecuto corectamente el comando CREATE %s en MEMORIA",sPayload);
-				puts("\n>");
+				//printf("\nSe ejecuto corectamente el comando CREATE %s en MEMORIA",sPayload);
+				//puts("\n>");
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Se ejecuto corectamente el comando CREATE %s en MEMORIA",sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 			case DESCRIBE:
 				tablas = string_n_split(sPayload, 100, ";");
 				numeroTabla = 0;
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Se ejecuto corectamente el comando DESCRIBE en MEMORIA");
+				sem_post(&loggerSemaforo);
 				puts("\nDESCRIBE:");
 				while(tablas[numeroTabla]!=NULL)
 				{
@@ -195,24 +237,40 @@ void respuestas(void* socket_Mem){
 				puts("\n>");
 				break;
 			case DROP:
-				printf("\nSe elimino la tabla %s de MEMORIA", sPayload);
-				puts("\n>");
+				//printf("\nSe elimino la tabla %s de MEMORIA", sPayload);
+				//puts("\n>");
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Se elimino la tabla %s de MEMORIA", sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 			case JOURNAL:
-				if(atoi(sPayload)==1)
-					printf("\nJOURNAL de MEMORIA correctamente ejecutado.");
-				else
-					printf("\nError en el JOURNAL de MEMORIA.");
-					puts("\n>");
+				if(atoi(sPayload)==1){
+					//printf("\nJOURNAL de MEMORIA correctamente ejecutado.");
+					sem_wait(&loggerSemaforo);
+					log_info(logger, "JOURNAL de MEMORIA correctamente ejecutado");
+					sem_post(&loggerSemaforo);
+				}else{
+					//printf("\nError en el JOURNAL de MEMORIA.");
+					sem_wait(&loggerSemaforo);
+					log_error(logger, "Error en el JOURNAL de MEMORIA");
+					sem_post(&loggerSemaforo);
+				}
+					//puts("\n>");
 				break;
 			case ERROR_EN_COMANDO:
-				printf("\nHubo un error en la ejecucion del comando %s en MEMORIA", sPayload);
-				puts("\n>");
+				//printf("\nHubo un error en la ejecucion del comando %s en MEMORIA", sPayload);
+				//puts("\n>");
+				sem_wait(&loggerSemaforo);
+				log_error(logger, "Hubo un error en la ejecucion del comando %s en MEMORIA", sPayload);
+				sem_post(&loggerSemaforo);
 				break;
 
 			default:
-				printf("Tipo de mensaje desconocido \n");
-				puts("\n>");
+				//printf("Tipo de mensaje desconocido \n");
+				//puts("\n>");
+				sem_wait(&loggerSemaforo);
+				log_error(logger, "El tipo de mensaje ingresado es desconocido");
+				sem_post(&loggerSemaforo);
 				break;
 		}
 		if(sPayload != NULL) free(sPayload);

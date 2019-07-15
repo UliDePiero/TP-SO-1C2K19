@@ -77,6 +77,9 @@ char* ejecutarSelect(char* instruccion){
 			printf("value: %s\n", registro->value);
 			retorno = string_duplicate(registro->value);
 			free(registro->value);
+			sem_wait(&loggerSemaforo);
+			log_info(logger, "Resultado de '%s': %s ", instruccion, retorno);
+			sem_post(&loggerSemaforo);
 		}
 		free(registro);
 		for(int i = 0; i<3; i++)
@@ -97,6 +100,9 @@ char* ejecutarInsert(char* instruccion){
 			free(comando[i]);
 		free(comando);
 	}
+	sem_wait(&loggerSemaforo);
+	log_info(logger, "Resultado de '%s': %s ", instruccion, retorno);
+	sem_post(&loggerSemaforo);
 	free(instruccion);
 	return retorno;
 }
@@ -118,6 +124,9 @@ char* ejecutarCreate(char* instruccion){
 			free(comando[i]);
 		free(comando);
 	}
+	sem_wait(&loggerSemaforo);
+	log_info(logger, "Resultado de '%s': %s ", instruccion, retorno);
+	sem_post(&loggerSemaforo);
 	free(instruccion);
 	return retorno;
 }
@@ -134,6 +143,9 @@ t_list* ejecutarDescribe(char* instruccion){
 		list_add(retorno, metadata);
 		printf("\nMetadata: %s", (char*)retorno->head->data);
 		free(comando[1]);
+		sem_wait(&loggerSemaforo);
+		log_info(logger, "Resultado de '%s': %s ", instruccion, metadata);
+		sem_post(&loggerSemaforo);
 		if(metadata) free(metadata);
 	}else{
 		sleep(configuracion->RETARDO_MEM / 1000);
