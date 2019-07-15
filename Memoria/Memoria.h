@@ -86,6 +86,16 @@ MEMORY_NUMBER=1
 
 ConfiguracionMemoria* configuracion;
 
+// Estructura para guardar las memorias que pertenecen al pool y datos de conexión
+typedef struct {
+	int IDMemoria; // ID o Número de Memoria (Viene dado por el Archivo de Configuración de Memoria)
+	char IPMemoria[20]; // IP de la Memoria
+	int puertoMemoria; // Puerto de la Memoria
+	int socketMemoria;
+} TablaGossip;
+
+t_list* listaGossiping;
+
 typedef struct {
 	int segmentoID;
 	int paginaID;
