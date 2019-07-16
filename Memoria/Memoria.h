@@ -144,12 +144,12 @@ Pagina* paginaCrear(int modificado, int nRegistro);
 void levantarMemoria();
 void resetearMemoria(void* punteroMemoria);
 void vaciarMemoria();
-void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nRegistro);
-void asignarRegistroASegmentoExistente(uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nPagina, int nRegistro);
+void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nRegistro, int flagModificado);
+void asignarRegistroASegmentoExistente(uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nPagina, int nRegistro, int flagModificado);
 int buscarRegistroDisponible();
 int buscarRegistro(t_nodoLRU* nodo_reemplazo);
 
-void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp);
+void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, int flagModificado);
 Registro* selectMemoria(char* tabla, uint16_t key);
 void journalMemoria();
 void dropMemoria(char* tabla);

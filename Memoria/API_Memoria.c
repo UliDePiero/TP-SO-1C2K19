@@ -94,7 +94,7 @@ char* ejecutarInsert(char* instruccion){
 	char** comando = validarComando(instruccion, 4);
 	if(comando){
 		sleep(configuracion->RETARDO_MEM / 1000);
-		insertMemoria(comando[1], atoi(comando[2]), comando[3], getCurrentTime());
+		insertMemoria(comando[1], atoi(comando[2]), comando[3], getCurrentTime(), 1);
 		retorno = string_from_format("Tabla:%s Key:%d Value:%s",comando[1], atoi(comando[2]), comando[3]);
 		for(int i = 0; i<4; i++)
 			free(comando[i]);
