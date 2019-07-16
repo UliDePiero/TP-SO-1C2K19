@@ -78,10 +78,10 @@ int main()
 	tMensaje* mensaje_handshake = NULL;
 	recibirPaquete(socketLFS,mensaje_handshake,&tamanioValue,logger,"Maximo tamanio del value");
 	maxValueSize = atoi(tamanioValue);*/
-	levantarMemoria();
-	listaPaginasLRU = list_create();
 	sem_init(&mutexMemoria, 0, 1);
 	sem_init(&loggerSemaforo, 1, 1);
+	levantarMemoria();
+	listaPaginasLRU = list_create();
 
 	crearHiloIndependiente(&hiloJournal,(void*)journalAutomatico, NULL, "proceso Memoria(Journal)");
 
