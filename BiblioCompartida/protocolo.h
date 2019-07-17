@@ -41,6 +41,7 @@ typedef enum {
 	SC,
 	HC,
 	EC,
+	GOSSIPING,
 	EXIT,
 	ERROR_EN_COMANDO
 } tMensaje;

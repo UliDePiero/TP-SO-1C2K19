@@ -290,10 +290,16 @@ int main()
 				sem_post(&loggerSemaforo);
 				mensaje = malloc(sizeof(tPaquete));
 				mensaje->type = HANDSHAKE;
-				strcpy(mensaje->payload, string_itoa(configuracion->MEMORY_NUMBER));
+				strcpy(mensaje->payload, string_itoa(configuracion->RETARDO_GOSSIPING));
 				mensaje->length = sizeof(mensaje->payload);
-				enviarPaquete(socketActivo, mensaje, logger, "Enviar Número de Memoria a Kernel");
+				enviarPaquete(socketActivo, mensaje, logger, "Enviar Retardo de Gossiping a Kernel");
 				liberarPaquete(mensaje);
+				break;
+			case GOSSIPING:
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Kernel pide Lista de Gossiping a Memoria");
+				sem_post(&loggerSemaforo);
+
 				break;
 
 			default:

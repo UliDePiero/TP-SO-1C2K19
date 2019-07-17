@@ -68,7 +68,7 @@ int main() {
 	//int socketMEMORIA = conectarAUnServidor(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA);
 	socketMemoria = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
 
-	realizarHandshakeConMemoria(); // Creo que esto después va a quedar dentro de Gossiping
+	//realizarHandshakeConMemoria(); // Creo que esto después va a quedar dentro de Gossiping
 
 	crearHiloIndependiente(&hiloPlanificacion, (void*) planificacion, NULL,"Kernel(Planificacion)");
 
@@ -167,7 +167,7 @@ void actualizarRequestEjecutadas() {
 	LQL->requestEjecutadas += configuracion->QUANTUM;
 }
 
-void realizarHandshakeConMemoria() {
+/*void realizarHandshakeConMemoria() {
 	tPaquete* msjeEnviado = malloc(sizeof(tPaquete));
 	msjeEnviado->type = HANDSHAKE;
 	strcpy(msjeEnviado->payload, "Kernel realiza handshake con Memoria");
@@ -179,7 +179,7 @@ void realizarHandshakeConMemoria() {
 	recv(socketMemoria, msjeRecibido, sizeof(tPaquete), MSG_WAITALL);
 	armarNodoMemoria(atoi(msjeRecibido->payload));
 	liberarPaquete(msjeRecibido);
-}
+}*/
 
 void crearListasDeCriteriosMemorias() {
 	memoriaSC = list_create();
@@ -187,7 +187,7 @@ void crearListasDeCriteriosMemorias() {
 	memoriasEC = list_create();
 }
 
-void armarNodoMemoria(int nroMemoria) {
+/*void armarNodoMemoria(int nroMemoria) {
 	TablaGossip* nodoMem = malloc(sizeof(TablaGossip));
 	// Cargo datos el nodo
 	nodoMem->IDMemoria = nroMemoria;
@@ -199,7 +199,7 @@ void armarNodoMemoria(int nroMemoria) {
 	nodoMem->criterioEC = 0;
 	// Agrego el nodo a listaGossiping
 	list_add(listaGossiping, nodoMem);
-}
+}*/
 
 TablaGossip* buscarNodoMemoria(int nroMemoria) {
 	TablaGossip* nodoBuscado = malloc(sizeof(TablaGossip));
