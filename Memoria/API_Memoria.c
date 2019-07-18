@@ -117,7 +117,7 @@ char* ejecutarCreate(char* instruccion){
 		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando CREATE desde Memoria.");
 		liberarPaquete(mensaje);
 		sem_wait(&loggerSemaforo);
-		log_info(logger, "'%s' enviado a memoria", instruccion);
+		log_trace(logger, "'%s' enviado a LFS", instruccion);
 		sem_post(&loggerSemaforo);
 		retorno = string_from_format("Tabla:%s Consistencia:%s Particiones:%d Tiempo compactacion:%d",comando[1], comando[2], atoi(comando[3]), atoi(comando[4]));
 		for(int i = 0; i<5; i++)

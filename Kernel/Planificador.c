@@ -98,7 +98,7 @@ int main() {
 	list_destroy(listaGossiping);
 	list_destroy(listaTablas);
 	sem_wait(&loggerSemaforo);
-	log_info(logger, "Modulo Kernel cerrado");
+	log_debug(logger, "Modulo Kernel cerrado");
 	sem_post(&loggerSemaforo);
 	log_destroy(logger);
 	sem_destroy(&loggerSemaforo);
@@ -113,7 +113,7 @@ void planificacion() {
 		LQL = queue_peek(Exec);
 		//printf("\nLQL en Exec: %s\n", LQL->Instruccion);
 		sem_wait(&loggerSemaforo);
-		log_info(logger, "LQL en Exec: %s", LQL->Instruccion);
+		log_trace(logger, "LQL en Exec: %s", LQL->Instruccion);
 		sem_post(&loggerSemaforo);
 		LQLEnEjecucion++;
 		LQL = queue_peek(Exec);
@@ -127,7 +127,7 @@ void planificacion() {
 				LQL = queue_peek(Ready);
 				//printf("\nLQL en Ready: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "LQL en Ready: %s", LQL->Instruccion);
+				log_trace(logger, "LQL en Ready: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				sem_post(&semContadorLQL);
 			} else {
@@ -148,14 +148,14 @@ void cargarNuevoLQL(char* ScriptLQL) {
 	strcpy(NuevoLQL->Instruccion, ScriptLQL);
 	//printf("\nNuevo LQL: %s\n", NuevoLQL->Instruccion);
 	sem_wait(&loggerSemaforo);
-	log_info(logger, "Nuevo LQL: %s", NuevoLQL->Instruccion);
+	log_debug(logger, "Nuevo LQL: %s", NuevoLQL->Instruccion);
 	sem_post(&loggerSemaforo);
 	//list_add(ListaLQL, NuevoLQL); //creo que no es necesaria
 	queue_push(Ready, NuevoLQL);
 	LQL = queue_peek(Ready);
 	//printf("\nLQL en Ready: %s\n", LQL->Instruccion);
 	sem_wait(&loggerSemaforo);
-	log_info(logger, "LQL en Ready: %s", LQL->Instruccion);
+	log_trace(logger, "LQL en Ready: %s", LQL->Instruccion);
 	sem_post(&loggerSemaforo);
 	sem_post(&semContadorLQL);
 }
