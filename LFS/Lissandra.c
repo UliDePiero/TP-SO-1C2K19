@@ -122,9 +122,10 @@ int main(){
 
 		puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
-		log_info(logger, "Socket comunicacion: %d", socketActivo);//CORREGIR getConnection
 		if (socketActivo != -1) {
-
+			sem_wait(&loggerSemaforo);
+			log_info(logger, "Comunicacion establecida en el socket %d", socketActivo);
+			sem_post(&loggerSemaforo);
 			switch (tipoMensaje) {
 				char** comando;
 				case SELECT:

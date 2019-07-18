@@ -110,12 +110,10 @@ int main()
 	while (1) {
 		//puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
-		//printf("Socket comunicacion: %d \n", socketActivo); //CORREGIR getConnection
-		sem_wait(&loggerSemaforo);
-		log_info(logger, "Comunicacion establecida en el socket %d", socketActivo);
-		sem_post(&loggerSemaforo);
 		if (socketActivo != -1) {
-
+			sem_wait(&loggerSemaforo);
+			log_info(logger, "Comunicacion establecida en el socket %d", socketActivo);
+			sem_post(&loggerSemaforo);
 			switch (tipoMensaje) {
 			case SELECT:
 				sem_wait(&loggerSemaforo);
@@ -473,10 +471,21 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 		char* sPayload;
 		tMensaje tipo_mensaje;
 		recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Value del SELECT de LFS");
-		insertMemoria(tabla, key, sPayload, getCurrentTime(), 0);
-		free(sPayload);
-		Registro* registro = selectMemoria(tabla, key);
-		return registro;
+		if(tipo_mensaje == ERROR_EN_COMANDO)
+		{
+			free(sPayload);
+			sem_wait(&loggerSemaforo);
+			log_error(logger, "No se pudo encontrar la key %d o la tabla %s en LFS", key, tabla);
+			sem_post(&loggerSemaforo);
+			return NULL;
+		}
+		else
+		{
+			insertMemoria(tabla, key, sPayload, getCurrentTime(), 0);
+			free(sPayload);
+			Registro* registro = selectMemoria(tabla, key);
+			return registro;
+		}
 	}else{
 		sem_wait(&loggerSemaforo);
 		log_error(logger, "No se pudo encontrar la key %d: LFS no conectado", key);

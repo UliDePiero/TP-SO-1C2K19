@@ -7,18 +7,13 @@
 #include "API_Kernel.h"
 
 void API_Kernel(void){
-	//char* linea;
-	//char* linea2;
 	int retornoRUN;
 	char* line = NULL;
 	char* instruccion_API = NULL;
 
-	//logger = log_create(logFile, "Planificador", true, LOG_LEVEL_INFO);
-
 	line = readline(">\n");
 
 	while(strncmp("EXIT", line, 5)){
-		//linea2 = string_duplicate(linea);
 		instruccion_API = string_duplicate(line);
 		switch(parser(line)){
 			case SELECT:
@@ -388,7 +383,7 @@ void ejecutarCreate(char* instruccion){
 void ejecutarDescribe(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	int resultado = 0;
-	char** comando = validarComando(instruccion, 2);
+	char** comando = string_n_split(instruccion, 2, " ");
 	if(comando){
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = DESCRIBE;
