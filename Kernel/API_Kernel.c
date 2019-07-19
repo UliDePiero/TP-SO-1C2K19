@@ -270,7 +270,7 @@ void respuestas(void* socket_Mem){
 		}
 		if(sPayload != NULL) free(sPayload);
 	}
-	// ACTUALIZAR LISTA GOSSIPING!!! (Eliminar elemento del socket que llamó al hilo)
+	eliminaMemoriaDeListaGossiping(socket_Mem); // La Memoria se desconectó, la elimino de listaGossiping
 	free(socket_Mem);
 	if(listaGossiping->elements_count == 0)
 		pthread_cancel(hiloAPI);

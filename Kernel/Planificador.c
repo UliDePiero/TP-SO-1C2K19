@@ -232,12 +232,9 @@ void asociarACriterioEC(int nroMemoria) {
 	}
 }
 
-void desasociarDeCriterioSC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES PARA DESASOCIAR
+void desasociarDeCriterioSC(int nroMemoria) {
 	if (memoriaSC->elements_count == 1) {
 		list_remove(memoriaSC, 0); // Desasignar memoria del criterio (Como es una sola, va a estar en la primer posición de la lista)
-		// Eliminar el criterio en la Tabla de Gossip de la memoria:
-		TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria); // Buscar nodo correspondiente a la memoria en cuestión
-		nodoMemoria->criterioSC = 0; // Como la memoria ya no está asignada al criterio SC, ponemos este campo en 0
 		sem_wait(&loggerSemaforo);
 		log_info(logger, "Se desasoció la memoria %d del criterio SC", nroMemoria);
 		sem_post(&loggerSemaforo);
@@ -260,31 +257,30 @@ int buscarMemoriaEnListaCriterio(int nroMemoria, t_list* listaMemoriasCriterio) 
 	return -1;
 }
 
-void desasociarDeCriterioSHC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES PARA DESASOCIAR
+void desasociarDeCriterioSHC(int nroMemoria) {
 	if (memoriasSHC->elements_count > 0) {
 		int indice = buscarMemoriaEnListaCriterio(nroMemoria, memoriasSHC);
 		if (indice >= 0) {
 			list_remove(memoriasSHC, indice);
-			TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria);
-			nodoMemoria->criterioSHC = 0;
-			printf("Se desasoció la memoria %d del criterio SHC \n",
-					nroMemoria);
+			sem_wait(&loggerSemaforo);
+			log_info(logger, "Se desasoció la memoria %d del criterio SHC", nroMemoria);
+			sem_post(&loggerSemaforo);
 			// Realizar un JOURNAL sobre todas las memorias asociadas al criterio, para garantizar que las keys se mantienen en las memorias correctas
 			// TODO: Llamada a JOURNAL de memoria (pasándole la lista memoriasSHC)
 		} else {
 			// Si no existe memoria asignada al criterio, informarlo y no hacer nada más
-			printf("No existe ninguna memoria asignada al criterio SHC \n");
+			sem_wait(&loggerSemaforo);
+			log_error(logger, "No se desasoció a la memoria %d del criterio SHC: No existe ninguna memoria asignada al criterio SHC", nroMemoria);
+			sem_post(&loggerSemaforo);
 		}
 	}
 }
 
-void desasociarDeCriterioEC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES PARA DESASOCIAR
+void desasociarDeCriterioEC(int nroMemoria) {
 	if (memoriasEC->elements_count > 0) {
 		int indice = buscarMemoriaEnListaCriterio(nroMemoria, memoriasEC);
 		if (indice >= 0) {
 			list_remove(memoriasEC, indice);
-			TablaGossip* nodoMemoria = buscarNodoMemoria(nroMemoria);
-			nodoMemoria->criterioEC = 0;
 			sem_wait(&loggerSemaforo);
 			log_info(logger, "Se desasoció la memoria %d del criterio EC", nroMemoria);
 			sem_post(&loggerSemaforo);
@@ -294,6 +290,40 @@ void desasociarDeCriterioEC(int nroMemoria) { // TODO: REVER TODAS LAS FUNCIONES
 		sem_wait(&loggerSemaforo);
 		log_error(logger, "No se desasoció a la memoria %d del criterio EC: No existe ninguna memoria asignada al criterio EC", nroMemoria);
 		sem_post(&loggerSemaforo);
+	}
+}
+
+void desasociarMemoriaDeCriterios(TablaGossip* nodoMem) {
+	if (nodoMem->criterioSC == 1)
+		desasociarDeCriterioSC(nodoMem->IDMemoria);
+	if (nodoMem->criterioSHC == 1)
+		desasociarDeCriterioSHC(nodoMem->IDMemoria);
+	if (nodoMem->criterioEC == 1)
+		desasociarDeCriterioEC(nodoMem->IDMemoria);
+}
+
+void eliminaMemoriaDeListaGossiping(int socketMem) {
+	t_link_element* nodoActual = listaGossiping->head;
+	t_link_element* nodoAnterior = NULL;
+	TablaGossip* nodoAux;
+
+	if (nodoActual)
+		nodoAux = nodoActual->data;
+	while (nodoActual && nodoAux->socketMemoria != socketMem) {
+		nodoAnterior = nodoActual;
+		nodoActual = nodoActual->next;
+		if (nodoActual)
+			nodoAux = nodoActual->data;
+	}
+	if (nodoActual && nodoAux->socketMemoria == socketMem) {
+		if (!nodoAnterior)
+			listaGossiping->head = nodoActual->next;
+		else
+			nodoAnterior->next = nodoActual->next;
+		listaGossiping->elements_count--;
+		desasociarMemoriaDeCriterios(nodoAux); // Se elimina la Memoria de los criterios a los que estaba asociada
+		free(nodoActual);
+		free(nodoAux);
 	}
 }
 

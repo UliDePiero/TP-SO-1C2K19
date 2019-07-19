@@ -140,6 +140,8 @@ void desasociarDeCriterioSC(int nroMemoria);
 int buscarMemoriaEnListaCriterio(int nroMemoria, t_list* listaMemoriasCriterio);
 void desasociarDeCriterioSHC(int nroMemoria);
 void desasociarDeCriterioEC(int nroMemoria);
+void desasociarMemoriaDeCriterios(TablaGossip* nodoMem);
+void eliminaMemoriaDeListaGossiping(int socketMem);
 TablaGossip* elegirMemoriaCriterioSC();
 int funcionHash(int key, int cantMaxMemoriasSHC);
 TablaGossip* elegirMemoriaCriterioSHC(int key);
