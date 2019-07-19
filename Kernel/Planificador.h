@@ -147,6 +147,7 @@ int funcionHash(int key, int cantMaxMemoriasSHC);
 TablaGossip* elegirMemoriaCriterioSHC(int key);
 int generarNumeroRandom(int nroMax);
 TablaGossip* elegirMemoriaCriterioEC();
+TablaGossip* elegirMemoriaRandom();
 // Funciones para Gossiping
 int pideRetardoGossiping();
 void armarNodoMemoria(TablaGossip* nodo);

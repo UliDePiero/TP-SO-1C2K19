@@ -42,7 +42,6 @@ void ejecutarJournal(char* instruccion);
 void ejecutarAdd(char* instruccion);
 int ejecutarRun(char* instruccion, int requestEjecutadas);
 void respuestas(void* socket_Mem);
-TablaGossip* elegirMemoriaRandom();
 int elegirSocketMemoria(char* tabla, int key);
 int elegirSocketMemoria_CREATE(char* criterio);
 #endif /* API_KERNEL_H_ */
