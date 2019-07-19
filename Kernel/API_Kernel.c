@@ -24,7 +24,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -37,7 +37,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -50,7 +50,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -58,12 +58,13 @@ void API_Kernel(void){
 			case DESCRIBE:
 				cargarNuevoLQL(instruccion_API);
 				sem_wait(&semEjecutarLQL);
+				sleep(configuracion->SLEEP_EJECUCION / 1000);
 				ejecutarDescribe(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -76,7 +77,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -89,7 +90,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -102,7 +103,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -117,7 +118,7 @@ void API_Kernel(void){
 					LQL = queue_peek(Ready);
 					//printf("\nLQL en Ready: %s\n", LQL->Instruccion);
 					sem_wait(&loggerSemaforo);
-					log_trace(logger, "LQL en Ready: %s", LQL->Instruccion);
+					log_info(logger, "LQL en Ready: %s", LQL->Instruccion);
 					sem_post(&loggerSemaforo);
 					sem_post(&semContadorLQL);
 				}
@@ -126,13 +127,13 @@ void API_Kernel(void){
 					LQL = queue_peek(Exit);
 					//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 					sem_wait(&loggerSemaforo);
-					log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
+					log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
 					sem_post(&loggerSemaforo);
 					free(queue_pop(Exit));
 				}
 				//printf("\nRetorno de la ejecucion: %d\n",retornoRUN);
 				sem_wait(&loggerSemaforo);
-				log_debug(logger, "Retorno de la ejecucion: %d", retornoRUN);
+				log_info(logger, "Retorno de la ejecucion: %d", retornoRUN);
 				sem_post(&loggerSemaforo);
 				sem_post(&semMultiprocesamiento);
 				break;
@@ -187,56 +188,61 @@ void respuestas(void* socket_Mem){
 				sem_post(&loggerSemaforo);
 				break;
 			case DESCRIBE:
-				tablas = string_n_split(sPayload, 100, ";");
-				numeroTabla = 0;
-				sem_wait(&loggerSemaforo);
-				log_info(logger, "Se ejecuto corectamente el comando DESCRIBE en MEMORIA");
-				sem_post(&loggerSemaforo);
-				puts("\nDESCRIBE:");
-				while(tablas[numeroTabla]!=NULL)
-				{
-					printf("\n%s",tablas[numeroTabla]);
-					numeroTabla++;
-				}
-				if(numeroTabla>1)
-				{
+				printf("RECIBO<%s>",sPayload);
+				if(!strcmp(sPayload," ")){
+					printf("%s",sPayload);
+					tablas = string_n_split(sPayload, 100, ";");
 					numeroTabla = 0;
+					sem_wait(&loggerSemaforo);
+					log_info(logger, "Se ejecuto corectamente el comando DESCRIBE en MEMORIA");
+					sem_post(&loggerSemaforo);
+					puts("\nDESCRIBE:");
 					while(tablas[numeroTabla]!=NULL)
 					{
-						list_clean_and_destroy_elements(listaTablas,(void*)limpiarListaTablas);
-						tabla = string_n_split(tablas[numeroTabla], 4, ",");
-						Metadata* metadata = malloc(sizeof(Metadata));
-						strcpy(metadata->consistencia,tabla[1]);
-						metadata->particiones = atoi(tabla[2]);
-						metadata->tiempoCompactacion = atol(tabla[3]);
-						Tabla* tab = malloc(sizeof(Tabla));
-						tab->nombreTabla = malloc(sizeof(tabla[0]));
-						strcpy(tab->nombreTabla,tabla[0]);
-						tab->metadata = metadata;
-						list_add(listaTablas,tab);
+						printf("\n%s",tablas[numeroTabla]);
+						getchar();
 						numeroTabla++;
+					}
+					if(numeroTabla>1)
+					{
+						numeroTabla = 0;
+						while(tablas[numeroTabla]!=NULL)
+						{
+							list_clean_and_destroy_elements(listaTablas,(void*)limpiarListaTablas);
+							tabla = string_n_split(tablas[numeroTabla], 4, ",");
+							Metadata* metadata = malloc(sizeof(Metadata));
+							strcpy(metadata->consistencia,tabla[1]);
+							metadata->particiones = atoi(tabla[2]);
+							metadata->tiempoCompactacion = atol(tabla[3]);
+							Tabla* tab = malloc(sizeof(Tabla));
+							tab->nombreTabla = malloc(sizeof(tabla[0]));
+							strcpy(tab->nombreTabla,tabla[0]);
+							tab->metadata = metadata;
+							list_add(listaTablas,tab);
+							numeroTabla++;
 
+							for(int i = 0; i<4; i++)
+								free(tabla[i]);
+							free(tabla);
+						}
+					}
+					else
+					{
+						tabla = string_n_split(tablas[0], 4, ",");
+						Tabla* tab = encontrarTabla(tabla[0]);
+						strcpy(tab->metadata->consistencia,tabla[1]);
+						tab->metadata->particiones = atoi(tabla[2]);
+						tab->metadata->tiempoCompactacion = atol(tabla[3]);
 						for(int i = 0; i<4; i++)
 							free(tabla[i]);
 						free(tabla);
 					}
-				}
-				else
-				{
-					tabla = string_n_split(tablas[0], 4, ",");
-					Tabla* tab = encontrarTabla(tabla[0]);
-					strcpy(tab->metadata->consistencia,tabla[1]);
-					tab->metadata->particiones = atoi(tabla[2]);
-					tab->metadata->tiempoCompactacion = atol(tabla[3]);
-					for(int i = 0; i<4; i++)
-						free(tabla[i]);
-					free(tabla);
-				}
 
-				for(int i = 0; i<100; i++)
-					free(tablas[i]);
-				free(tablas);
-				puts("\n>");
+					for(int i = 0; i<100; i++)
+						free(tablas[i]);
+					free(tablas);
+					//puts("\n>");
+				}
 				break;
 			case DROP:
 				//printf("\nSe elimino la tabla %s de MEMORIA", sPayload);
@@ -370,6 +376,7 @@ int elegirSocketMemoria_CREATE(char* criterio){
 }
 Tabla* encontrarTabla(char* nombreTabla){
 	int encuentraTabla(Tabla* t) {
+		printf("TABLA: %s",t->nombreTabla);
 		return string_equals_ignore_case(t->nombreTabla, nombreTabla);
 	}
 	return list_find(listaTablas, (void*)encuentraTabla);
@@ -483,7 +490,6 @@ void ejecutarCreate(char* instruccion){
 	}
 }
 void ejecutarDescribe(char* instruccion){
-	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	int resultado = 0;
 	char** comando = string_n_split(instruccion, 2, " ");
 	if(comando){
@@ -706,6 +712,7 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 							ejecutarDescribe(stringLQL);
 							moverLQL(Exec,Exit);
 							sem_post(&semMultiprocesamiento);*/
+							sleep(configuracion->SLEEP_EJECUCION / 1000);
 							ejecutarDescribe(stringLQL);
 							break;
 						case DROP:

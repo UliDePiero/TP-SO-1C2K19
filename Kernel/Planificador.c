@@ -90,6 +90,15 @@ int main() {
 	sem_init(&semEjecutarLQL, 0, 0);
 	sem_init(&loggerSemaforo, 1, 1);
 
+TablaGossip* nodo = malloc(sizeof(TablaGossip));
+nodo->IDMemoria = 1;
+strcpy(nodo->IPMemoria,configuracion->IP_MEMORIA);
+nodo->criterioSC=0;
+nodo->criterioEC=0;
+nodo->criterioSHC=0;
+nodo->puertoMemoria=configuracion->PUERTO_MEMORIA;
+list_add(listaGossiping,nodo);
+conectarConNuevaMemoria(nodo);
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
 
 	// cliente
@@ -97,7 +106,8 @@ int main() {
 	socketMemoria = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
 
 	crearHiloIndependiente(&hiloPlanificacion, (void*) planificacion, NULL,"Kernel(Planificacion)");
-
+	//crearHiloIndependiente(&hiloGossipKernel,(void*)gossipingKernel, NULL, "Kernel(Gossip)");
+	crearHiloIndependiente(&hiloDescribeAutomatico,(void*)describeAutomatico, NULL, "Kernel(Describe)");
 	crearHilo(&hiloAPI, (void*) API_Kernel, NULL, "Kernel(API)");
 
 	joinearHilo(hiloAPI, NULL, "Kernel(API)");
@@ -117,7 +127,7 @@ int main() {
 	list_destroy(listaGossiping);
 	list_destroy(listaTablas);
 	sem_wait(&loggerSemaforo);
-	log_debug(logger, "Modulo Kernel cerrado");
+	log_info(logger, "Modulo Kernel cerrado");
 	sem_post(&loggerSemaforo);
 	log_destroy(logger);
 	sem_destroy(&loggerSemaforo);
@@ -132,7 +142,7 @@ void planificacion() {
 		LQL = queue_peek(Exec);
 		//printf("\nLQL en Exec: %s\n", LQL->Instruccion);
 		sem_wait(&loggerSemaforo);
-		log_trace(logger, "LQL en Exec: %s", LQL->Instruccion);
+		log_info(logger, "LQL en Exec: %s", LQL->Instruccion);
 		sem_post(&loggerSemaforo);
 		LQLEnEjecucion++;
 		LQL = queue_peek(Exec);
@@ -146,7 +156,7 @@ void planificacion() {
 				LQL = queue_peek(Ready);
 				//printf("\nLQL en Ready: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "LQL en Ready: %s", LQL->Instruccion);
+				log_info(logger, "LQL en Ready: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				sem_post(&semContadorLQL);
 			} else {
@@ -167,14 +177,14 @@ void cargarNuevoLQL(char* ScriptLQL) {
 	strcpy(NuevoLQL->Instruccion, ScriptLQL);
 	//printf("\nNuevo LQL: %s\n", NuevoLQL->Instruccion);
 	sem_wait(&loggerSemaforo);
-	log_debug(logger, "Nuevo LQL: %s", NuevoLQL->Instruccion);
+	log_info(logger, "Nuevo LQL: %s", NuevoLQL->Instruccion);
 	sem_post(&loggerSemaforo);
 	//list_add(ListaLQL, NuevoLQL); //creo que no es necesaria
 	queue_push(Ready, NuevoLQL);
 	LQL = queue_peek(Ready);
 	//printf("\nLQL en Ready: %s\n", LQL->Instruccion);
 	sem_wait(&loggerSemaforo);
-	log_trace(logger, "LQL en Ready: %s", LQL->Instruccion);
+	log_info(logger, "LQL en Ready: %s", LQL->Instruccion);
 	sem_post(&loggerSemaforo);
 	sem_post(&semContadorLQL);
 }
@@ -415,4 +425,23 @@ TablaGossip* elegirMemoriaCriterioEC() {
 		sem_post(&loggerSemaforo);
 	}
 	return NULL;
+}
+
+void* describeAutomatico (){
+    clock_t start, diff;
+    int elapsedsec;
+    while (1) {
+    	start = clock();
+    	while (1) {
+    		diff = clock() - start;
+    		elapsedsec = diff / CLOCKS_PER_SEC;
+    		if (elapsedsec >= (configuracion->METADATA_REFRESH / 1000)){
+    			sem_wait(&loggerSemaforo);
+    			log_info(logger, "DESCRIBE automático ejecutando");
+    			sem_post(&loggerSemaforo);
+    			ejecutarDescribe("DESCRIBE");
+    			break;
+    		}
+        }
+    }
 }

@@ -117,7 +117,7 @@ char* ejecutarCreate(char* instruccion){
 		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando CREATE desde Memoria.");
 		liberarPaquete(mensaje);
 		sem_wait(&loggerSemaforo);
-		log_trace(logger, "'%s' enviado a LFS", instruccion);
+		log_info(logger, "'%s' enviado a LFS", instruccion);
 		sem_post(&loggerSemaforo);
 		retorno = string_from_format("Tabla:%s Consistencia:%s Particiones:%d Tiempo compactacion:%d",comando[1], comando[2], atoi(comando[3]), atoi(comando[4]));
 		for(int i = 0; i<5; i++)
@@ -141,7 +141,7 @@ t_list* ejecutarDescribe(char* instruccion){
 		retorno = list_create();
 		char* metadata = describeMemoriaTabla(comando[1]);
 		list_add(retorno, metadata);
-		printf("\nMetadata: %s", (char*)retorno->head->data);
+		printf("\nMetadata: %s", /*(char*)retorno->head->data*/metadata);
 		free(comando[1]);
 		sem_wait(&loggerSemaforo);
 		log_info(logger, "Resultado de '%s': %s ", instruccion, metadata);

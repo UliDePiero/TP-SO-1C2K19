@@ -68,17 +68,28 @@ void conectarConNuevaMemoria(TablaGossip* nodo) {
 	// Cada vez que se conoce una nueva Memoria por Gossiping, Kernel se conecta a ella
 	nodo->socketMemoria = connectToServer(nodo->IPMemoria, nodo->puertoMemoria,
 			logger);
-
 	// Si la conexión no falló, crea un hilo para las respuestas de esa nueva Memoria
 	if (nodo->socketMemoria != 1) {
 		sem_wait(&loggerSemaforo);
-		log_trace(logger, "Kernel se conectó correctamente a la Memoria %d",
+		log_info(logger, "Kernel se conectó correctamente a la Memoria %d",
 				nodo->IDMemoria);
 		sem_post(&loggerSemaforo);
 		int *socket_m = malloc(sizeof(*socket_m));
 		*socket_m = nodo->socketMemoria; //Solo cambia el socket de la memoria nueva
 		crearHiloIndependiente(&hiloRespuestasRequest, (void*) respuestas,
 				(void*) socket_m, "Kernel(Respuestas)");
+		tPaquete* mensaje = malloc(sizeof(tPaquete));
+		mensaje->type = DESCRIBE;
+		strcpy(mensaje->payload,"DESCRIBE");
+		mensaje->length = sizeof(mensaje->payload);
+		int resultado = enviarPaquete(nodo->socketMemoria, mensaje,logger,"Ejecutar comando DESCRIBE desde Kernel.");
+		liberarPaquete(mensaje);
+
+		if (resultado > 0){
+			sem_wait(&loggerSemaforo);
+			log_info(logger, "'DESCRIBE' enviado exitosamente a Memoria");
+			sem_post(&loggerSemaforo);
+		}
 	}
 }
 
@@ -87,7 +98,7 @@ void gossipingKernel() {
 	int retardoGossiping = pideRetardoGossiping();
 
 	sem_wait(&loggerSemaforo);
-	log_trace(logger, "Kernel hace Gossiping con Memoria");
+	log_info(logger, "Kernel hace Gossiping con Memoria");
 	sem_post(&loggerSemaforo);
 	// Pide a la memoria del archivo de configuración la Lista de Gossiping
 	pideListaGossiping(socketMemoria);
@@ -96,7 +107,7 @@ void gossipingKernel() {
 		sleep(retardoGossiping / 1000);
 
 		sem_wait(&loggerSemaforo);
-		log_trace(logger, "Kernel hace Gossiping con Memoria");
+		log_info(logger, "Kernel hace Gossiping con Memoria");
 		sem_post(&loggerSemaforo);
 		if (listaGossiping->elements_count > 0) {
 			// Hago Gossiping siempre con la primera Memoria que esté en listaGossiping (Si no se desconectó, va a ser la que tenemos en el Archivo de Configuración)

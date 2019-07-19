@@ -77,7 +77,7 @@ void levantarLFS(){
 	configurar(configuracion);
 	levantarFileSystem();
 
-	log_debug(logger, "Modulo LFS iniciado");
+	log_info(logger, "Modulo LFS iniciado");
 }
 void destruirLFS(){
 	sem_wait(&dumpSemaforo);
@@ -87,7 +87,7 @@ void destruirLFS(){
 	pthread_cancel(hiloConfig);
 	sem_wait(&memtableSemaforo);
 	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
-	log_debug(logger, "Modulo LFS cerrado");
+	log_info(logger, "Modulo LFS cerrado");
 	log_destroy(logger);
 	free(configuracion);
 	close(socketEscucha);
@@ -124,7 +124,7 @@ int main(){
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
 		if (socketActivo != -1) {
 			sem_wait(&loggerSemaforo);
-			log_debug(logger, "Comunicacion establecida en el socket %d", socketActivo);
+			log_info(logger, "Comunicacion establecida en el socket %d", socketActivo);
 			sem_post(&loggerSemaforo);
 			switch (tipoMensaje) {
 				char** comando;
@@ -211,7 +211,7 @@ int main(){
 					}
 					break;
 				case DESCONEXION:
-					log_debug(logger, "Se desconecto un cliente, socket: %d", socketActivo);
+					log_info(logger, "Se desconecto un cliente, socket: %d", socketActivo);
 					break;
 				case HANDSHAKE:
 					log_info(logger, "Memoria y LFS realizan Handshake");
@@ -665,7 +665,7 @@ t_list* describeLFS(char* nombreTabla){
 			sem_wait(&loggerSemaforo);
 			log_info(logger, "Describe Tabla %s: consistencia %s particiones %d tiempo compactacion %ld", nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
 			sem_post(&loggerSemaforo);
-			tabla_s = string_from_format("%s,%s,%d,%ld;",nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
+			tabla_s = string_from_format("%s,%s,%d,%ld;",tabla->nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
 			list_add(listaTablas,tabla_s);
 			sem_post(&tabla->semaforo);
 		}else{
@@ -680,7 +680,7 @@ t_list* describeLFS(char* nombreTabla){
 			sem_wait(&tabla->semaforo);
 			sem_wait(&loggerSemaforo);
 			log_info(logger, "Describe Tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tabla->nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
-			tabla_s = string_from_format("%s,%s,%d,%ld;",nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
+			tabla_s = string_from_format("%s,%s,%d,%ld;",tabla->nombreTabla, tabla->metadata->consistencia, tabla->metadata->particiones, tabla->metadata->tiempoCompactacion);
 			list_add(listaTablas,tabla_s);
 			sem_post(&loggerSemaforo);
 			sem_post(&tabla->semaforo);
