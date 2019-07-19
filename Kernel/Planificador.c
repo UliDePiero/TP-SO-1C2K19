@@ -355,7 +355,9 @@ TablaGossip* elegirMemoriaCriterioSHC(int key) {
 		TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
 		return memoriaElegida;
 	} else {
-		printf("No se pudo elegir una memoria con criterio SHC: No existe ninguna memoria asignada al criterio SHC \n");
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "No se pudo elegir una memoria con criterio SHC: No existe ninguna memoria asignada al criterio SHC");
+		sem_post(&loggerSemaforo);
 	}
 	return NULL;
 }
