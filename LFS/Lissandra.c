@@ -52,13 +52,13 @@ void cambiosConfigLFS(){
 			sem_wait(&configSemaforo);
 			if(configuracion->RETARDO != retardoNuevo){
 				sem_wait(&loggerSemaforo);
-				log_error(logger, "Retardo cambiado %ld -> %ld", configuracion->RETARDO, retardoNuevo);
+				log_info(logger, "Retardo cambiado %ld -> %ld", configuracion->RETARDO, retardoNuevo);
 				sem_post(&loggerSemaforo);
 				configuracion->RETARDO = retardoNuevo;
 			}
 			if(configuracion->TIEMPO_DUMP != dumpNuevo){
 				sem_wait(&loggerSemaforo);
-				log_error(logger, "Tiempo dump cambiado %ld -> %ld", configuracion->TIEMPO_DUMP, dumpNuevo);
+				log_info(logger, "Tiempo dump cambiado %ld -> %ld", configuracion->TIEMPO_DUMP, dumpNuevo);
 				sem_post(&loggerSemaforo);
 				configuracion->TIEMPO_DUMP = dumpNuevo;
 			}

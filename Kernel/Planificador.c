@@ -32,15 +32,43 @@ void configurar(ConfiguracionKernel* configuracion) {
 }
 
 void cambiosConfigKernel() {
-	if (configModificado()) {
-		t_config* archivoConfig = config_create(RUTA_CONFIG);
-		configuracion->QUANTUM = archivoConfigSacarIntDe(archivoConfig,
-				"QUANTUM");
-		configuracion->METADATA_REFRESH = archivoConfigSacarIntDe(archivoConfig,
-				"METADATA_REFRESH");
-		configuracion->SLEEP_EJECUCION = archivoConfigSacarIntDe(archivoConfig,
-				"SLEEP_EJECUCION");
-		archivoConfigDestruir(archivoConfig);
+	while (1) {
+		if (configModificado()) {
+			char* campos[] =
+					{ "IP_MEMORIA", "PUERTO_MEMORIA", "QUANTUM",
+							"MULTIPROCESAMIENTO", "METADATA_REFRESH",
+							"SLEEP_EJECUCION" };
+			t_config* archivoConfig = archivoConfigCrear(RUTA_CONFIG, campos);
+			int nuevoQuantum = archivoConfigSacarIntDe(archivoConfig,
+					"QUANTUM");
+			int nuevoMetadataRefresh = archivoConfigSacarIntDe(archivoConfig,
+					"METADATA_REFRESH");
+			int nuevoSleepEjecucion = archivoConfigSacarIntDe(archivoConfig,
+					"SLEEP_EJECUCION");
+
+			if (configuracion->QUANTUM != nuevoQuantum) {
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Cambio de Quantum %d -> %d",
+						configuracion->QUANTUM, nuevoQuantum);
+				sem_post(&loggerSemaforo);
+				configuracion->QUANTUM = nuevoQuantum;
+			}
+			if (configuracion->METADATA_REFRESH != nuevoMetadataRefresh) {
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Cambio de Metadata Refresh %d -> %d",
+						configuracion->METADATA_REFRESH, nuevoMetadataRefresh);
+				sem_post(&loggerSemaforo);
+				configuracion->METADATA_REFRESH = nuevoMetadataRefresh;
+			}
+			if (configuracion->SLEEP_EJECUCION != nuevoSleepEjecucion) {
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Cambio de Sleep Ejecución %d -> %d",
+						configuracion->SLEEP_EJECUCION, nuevoSleepEjecucion);
+				sem_post(&loggerSemaforo);
+				configuracion->SLEEP_EJECUCION = nuevoSleepEjecucion;
+			}
+			archivoConfigDestruir(archivoConfig);
+		}
 	}
 }
 

@@ -49,13 +49,54 @@ void configurar(ConfiguracionMemoria* configuracion) {
 }
 
 void cambiosConfigMemoria() {
-	if (configModificado()) {
-		t_config* archivoConfig = config_create(RUTA_CONFIG);
-		configuracion->RETARDO_MEM = archivoConfigSacarIntDe(archivoConfig, "RETARDO_MEM");
-		configuracion->RETARDO_FS = archivoConfigSacarIntDe(archivoConfig, "RETARDO_FS");
-		configuracion->RETARDO_JOURNAL = archivoConfigSacarIntDe(archivoConfig, "RETARDO_JOURNAL");
-		configuracion->RETARDO_GOSSIPING = archivoConfigSacarIntDe(archivoConfig, "RETARDO_GOSSIPING");
-		archivoConfigDestruir(archivoConfig);
+	while (1) {
+		if (configModificado()) {
+			char* campos[] = { "PUERTO", "IP_FS", "PUERTO_FS", "IP_SEEDS",
+					"PUERTO_SEEDS", "RETARDO_MEM", "RETARDO_FS", "TAM_MEM",
+					"RETARDO_JOURNAL", "RETARDO_GOSSIPING", "MEMORY_NUMBER" };
+			t_config* archivoConfig = archivoConfigCrear(RUTA_CONFIG, campos);
+			int nuevoRetardoMem = archivoConfigSacarIntDe(archivoConfig,
+					"RETARDO_MEM");
+			int nuevoRetardoFS = archivoConfigSacarIntDe(archivoConfig,
+					"RETARDO_FS");
+			int nuevoRetardoJournal = archivoConfigSacarIntDe(archivoConfig,
+					"RETARDO_JOURNAL");
+			int nuevoRetardoGossiping = archivoConfigSacarIntDe(archivoConfig,
+					"RETARDO_GOSSIPING");
+
+			if (configuracion->RETARDO_MEM != nuevoRetardoMem) {
+				sem_wait(&loggerSemaforo);
+				log_info(logger,
+						"Cambio de Retardo de acceso a Memoria Principal %d -> %d",
+						configuracion->RETARDO_MEM, nuevoRetardoMem);
+				sem_post(&loggerSemaforo);
+				configuracion->RETARDO_MEM = nuevoRetardoMem;
+			}
+			if (configuracion->RETARDO_FS != nuevoRetardoFS) {
+				sem_wait(&loggerSemaforo);
+				log_info(logger,
+						"Cambio de Retardo de acceso a File System %d -> %d",
+						configuracion->RETARDO_FS, nuevoRetardoFS);
+				sem_post(&loggerSemaforo);
+				configuracion->RETARDO_FS = nuevoRetardoFS;
+			}
+			if (configuracion->RETARDO_JOURNAL != nuevoRetardoJournal) {
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Cambio de Tiempo de Journal %d -> %d",
+						configuracion->RETARDO_JOURNAL, nuevoRetardoJournal);
+				sem_post(&loggerSemaforo);
+				configuracion->RETARDO_JOURNAL = nuevoRetardoJournal;
+			}
+			if (configuracion->RETARDO_GOSSIPING != nuevoRetardoGossiping) {
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Cambio de Tiempo de Gossiping %d -> %d",
+						configuracion->RETARDO_GOSSIPING,
+						nuevoRetardoGossiping);
+				sem_post(&loggerSemaforo);
+				configuracion->RETARDO_GOSSIPING = nuevoRetardoGossiping;
+			}
+			archivoConfigDestruir(archivoConfig);
+		}
 	}
 }
 
