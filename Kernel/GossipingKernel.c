@@ -26,14 +26,18 @@ int pideRetardoGossiping() {
 
 void armarNodoMemoria(TablaGossip* nodo) {
 	// Cargo datos faltantes del nodo
-	nodo->socketMemoria = 1;
+	if(nodo->IPMemoria != configuracion->IP_MEMORIA && nodo->puertoMemoria != configuracion->PUERTO_MEMORIA)
+		nodo->socketMemoria = 1;
+	else
+		nodo->socketMemoria = socketMemoria;
 	nodo->criterioSC = 0;
 	nodo->criterioSHC = 0;
 	nodo->criterioEC = 0;
 	// Si el nodo no está en listaGossiping, lo agrego, me conecto y creo hilo de respuestas
 	if (!nodoEstaEnLista(listaGossiping, nodo)) {
 		list_add(listaGossiping, nodo);
-		conectarConNuevaMemoria(nodo);
+		if(nodo->socketMemoria == 1)
+			conectarConNuevaMemoria(nodo);
 	} else
 		free(nodo); // Si el nodo ya se encontraba en listaGossiping, lo libero
 }
