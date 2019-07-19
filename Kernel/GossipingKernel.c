@@ -12,7 +12,8 @@ int pideRetardoGossiping() {
 	msjeEnviado->type = HANDSHAKE;
 	strcpy(msjeEnviado->payload, "Pedido de RETARDO_GOSSIPING a Memoria");
 	msjeEnviado->length = sizeof(msjeEnviado->payload);
-	enviarPaquete(socketMemoria, msjeEnviado, logger, "Kernel realiza pedido de Retardo de Gossiping a Memoria");
+	enviarPaquete(socketMemoria, msjeEnviado, logger,
+			"Kernel realiza pedido de Retardo de Gossiping a Memoria");
 	liberarPaquete(msjeEnviado);
 
 	tPaquete* msjeRecibido = malloc(sizeof(tPaquete));
@@ -30,11 +31,10 @@ void armarNodoMemoria(TablaGossip* nodo) {
 	nodo->criterioSHC = 0;
 	nodo->criterioEC = 0;
 	// Si el nodo no está en listaGossiping, lo agrego, me conecto y creo hilo de respuestas
-	if (!nodoEstaEnLista(listaGossiping, nodo)){
+	if (!nodoEstaEnLista(listaGossiping, nodo)) {
 		list_add(listaGossiping, nodo);
 		conectarConNuevaMemoria(nodo);
-	}
-	else
+	} else
 		free(nodo); // Si el nodo ya se encontraba en listaGossiping, lo libero
 }
 
@@ -43,7 +43,8 @@ void pideListaGossiping(int socketMem) {
 	msjeEnviado->type = GOSSIPING;
 	strcpy(msjeEnviado->payload, "Kernel pide Lista de Gossiping a Memoria");
 	msjeEnviado->length = sizeof(msjeEnviado->payload);
-	enviarPaquete(socketMem, msjeEnviado, logger, "Kernel realiza pedido de Lista de Gossiping a Memoria");
+	enviarPaquete(socketMem, msjeEnviado, logger,
+			"Kernel realiza pedido de Lista de Gossiping a Memoria");
 	liberarPaquete(msjeEnviado);
 
 	int status;
@@ -59,15 +60,17 @@ void pideListaGossiping(int socketMem) {
 	}
 }
 
-void conectarConNuevaMemoria(TablaGossip* nodo){
+void conectarConNuevaMemoria(TablaGossip* nodo) {
 	// Cada vez que se conoce una nueva Memoria por Gossiping, Kernel se conecta a ella
-	nodo->socketMemoria = connectToServer(nodo->IPMemoria, nodo->puertoMemoria, logger);
+	nodo->socketMemoria = connectToServer(nodo->IPMemoria, nodo->puertoMemoria,
+			logger);
 
 	// Si la conexión no falló, crea un hilo para las respuestas de esa nueva Memoria
-	if(nodo->socketMemoria!=1){
+	if (nodo->socketMemoria != 1) {
 		int *socket_m = malloc(sizeof(*socket_m));
-		*socket_m = nodo->socketMemoria;//Solo cambia el socket de la memoria nueva
-		crearHiloIndependiente(&hiloRespuestasRequest, (void*) respuestas, (void*)socket_m,"Kernel(Respuestas)");
+		*socket_m = nodo->socketMemoria; //Solo cambia el socket de la memoria nueva
+		crearHiloIndependiente(&hiloRespuestasRequest, (void*) respuestas,
+				(void*) socket_m, "Kernel(Respuestas)");
 	}
 }
 
@@ -79,11 +82,11 @@ void gossipingKernel() {
 	// Pide a la memoria del archivo de configuración la Lista de Gossiping
 	pideListaGossiping(socketMemoria);
 
-	while(1){
+	while (1) {
 		sleep(retardoGossiping / 1000);
 
 		log_trace(logger, "Kernel hace Gossiping con Memoria");
-		if(listaGossiping->elements_count > 0){
+		if (listaGossiping->elements_count > 0) {
 			// Hago Gossiping siempre con la primera Memoria que esté en listaGossiping (Si no se desconectó, va a ser la que tenemos en el Archivo de Configuración)
 			TablaGossip* nodoTablaGossipAux = listaGossiping->head->data;
 			pideListaGossiping(nodoTablaGossipAux->socketMemoria);
@@ -102,7 +105,8 @@ int recibirNodoYDeserializar(TablaGossip *nodo, int socketMem) {
 	if (!status)
 		return 0;
 
-	status = recv(socketMem, &(nodo->puertoMemoria), sizeof(nodo->puertoMemoria), 0);
+	status = recv(socketMem, &(nodo->puertoMemoria),
+			sizeof(nodo->puertoMemoria), 0);
 	if (!status)
 		return 0;
 

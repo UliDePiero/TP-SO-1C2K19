@@ -66,6 +66,8 @@ void removerElemento(t_list* lista, t_nodoLRU* nodo) {
 	t_link_element* nodoAnterior = NULL;
 	t_nodoLRU* nodoLRUAux;
 
+	if (nodoActual)
+		nodoLRUAux = nodoActual->data;
 	while (nodoActual && (nodoLRUAux->segmentoID != nodo->segmentoID || nodoLRUAux->paginaID != nodo->paginaID))
 	{
 		nodoAnterior = nodoActual;
