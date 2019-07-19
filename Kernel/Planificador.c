@@ -68,16 +68,7 @@ int main() {
 	//int socketMEMORIA = conectarAUnServidor(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA);
 	socketMemoria = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
 
-	//realizarHandshakeConMemoria(); // Creo que esto después va a quedar dentro de Gossiping
-
 	crearHiloIndependiente(&hiloPlanificacion, (void*) planificacion, NULL,"Kernel(Planificacion)");
-
-	//Hacer siempre esto para cada memoria nueva agregada
-	if(socketMemoria!=1){
-		int *socket_m = malloc(sizeof(*socket_m));
-		*socket_m = socketMemoria;//Solo cambia el socket de la memoria nueva
-		crearHiloIndependiente(&hiloRespuestasRequest, (void*) respuestas, (void*)socket_m,"Kernel(Respuestas)");
-	}
 
 	crearHilo(&hiloAPI, (void*) API_Kernel, NULL, "Kernel(API)");
 
@@ -167,39 +158,11 @@ void actualizarRequestEjecutadas() {
 	LQL->requestEjecutadas += configuracion->QUANTUM;
 }
 
-/*void realizarHandshakeConMemoria() {
-	tPaquete* msjeEnviado = malloc(sizeof(tPaquete));
-	msjeEnviado->type = HANDSHAKE;
-	strcpy(msjeEnviado->payload, "Kernel realiza handshake con Memoria");
-	msjeEnviado->length = sizeof(msjeEnviado->payload);
-	enviarPaquete(socketMemoria, msjeEnviado, logger, "Realizar Handshake entre Kernel y Memoria.");
-	liberarPaquete(msjeEnviado);
-
-	tPaquete* msjeRecibido = malloc(sizeof(tPaquete));
-	recv(socketMemoria, msjeRecibido, sizeof(tPaquete), MSG_WAITALL);
-	armarNodoMemoria(atoi(msjeRecibido->payload));
-	liberarPaquete(msjeRecibido);
-}*/
-
 void crearListasDeCriteriosMemorias() {
 	memoriaSC = list_create();
 	memoriasSHC = list_create();
 	memoriasEC = list_create();
 }
-
-/*void armarNodoMemoria(int nroMemoria) {
-	TablaGossip* nodoMem = malloc(sizeof(TablaGossip));
-	// Cargo datos el nodo
-	nodoMem->IDMemoria = nroMemoria;
-	//nodoMem->IPMemoria = configuracion->IP_MEMORIA; // Cambiar por IP de la memoria a la que se conecta
-	strcpy(nodoMem->IPMemoria, configuracion->IP_MEMORIA);
-	nodoMem->puertoMemoria = configuracion->PUERTO_MEMORIA; // Cambiar por puerto de la memoria a la que se conecta
-	nodoMem->criterioSC = 0;
-	nodoMem->criterioSHC = 0;
-	nodoMem->criterioEC = 0;
-	// Agrego el nodo a listaGossiping
-	list_add(listaGossiping, nodoMem);
-}*/
 
 TablaGossip* buscarNodoMemoria(int nroMemoria) {
 	TablaGossip* nodoBuscado = malloc(sizeof(TablaGossip));

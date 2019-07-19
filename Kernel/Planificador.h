@@ -131,9 +131,7 @@ void cargarNuevoLQL(char* ScriptLQL);
 void moverLQL(t_queue *colaOrigen, t_queue *colaDestino);
 void actualizarRequestEjecutadas();
 // Funciones de Criterios de Consistencia
-void realizarHandshakeConMemoria();
 void crearListasDeCriteriosMemorias();
-void armarNodoMemoria(int nroMemoria);
 TablaGossip* buscarNodoMemoria(int nroMemoria);
 void asociarACriterioSC(int nroMemoria);
 void asociarACriterioSHC(int nroMemoria);
@@ -147,5 +145,13 @@ int funcionHash(int key, int cantMaxMemoriasSHC);
 TablaGossip* elegirMemoriaCriterioSHC(int key);
 int generarNumeroRandom(int nroMax);
 TablaGossip* elegirMemoriaCriterioEC();
+// Funciones para Gossiping
+int pideRetardoGossiping();
+void armarNodoMemoria(TablaGossip* nodo);
+void pideListaGossiping(int socketMem);
+void conectarConNuevaMemoria(TablaGossip* nodo);
+void gossipingKernel();
+int recibirNodoYDeserializar(TablaGossip *nodo, int socketMem);
+int nodoEstaEnLista(t_list* lista, TablaGossip* nodo);
 
 #endif /* PLANIFICADOR_H_ */

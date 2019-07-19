@@ -270,8 +270,10 @@ void respuestas(void* socket_Mem){
 		}
 		if(sPayload != NULL) free(sPayload);
 	}
+	// ACTUALIZAR LISTA GOSSIPING!!! (Eliminar elemento del socket que llamó al hilo)
 	free(socket_Mem);
-	pthread_cancel(hiloAPI);
+	if(listaGossiping->elements_count == 0)
+		pthread_cancel(hiloAPI);
 }
 Tabla* encontrarTabla(char* nombreTabla){
 	int encuentraTabla(Tabla* t) {
