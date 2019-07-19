@@ -349,6 +349,9 @@ void eliminaMemoriaDeListaGossiping(int socketMem) {
 		else
 			nodoAnterior->next = nodoActual->next;
 		listaGossiping->elements_count--;
+		sem_wait(&loggerSemaforo);
+		log_info(logger, "La Memoria %d se desconectó", nodoAux->IDMemoria);
+		sem_post(&loggerSemaforo);
 		desasociarMemoriaDeCriterios(nodoAux); // Se elimina la Memoria de los criterios a los que estaba asociada
 		free(nodoActual);
 		free(nodoAux);
