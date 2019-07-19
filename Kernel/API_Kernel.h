@@ -28,17 +28,21 @@
 
 #define PATH_SCRIPT "LQL.script" //para hacer pruebas
 
+int socketElegido;
+
 /* --------------------    Definición de Funciones    -------------------- */
 
 void API_Kernel(void);
-void ejecutarSelect(char* instruccion);
-void ejecutarInsert(char* instruccion);
+int ejecutarSelect(char* instruccion);
+int ejecutarInsert(char* instruccion);
 void ejecutarCreate(char* instruccion);
 void ejecutarDescribe(char* instruccion);
-void ejecutarDrop(char* instruccion);
+int ejecutarDrop(char* instruccion);
 void ejecutarJournal(char* instruccion);
 void ejecutarAdd(char* instruccion);
 int ejecutarRun(char* instruccion, int requestEjecutadas);
 void respuestas(void* socket_Mem);
-
+TablaGossip* elegirMemoriaRandom();
+int elegirSocketMemoria(char* tabla, int key);
+int elegirSocketMemoria_CREATE(char* criterio);
 #endif /* API_KERNEL_H_ */

@@ -215,7 +215,10 @@ void respuestas(void* socket_Mem){
 						tab->metadata = metadata;
 						list_add(listaTablas,tab);
 						numeroTabla++;
-						free(tabla);//???
+
+						for(int i = 0; i<4; i++)
+							free(tabla[i]);
+						free(tabla);
 					}
 				}
 				else
@@ -225,9 +228,13 @@ void respuestas(void* socket_Mem){
 					strcpy(tab->metadata->consistencia,tabla[1]);
 					tab->metadata->particiones = atoi(tabla[2]);
 					tab->metadata->tiempoCompactacion = atol(tabla[3]);
-					free(tabla);//???
+					for(int i = 0; i<4; i++)
+						free(tabla[i]);
+					free(tabla);
 				}
 
+				for(int i = 0; i<100; i++)
+					free(tablas[i]);
 				free(tablas);
 				puts("\n>");
 				break;
@@ -275,11 +282,96 @@ void respuestas(void* socket_Mem){
 	if(listaGossiping->elements_count == 0)
 		pthread_cancel(hiloAPI);
 }
+TablaGossip* elegirMemoriaRandom() {
+	int indice, nroMemoria;
+	if (listaGossiping->elements_count > 0) {
+		if (memoriasEC->elements_count > 0) {
+			indice = generarNumeroRandom(memoriasEC->elements_count);
+			nroMemoria = (int) list_get(memoriasEC, indice);
+			TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
+			return memoriaElegida;
+		}
+		if (memoriaSC->elements_count > 0) {
+			indice = generarNumeroRandom(memoriaSC->elements_count);
+			nroMemoria = (int) list_get(memoriaSC, indice);
+			TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
+			return memoriaElegida;
+		}
+		/*if (memoriasSHC->elements_count > 0) {
+			indice = generarNumeroRandom(memoriasSHC->elements_count);
+			nroMemoria = (int) list_get(memoriasSHC, indice);
+			TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
+			return memoriaElegida;
+		}*/
+	} else {
+		sem_wait(&loggerSemaforo);
+		log_error(logger, "No se pudo elegir una memoria: No existe ninguna memoria asignada a algun criterio");
+		sem_post(&loggerSemaforo);
+	}
+	return NULL;
+}
+int elegirSocketMemoria(char* tabla, int key){
+	Tabla* tab = encontrarTabla(tabla);
+	if(tab != NULL){
+		TablaGossip* mem;
+		if(string_equals_ignore_case(tab->metadata->consistencia,"EC")){
+			mem = elegirMemoriaCriterioEC();
+			if(mem != NULL)
+				return mem->socketMemoria;
+			else
+				return -1;
+		}
+		if(string_equals_ignore_case(tab->metadata->consistencia,"SC")){
+			mem = elegirMemoriaCriterioSC();
+			if(mem != NULL)
+				return mem->socketMemoria;
+			else
+				return -1;
+		}
+		/*if(string_equals_ignore_case(tab->metadata->consistencia,"SHC")){
+			mem = elegirMemoriaCriterioSHC(key);
+			if(mem != NULL)
+				return mem->socketMemoria;
+			else
+				return -1;
+		}*/
+	}
+	return -2;
+}
+int elegirSocketMemoria_CREATE(char* criterio){
+	TablaGossip* mem;
+	if(string_equals_ignore_case(criterio,"EC")){
+		mem = elegirMemoriaCriterioEC();
+		if(mem != NULL)
+			return mem->socketMemoria;
+		else
+			return -1;
+	}
+	if(string_equals_ignore_case(criterio,"SC")){
+		mem = elegirMemoriaCriterioSC();
+		if(mem != NULL)
+			return mem->socketMemoria;
+		else
+			return -1;
+	}
+	/*if(string_equals_ignore_case(criterio,"SHC")){
+		mem = elegirMemoriaCriterioSHC(key);
+		if(mem != NULL)
+			return mem->socketMemoria;
+		else
+			return -1;
+	}*/
+
+	sem_wait(&loggerSemaforo);
+	log_error(logger, "Criterio desconocido, tabla no creada.");
+	sem_post(&loggerSemaforo);
+
+	return -2;
+}
 Tabla* encontrarTabla(char* nombreTabla){
 	int encuentraTabla(Tabla* t) {
 		return string_equals_ignore_case(t->nombreTabla, nombreTabla);
 	}
-
 	return list_find(listaTablas, (void*)encuentraTabla);
 }
 void limpiarListaTablas(Tabla* tabla){
@@ -288,98 +380,106 @@ void limpiarListaTablas(Tabla* tabla){
 	free(tabla);
 }
 
-void ejecutarSelect(char* instruccion){
+int ejecutarSelect(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	int resultado = 0;
 	char** comando = validarComando(instruccion, 3);
 	if(comando){
-		tPaquete* mensaje = malloc(sizeof(tPaquete));
-		mensaje->type = SELECT;
-		strcpy(mensaje->payload,instruccion);
-		mensaje->length = sizeof(mensaje->payload);
-		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando SELECT desde Kernel.");
-		liberarPaquete(mensaje);
+		socketElegido = elegirSocketMemoria(comando[1],atoi(comando[2]));
+		if(socketElegido != -1){
+			tPaquete* mensaje = malloc(sizeof(tPaquete));
+			mensaje->type = SELECT;
+			strcpy(mensaje->payload,instruccion);
+			mensaje->length = sizeof(mensaje->payload);
+			resultado = enviarPaquete(socketElegido, mensaje,logger,"Ejecutar comando SELECT desde Kernel.");
+			liberarPaquete(mensaje);
 
-		if (resultado > 0){
-			sem_wait(&loggerSemaforo);
-			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
-			sem_post(&loggerSemaforo);
+			if (resultado > 0){
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+				sem_post(&loggerSemaforo);
+			}
+
+			for(int i = 0; i<3; i++)
+				free(comando[i]);
+			free(comando);
+
+			return EXIT_SUCCESS;
 		}
+		else if(socketElegido == -2){
+				sem_wait(&loggerSemaforo);
+				log_error(logger, "Tabla '%s' no encontrada dentro de la metadata conocida.", comando[1]);
+				sem_post(&loggerSemaforo);
 
-		/*char* sPayload;
-		tMensaje tipo_mensaje;
-		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Value del SELECT de MEMORIA");
-		if(tipo_mensaje == ERROR_EN_COMANDO)
-			printf("\nHubo un error en la ejecucion del comando SELECT en MEMORIA");
-		else
-			printf("\nValue: %s",sPayload);
-		free(sPayload);*/
-		for(int i = 0; i<3; i++)
-			free(comando[i]);
-		free(comando);
+				for(int i = 0; i<3; i++)
+					free(comando[i]);
+				free(comando);
+			 }
 	}
-
+	return EXIT_FAILURE;
 }
-void ejecutarInsert(char* instruccion){
+int ejecutarInsert(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	int resultado = 0;
 	char** comando = validarComando(instruccion, 4);
 	if(comando){
-		tPaquete* mensaje = malloc(sizeof(tPaquete));
-		mensaje->type = INSERT;
-		strcpy(mensaje->payload,instruccion);
-		mensaje->length = sizeof(mensaje->payload);
-		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando INSERT desde Kernel.");
-		liberarPaquete(mensaje);
+		socketElegido = elegirSocketMemoria(comando[1],atoi(comando[2]));
+		if(socketElegido != -1){
+			tPaquete* mensaje = malloc(sizeof(tPaquete));
+			mensaje->type = INSERT;
+			strcpy(mensaje->payload,instruccion);
+			mensaje->length = sizeof(mensaje->payload);
+			resultado = enviarPaquete(socketElegido, mensaje,logger,"Ejecutar comando INSERT desde Kernel.");
+			liberarPaquete(mensaje);
 
-		if (resultado > 0){
-			sem_wait(&loggerSemaforo);
-			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
-			sem_post(&loggerSemaforo);
+			if (resultado > 0){
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+				sem_post(&loggerSemaforo);
+			}
+
+			for(int i = 0; i<4; i++)
+				free(comando[i]);
+			free(comando);
+
+			return EXIT_SUCCESS;
 		}
+		else if(socketElegido == -2){
+				sem_wait(&loggerSemaforo);
+				log_error(logger, "Tabla '%s' no encontrada dentro de la metadata conocida.", comando[1]);
+				sem_post(&loggerSemaforo);
 
-		/*char* sPayload;
-		tMensaje tipo_mensaje;
-		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del INSERT en MEMORIA");
-		if(tipo_mensaje == ERROR_EN_COMANDO)
-			printf("\nHubo un error en la ejecucion del comando INSERT en MEMORIA");
-		else
-			printf("\nSe inserto corectamente en MEMORIA: %s",sPayload);
-		free(sPayload);*/
-		for(int i = 0; i<4; i++)
-			free(comando[i]);
-		free(comando);
+				for(int i = 0; i<4; i++)
+					free(comando[i]);
+				free(comando);
+			 }
 	}
+	return EXIT_FAILURE;
 }
 void ejecutarCreate(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	int resultado = 0;
 	char** comando = validarComando(instruccion, 5);
 	if(comando){
-		tPaquete* mensaje = malloc(sizeof(tPaquete));
-		mensaje->type = CREATE;
-		strcpy(mensaje->payload,instruccion);
-		mensaje->length = sizeof(mensaje->payload);
-		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando CREATE desde Kernel.");
-		liberarPaquete(mensaje);
+		socketElegido = elegirSocketMemoria_CREATE(comando[2]);
+		if(socketElegido != -1){
+			tPaquete* mensaje = malloc(sizeof(tPaquete));
+			mensaje->type = CREATE;
+			strcpy(mensaje->payload,instruccion);
+			mensaje->length = sizeof(mensaje->payload);
+			resultado = enviarPaquete(socketElegido, mensaje,logger,"Ejecutar comando CREATE desde Kernel.");
+			liberarPaquete(mensaje);
 
-		if (resultado > 0){
-			sem_wait(&loggerSemaforo);
-			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
-			sem_post(&loggerSemaforo);
+			if (resultado > 0){
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+				sem_post(&loggerSemaforo);
+			}
+
+			for(int i = 0; i<5; i++)
+				free(comando[i]);
+			free(comando);
 		}
-
-		/*char* sPayload;
-		tMensaje tipo_mensaje;
-		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del CREATE en MEMORIA");
-		if(tipo_mensaje == ERROR_EN_COMANDO)
-			printf("\nHubo un error en la ejecucion del comando CREATE en MEMORIA");
-		else
-			printf("\nSe ejecuto corectamente el comando CREATE %s en MEMORIA",sPayload);
-		free(sPayload);*/
-		for(int i = 0; i<5; i++)
-			free(comando[i]);
-		free(comando);
 	}
 }
 void ejecutarDescribe(char* instruccion){
@@ -387,94 +487,121 @@ void ejecutarDescribe(char* instruccion){
 	int resultado = 0;
 	char** comando = string_n_split(instruccion, 2, " ");
 	if(comando){
-		tPaquete* mensaje = malloc(sizeof(tPaquete));
-		mensaje->type = DESCRIBE;
-		strcpy(mensaje->payload,instruccion);
-		mensaje->length = sizeof(mensaje->payload);
-		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DESCRIBE desde Kernel.");
-		liberarPaquete(mensaje);
+		TablaGossip* mem = elegirMemoriaRandom();
+		if(mem != NULL){
+			tPaquete* mensaje = malloc(sizeof(tPaquete));
+			mensaje->type = DESCRIBE;
+			strcpy(mensaje->payload,instruccion);
+			mensaje->length = sizeof(mensaje->payload);
+			resultado = enviarPaquete(mem->socketMemoria, mensaje,logger,"Ejecutar comando DESCRIBE desde Kernel.");
+			liberarPaquete(mensaje);
 
-		if (resultado > 0){
-			sem_wait(&loggerSemaforo);
-			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
-			sem_post(&loggerSemaforo);
+			if (resultado > 0){
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+				sem_post(&loggerSemaforo);
+			}
+
+			for(int i = 0; i<2; i++)
+				free(comando[i]);
+			free(comando);
 		}
-
-		/*char* sPayload;
-		tMensaje tipo_mensaje;
-		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del DESCRIBE en MEMORIA");
-		if(tipo_mensaje == ERROR_EN_COMANDO)
-			printf("\nHubo un error en la ejecucion del comando DESCRIBE en MEMORIA");
-		else{
-			printf("\nDESCRIBE: ");
-
-
-
-		}*/
-		for(int i = 0; i<2; i++)
-			free(comando[i]);
-		free(comando);
 	}
 }
-void ejecutarDrop(char* instruccion){
+int ejecutarDrop(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	int resultado = 0;
 	char** comando = validarComando(instruccion, 2);
 	if(comando){
-		tPaquete* mensaje = malloc(sizeof(tPaquete));
-		mensaje->type = DROP;
-		strcpy(mensaje->payload,instruccion);
-		mensaje->length = sizeof(mensaje->payload);
-		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando DROP desde Kernel.");
-		liberarPaquete(mensaje);
+		socketElegido = elegirSocketMemoria(comando[1],-1);
+		if(socketElegido != -1){
+			tPaquete* mensaje = malloc(sizeof(tPaquete));
+			mensaje->type = DROP;
+			strcpy(mensaje->payload,instruccion);
+			mensaje->length = sizeof(mensaje->payload);
+			resultado = enviarPaquete(socketElegido, mensaje,logger,"Ejecutar comando DROP desde Kernel.");
+			liberarPaquete(mensaje);
 
-		if (resultado > 0){
-			sem_wait(&loggerSemaforo);
-			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
-			sem_post(&loggerSemaforo);
+			if (resultado > 0){
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+				sem_post(&loggerSemaforo);
+			}
+
+			for(int i = 0; i<2; i++)
+				free(comando[i]);
+			free(comando);
+
+			return EXIT_SUCCESS;
 		}
+		else if(socketElegido == -2){
+				sem_wait(&loggerSemaforo);
+				log_error(logger, "Tabla '%s' no encontrada dentro de la metadata conocida.", comando[1]);
+				sem_post(&loggerSemaforo);
 
-		/*char* sPayload;
-		tMensaje tipo_mensaje;
-		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del DROP en MEMORIA");
-		if(tipo_mensaje == ERROR_EN_COMANDO)
-			printf("\nHubo un error en la ejecucion del comando DROP en MEMORIA");
-		else
-			printf("\nSe elimino la tabla %s de MEMORIA", sPayload);
-		*/
-		for(int i = 0; i<2; i++)
-			free(comando[i]);
-		free(comando);
+				for(int i = 0; i<2; i++)
+					free(comando[i]);
+				free(comando);
+			 }
 	}
+	return EXIT_FAILURE;
 }
 void ejecutarJournal(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
-	int resultado = 0;
+	int resultado = 0, nroMemoria = -1;
+	TablaGossip* memoriaElegida;
 	char** comando = validarComando(instruccion, 1);
 	if(comando){
-		tPaquete* mensaje = malloc(sizeof(tPaquete));
-		mensaje->type = JOURNAL;
-		strcpy(mensaje->payload,instruccion);
-		mensaje->length = sizeof(mensaje->payload);
-		resultado = enviarPaquete(socketMemoria, mensaje,logger,"Ejecutar comando JOURNAL desde Kernel.");
-		liberarPaquete(mensaje);
+		for(int a=0; a<memoriasEC->elements_count; a++){
+			nroMemoria = (int) list_get(memoriasEC, a);
+			memoriaElegida = buscarNodoMemoria(nroMemoria);
 
-		if (resultado > 0){
-			sem_wait(&loggerSemaforo);
-			log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
-			sem_post(&loggerSemaforo);
+			tPaquete* mensaje = malloc(sizeof(tPaquete));
+			mensaje->type = JOURNAL;
+			strcpy(mensaje->payload,instruccion);
+			mensaje->length = sizeof(mensaje->payload);
+			resultado = enviarPaquete(memoriaElegida->socketMemoria, mensaje,logger,"Ejecutar comando JOURNAL desde Kernel.");
+			liberarPaquete(mensaje);
+
+			if (resultado > 0){
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+				sem_post(&loggerSemaforo);
+			}
 		}
+		for(int a=0; a<memoriaSC->elements_count; a++){
+			nroMemoria = (int) list_get(memoriaSC, a);
+			memoriaElegida = buscarNodoMemoria(nroMemoria);
 
-		/*char* sPayload;
-		tMensaje tipo_mensaje;
-		recibirPaquete(socketMemoria,&tipo_mensaje,&sPayload,logger,"Ejecucucion del JOURNAL en MEMORIA");
-		if(tipo_mensaje == ERROR_EN_COMANDO)
-			printf("\nHubo un error en la ejecucion del comando JOURNAL en MEMORIA");
-		else{
-			printf("\nJOURNAL: ");
+			tPaquete* mensaje = malloc(sizeof(tPaquete));
+			mensaje->type = JOURNAL;
+			strcpy(mensaje->payload,instruccion);
+			mensaje->length = sizeof(mensaje->payload);
+			resultado = enviarPaquete(memoriaElegida->socketMemoria, mensaje,logger,"Ejecutar comando JOURNAL desde Kernel.");
+			liberarPaquete(mensaje);
 
+			if (resultado > 0){
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+				sem_post(&loggerSemaforo);
+			}
+		}
+		/*for(int a=0; a<memoriasSHC->elements_count; a++){
+			nroMemoria = (int) list_get(memoriasSHC, a);
+			memoriaElegida = buscarNodoMemoria(nroMemoria);
 
+			tPaquete* mensaje = malloc(sizeof(tPaquete));
+			mensaje->type = JOURNAL;
+			strcpy(mensaje->payload,instruccion);
+			mensaje->length = sizeof(mensaje->payload);
+			resultado = enviarPaquete(memoriaElegida->socketMemoria, mensaje,logger,"Ejecutar comando JOURNAL desde Kernel.");
+			liberarPaquete(mensaje);
 
+			if (resultado > 0){
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+				sem_post(&loggerSemaforo);
+			}
 		}*/
 		free(comando[0]);
 		free(comando);
@@ -541,7 +668,14 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 							ejecutarSelect(stringLQL);
 							moverLQL(Exec,Exit);
 							sem_post(&semMultiprocesamiento);*/
-							ejecutarSelect(stringLQL);
+							if(ejecutarSelect(stringLQL)){
+								free(stringLQL);
+								fclose(script);
+								for(int i = 0; i<2; i++)
+									free(comando[i]);
+								free(comando);
+								return -2;
+							}
 							break;
 						case INSERT:
 							/*cargarNuevoLQL(stringLQL);
@@ -549,7 +683,14 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 							ejecutarInsert(stringLQL);
 							moverLQL(Exec,Exit);
 							sem_post(&semMultiprocesamiento);*/
-							ejecutarInsert(stringLQL);
+							if(ejecutarInsert(stringLQL)){
+								free(stringLQL);
+								fclose(script);
+								for(int i = 0; i<2; i++)
+									free(comando[i]);
+								free(comando);
+								return -2;
+							}
 							break;
 						case CREATE:
 							/*cargarNuevoLQL(stringLQL);
@@ -573,7 +714,14 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 							ejecutarDrop(stringLQL);
 							moverLQL(Exec,Exit);
 							sem_post(&semMultiprocesamiento);*/
-							ejecutarDrop(stringLQL);
+							if(ejecutarDrop(stringLQL)){
+								free(stringLQL);
+								fclose(script);
+								for(int i = 0; i<2; i++)
+									free(comando[i]);
+								free(comando);
+								return -2;
+							}
 							break;
 						case JOURNAL:
 							/*cargarNuevoLQL(stringLQL);

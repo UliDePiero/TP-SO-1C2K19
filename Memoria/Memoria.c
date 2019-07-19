@@ -576,21 +576,21 @@ void dropMemoria(char* tabla){
 			}
 			else
 				segmentoDestruir(tablaDeSegmentos[segmento]);
-			if(socketLFS!=1){
-				tPaquete* mensaje = malloc(sizeof(tPaquete));
-				mensaje->type = DROP;
-				char* comando = string_from_format("DROP %s", tabla);
-				strcpy(mensaje->payload,comando);
-				mensaje->length = sizeof(mensaje->payload);
-				enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DROP desde Memoria.");
-				liberarPaquete(mensaje);
-				sem_wait(&loggerSemaforo);
-				log_info(logger, "'DROP %s' ejecutado exitosamente", tabla);
-				sem_post(&loggerSemaforo);
-				free(comando);
-			}
 			break;
 		}
+	}
+	if(socketLFS!=1){
+		tPaquete* mensaje = malloc(sizeof(tPaquete));
+		mensaje->type = DROP;
+		char* comando = string_from_format("DROP %s", tabla);
+		strcpy(mensaje->payload,comando);
+		mensaje->length = sizeof(mensaje->payload);
+		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DROP desde Memoria.");
+		liberarPaquete(mensaje);
+		sem_wait(&loggerSemaforo);
+		log_info(logger, "'DROP %s' ejecutado exitosamente", tabla);
+		sem_post(&loggerSemaforo);
+		free(comando);
 	}
 }
 
