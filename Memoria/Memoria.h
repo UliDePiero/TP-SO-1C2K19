@@ -14,6 +14,7 @@
 #define RUTA_CONFIG "../Memoria.config" // Para correr desde Consola
 #define logFile "../Memoria.log"
 #define BACKLOG 5 //Creo que se pueden conectar solo 2 clientes pero hay que verificar
+#define CANT_MAX_SEEDS 16
 
 #include <stdio.h>
 
@@ -37,7 +38,7 @@ int socketEscucha;
 int maxSock;
 int socketActivo;
 int	socketLFS;
-int	socketSEED[16];
+int	socketSEED[CANT_MAX_SEEDS];
 int seed;
 
 t_log* logger;
@@ -60,7 +61,7 @@ typedef struct {
 	//char IP_SEEDS[16][20]; //Verificar
 	char** IP_SEEDS;
 	//char PUERTO_SEEDS[16][10]; //Verificar
-	int PUERTO_SEEDS[16]; //Verificar
+	int PUERTO_SEEDS[CANT_MAX_SEEDS]; //Verificar
 
 	int RETARDO_MEM;
 	int RETARDO_FS;
@@ -68,6 +69,7 @@ typedef struct {
 	int RETARDO_JOURNAL;
 	int RETARDO_GOSSIPING;
 	int MEMORY_NUMBER;
+	char IP_PROPIA[20];
 } ConfiguracionMemoria;
 /*
 PUERTO=8001
@@ -175,5 +177,19 @@ t_nodoLRU* desencolarPrimerElementoNoModificado(t_list *lista);
 int estaEnListaDePaginas(t_list* lista, t_nodoLRU* nodo);
 t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo);
 void removerElemento(t_list* lista, t_nodoLRU* nodo);
+
+// Funciones para Gossiping
+void conectarConNuevaMemoria(TablaGossip* nodo);
+void armarNodoMemoria(TablaGossip* nodo);
+void recibeLista(int socketMem);
+void pideListaGossiping(int socketMem);
+void enviarListaGossiping(int socketEnvio);
+void enviaLista(int socketMem);
+void armarPropioNodo();
+int nodoSocketEstaEnLista(int socketID);
+void gossipingMemoria();
+void serializarNodo(TablaGossip* nodo, char* paqueteSerializado);
+int recibirNodoYDeserializar(TablaGossip *nodo, int socketMem);
+int nodoEstaEnLista(t_list* lista, TablaGossip* nodo);
 
 #endif /* MEMORIA_H_ */

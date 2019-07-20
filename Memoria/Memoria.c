@@ -18,7 +18,8 @@ void configurar(ConfiguracionMemoria* configuracion) {
 					   "TAM_MEM",
 					   "RETARDO_JOURNAL",
 					   "RETARDO_GOSSIPING",
-					   "MEMORY_NUMBER"
+					   "MEMORY_NUMBER",
+					   "IP_PROPIA"
 					 };
 
 	t_config* archivoConfig = archivoConfigCrear(RUTA_CONFIG, campos);
@@ -44,6 +45,7 @@ void configurar(ConfiguracionMemoria* configuracion) {
 	configuracion->RETARDO_JOURNAL = archivoConfigSacarIntDe(archivoConfig, "RETARDO_JOURNAL");
 	configuracion->RETARDO_GOSSIPING = archivoConfigSacarIntDe(archivoConfig, "RETARDO_GOSSIPING");
 	configuracion->MEMORY_NUMBER = archivoConfigSacarIntDe(archivoConfig, "MEMORY_NUMBER");
+	strcpy(configuracion->IP_PROPIA, archivoConfigSacarStringDe(archivoConfig, "IP_PROPIA"));
 
 	archivoConfigDestruir(archivoConfig);
 }
@@ -53,7 +55,8 @@ void cambiosConfigMemoria() {
 		if (configModificado()) {
 			char* campos[] = { "PUERTO", "IP_FS", "PUERTO_FS", "IP_SEEDS",
 					"PUERTO_SEEDS", "RETARDO_MEM", "RETARDO_FS", "TAM_MEM",
-					"RETARDO_JOURNAL", "RETARDO_GOSSIPING", "MEMORY_NUMBER" };
+					"RETARDO_JOURNAL", "RETARDO_GOSSIPING", "MEMORY_NUMBER",
+					"IP_PROPIA" };
 			t_config* archivoConfig = archivoConfigCrear(RUTA_CONFIG, campos);
 			int nuevoRetardoMem = archivoConfigSacarIntDe(archivoConfig,
 					"RETARDO_MEM");
@@ -104,7 +107,10 @@ int main()
 {
 	logger = log_create(logFile, "Memoria",true, LOG_LEVEL_INFO);
 	configuracion = malloc(sizeof(ConfiguracionMemoria));
-	for(int i=0;i<16;i++) configuracion->PUERTO_SEEDS[i]=0;
+	for (int i = 0; i < CANT_MAX_SEEDS; i++) {
+		configuracion->PUERTO_SEEDS[i] = 0;
+		socketSEED[i] = 0;
+	}
 	configurar(configuracion);
 
 	// cliente
@@ -127,7 +133,7 @@ int main()
 	crearHiloIndependiente(&hiloJournal,(void*)journalAutomatico, NULL, "proceso Memoria(Journal)");
 
 	seed=0;
-	while(configuracion->PUERTO_SEEDS[seed] != 0 && seed<16){
+	while (configuracion->PUERTO_SEEDS[seed] != 0 && seed < CANT_MAX_SEEDS) {
 		socketSEED[seed] = connectToServer(configuracion->IP_SEEDS[seed], configuracion->PUERTO_SEEDS[seed], logger);
 		seed++;
 	}
@@ -336,11 +342,16 @@ int main()
 				break;
 			case GOSSIPING:
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "Kernel pide Lista de Gossiping a Memoria");
+				log_trace(logger, "Pedido de Lista de Gossiping a Memoria");
 				sem_post(&loggerSemaforo);
-
+				enviarListaGossiping(socketActivo);
 				break;
-
+			case GOSSIPING_RECIBE:
+				sem_wait(&loggerSemaforo);
+				log_trace(logger, "Envío de Lista de Gossiping a Memoria");
+				sem_post(&loggerSemaforo);
+				recibeLista(socketActivo);
+				break;
 			default:
 				//printf("Tipo de mensaje desconocido \n");
 				sem_wait(&loggerSemaforo);
