@@ -258,7 +258,6 @@ int main()
 					strcpy(mensaje->payload,"DESCRIBE");
 				}
 				mensaje->length = sizeof(mensaje->payload);
-				printf("ENVIO:<%s>",mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del DESCRIBE en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);

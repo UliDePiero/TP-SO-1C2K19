@@ -160,6 +160,7 @@ void respuestas(void* socket_Mem){
 	char *sPayload;
 	char **tablas;
 	char **tabla;
+	Tabla* tab;
 	int numeroTabla;
 	tMensaje tipo_mensaje;
 	while(conexion != 0){
@@ -188,61 +189,43 @@ void respuestas(void* socket_Mem){
 				sem_post(&loggerSemaforo);
 				break;
 			case DESCRIBE:
-				printf("RECIBO<%s>",sPayload);
-				if(!strcmp(sPayload," ")){
-					printf("%s",sPayload);
+				sem_wait(&mutexTablas);
+				puts("DESCRIBE:\n");
+				list_clean_and_destroy_elements(listaTablas,(void*)limpiarListaTablas);
+				if(strcmp(sPayload," ") != 0){
 					tablas = string_n_split(sPayload, 100, ";");
 					numeroTabla = 0;
-					sem_wait(&loggerSemaforo);
-					log_info(logger, "Se ejecuto corectamente el comando DESCRIBE en MEMORIA");
-					sem_post(&loggerSemaforo);
-					puts("\nDESCRIBE:");
 					while(tablas[numeroTabla]!=NULL)
 					{
-						printf("\n%s",tablas[numeroTabla]);
-						getchar();
-						numeroTabla++;
-					}
-					if(numeroTabla>1)
-					{
-						numeroTabla = 0;
-						while(tablas[numeroTabla]!=NULL)
-						{
-							list_clean_and_destroy_elements(listaTablas,(void*)limpiarListaTablas);
-							tabla = string_n_split(tablas[numeroTabla], 4, ",");
-							Metadata* metadata = malloc(sizeof(Metadata));
-							strcpy(metadata->consistencia,tabla[1]);
-							metadata->particiones = atoi(tabla[2]);
-							metadata->tiempoCompactacion = atol(tabla[3]);
-							Tabla* tab = malloc(sizeof(Tabla));
-							tab->nombreTabla = malloc(sizeof(tabla[0]));
-							strcpy(tab->nombreTabla,tabla[0]);
-							tab->metadata = metadata;
-							list_add(listaTablas,tab);
-							numeroTabla++;
+						tabla = string_n_split(tablas[numeroTabla], 4, ",");
 
-							for(int i = 0; i<4; i++)
-								free(tabla[i]);
-							free(tabla);
-						}
-					}
-					else
-					{
-						tabla = string_n_split(tablas[0], 4, ",");
-						Tabla* tab = encontrarTabla(tabla[0]);
-						strcpy(tab->metadata->consistencia,tabla[1]);
-						tab->metadata->particiones = atoi(tabla[2]);
-						tab->metadata->tiempoCompactacion = atol(tabla[3]);
+						Metadata* metadata = malloc(sizeof(Metadata));
+						strcpy(metadata->consistencia,tabla[1]);
+						metadata->particiones = atoi(tabla[2]);
+						metadata->tiempoCompactacion = atol(tabla[3]);
+						tab = malloc(sizeof(Tabla));
+						tab->nombreTabla = malloc(sizeof(char)*string_length(tabla[0]));
+						strcpy(tab->nombreTabla,tabla[0]);
+						tab->metadata = metadata;
+						list_add(listaTablas,tab);
+						sem_wait(&loggerSemaforo);
+						log_info(logger, "Tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tab->nombreTabla, tab->metadata->consistencia, tab->metadata->particiones, tab->metadata->tiempoCompactacion);
+						sem_post(&loggerSemaforo);
+
 						for(int i = 0; i<4; i++)
 							free(tabla[i]);
 						free(tabla);
+						numeroTabla++;
 					}
-
-					for(int i = 0; i<100; i++)
+					for(int i = 0; i<numeroTabla; i++)
 						free(tablas[i]);
 					free(tablas);
-					//puts("\n>");
 				}
+				sem_post(&mutexTablas);
+				//puts("\n>");
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Se ejecuto corectamente el comando DESCRIBE en MEMORIA");
+				sem_post(&loggerSemaforo);
 				break;
 			case DROP:
 				//printf("\nSe elimino la tabla %s de MEMORIA", sPayload);
@@ -289,9 +272,9 @@ void respuestas(void* socket_Mem){
 		pthread_cancel(hiloAPI);
 }
 TablaGossip* elegirMemoriaRandom() {
-	int indice, nroMemoria;
+	int indice;
 	if (listaGossiping->elements_count > 0) {
-		if (memoriasEC->elements_count > 0) {
+		/*if (memoriasEC->elements_count > 0) {
 			indice = generarNumeroRandom(memoriasEC->elements_count);
 			nroMemoria = (int) list_get(memoriasEC, indice);
 			TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
@@ -303,21 +286,26 @@ TablaGossip* elegirMemoriaRandom() {
 			TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
 			return memoriaElegida;
 		}
-		/*if (memoriasSHC->elements_count > 0) {
+		if (memoriasSHC->elements_count > 0) {
 			indice = generarNumeroRandom(memoriasSHC->elements_count);
 			nroMemoria = (int) list_get(memoriasSHC, indice);
 			TablaGossip* memoriaElegida = buscarNodoMemoria(nroMemoria);
 			return memoriaElegida;
 		}*/
+		indice = generarNumeroRandom(listaGossiping->elements_count);
+		TablaGossip* memoriaElegida = list_get(listaGossiping, indice);
+		return memoriaElegida;
 	} else {
 		sem_wait(&loggerSemaforo);
-		log_error(logger, "No se pudo elegir una memoria: No existe ninguna memoria asignada a algun criterio");
+		log_error(logger, "No se pudo elegir una memoria: No hay memorias conectadas");
 		sem_post(&loggerSemaforo);
 	}
 	return NULL;
 }
 int elegirSocketMemoria(char* tabla, int key){
+	sem_wait(&mutexTablas);
 	Tabla* tab = encontrarTabla(tabla);
+	sem_post(&mutexTablas);
 	if(tab != NULL){
 		TablaGossip* mem;
 		if(string_equals_ignore_case(tab->metadata->consistencia,"EC")){
@@ -376,7 +364,6 @@ int elegirSocketMemoria_CREATE(char* criterio){
 }
 Tabla* encontrarTabla(char* nombreTabla){
 	int encuentraTabla(Tabla* t) {
-		printf("TABLA: %s",t->nombreTabla);
 		return string_equals_ignore_case(t->nombreTabla, nombreTabla);
 	}
 	return list_find(listaTablas, (void*)encuentraTabla);

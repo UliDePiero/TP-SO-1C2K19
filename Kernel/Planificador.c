@@ -89,9 +89,10 @@ int main() {
 	sem_init(&semMultiprocesamiento, 0, configuracion->MULTIPROCESAMIENTO);
 	sem_init(&semEjecutarLQL, 0, 0);
 	sem_init(&loggerSemaforo, 1, 1);
+	sem_init(&mutexTablas, 0, 1);
 
 TablaGossip* nodo = malloc(sizeof(TablaGossip));
-nodo->IDMemoria = 1;
+nodo->IDMemoria = 0;
 strcpy(nodo->IPMemoria,configuracion->IP_MEMORIA);
 nodo->criterioSC=0;
 nodo->criterioEC=0;
@@ -120,6 +121,7 @@ conectarConNuevaMemoria(nodo);
 	sem_destroy(&semContadorLQL);
 	sem_destroy(&semMultiprocesamiento);
 	sem_destroy(&semEjecutarLQL);
+	sem_destroy(&mutexTablas);
 	list_destroy(ListaLQL);
 	list_destroy(memoriaSC);
 	list_destroy(memoriasSHC);

@@ -52,6 +52,7 @@ sem_t semContadorLQL;
 sem_t semMultiprocesamiento;
 sem_t semEjecutarLQL;
 sem_t loggerSemaforo;
+sem_t mutexTablas;
 
 int LQLEnEjecucion;
 int IDLQL; //autoincremental
