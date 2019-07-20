@@ -361,6 +361,7 @@ int main()
 				sem_wait(&mutexMemoria);
 				enviarListaGossiping(socketActivo);
 				sem_wait(&mutexMemoria);
+					sem_post(&mutexMemoria);
 				break;
 			case GOSSIPING_RECIBE:
 				sem_wait(&loggerSemaforo);
