@@ -357,7 +357,7 @@ int main()
 				break;
 			case GOSSIPING_RECIBE:
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "Envío de Lista de Gossiping a Memoria");
+				log_info(logger, "Envío de Lista de Gossiping a Memoria");
 				sem_post(&loggerSemaforo);
 				recibeLista(socketActivo);
 				break;
