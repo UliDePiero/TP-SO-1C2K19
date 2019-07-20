@@ -109,16 +109,25 @@ int main()
 
 	// cliente
 	socketLFS = connectToServer(configuracion->IP_FS, configuracion->PUERTO_FS, logger);
-	/*tPaquete* mensaje = malloc(sizeof(tPaquete));
-	mensaje->type = HANDSHAKE;
-	strcpy(mensaje->payload,"Memoria solicita tamanio del value");
-	mensaje->length = sizeof(mensaje->payload);
-	enviarPaquete(socketLFS, mensaje,logger,"Maximo tamanio del value");
-	liberarPaquete(mensaje);
+
+	if(socketLFS == 1){
+		log_error(logger, "LFS no conectado");
+		log_debug(logger, "Modulo Memoria cerrada");
+		log_destroy(logger);
+		free(configuracion);
+		exit(EXIT_FAILURE);
+	}
+
+	tPaquete* mensajeHAND = malloc(sizeof(tPaquete));
+	mensajeHAND->type = HANDSHAKE;
+	strcpy(mensajeHAND->payload,"Memoria solicita tamanio del value");
+	mensajeHAND->length = sizeof(mensajeHAND->payload);
+	enviarPaquete(socketLFS, mensajeHAND,logger,"Maximo tamanio del value");
+	liberarPaquete(mensajeHAND);
 	char* tamanioValue;
-	tMensaje* mensaje_handshake = NULL;
-	recibirPaquete(socketLFS,mensaje_handshake,&tamanioValue,logger,"Maximo tamanio del value");
-	maxValueSize = atoi(tamanioValue);*/
+	tMensaje mensaje_handshake;
+	recibirPaquete(socketLFS,&mensaje_handshake,&tamanioValue,logger,"Maximo tamanio del value");
+	maxValueSize = atoi(tamanioValue);
 	sem_init(&mutexMemoria, 0, 1);
 	sem_init(&loggerSemaforo, 1, 1);
 	levantarMemoria();
@@ -699,7 +708,7 @@ t_list* describeMemoria(){
 
 void levantarMemoria(){
 	tablaDeSegmentos = malloc(1);
-	maxValueSize = 20; //ESTO TIENE QUE VENIR DE LFS
+	//maxValueSize = 20; //ESTO TIENE QUE VENIR DE LFS
 	tamanioRealDeUnRegistro = sizeof(uint64_t) + sizeof(uint16_t) + maxValueSize ;
 	cantidadDeRegistros = configuracion->TAM_MEM / tamanioRealDeUnRegistro;
 	granMalloc = malloc(cantidadDeRegistros*tamanioRealDeUnRegistro);
