@@ -138,6 +138,7 @@ int main()
 	sem_init(&loggerSemaforo, 1, 1);
 	levantarMemoria();
 	listaPaginasLRU = list_create();
+	listaGossiping = list_create();
 
 	crearHiloIndependiente(&hiloGossipMemoria,(void*)gossipingMemoria, NULL, "proceso Memoria(Gossip)");
 	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigMemoria, NULL, "proceso Memoria(Config)");
@@ -874,10 +875,10 @@ void ejecutarInsertJournal(char *instruccion){
 }
 
 void* journalAutomatico (){
-    clock_t start, diff;
-    int elapsedsec;
+    //clock_t start, diff;
+    //int elapsedsec;
     while (1) {
-    	start = clock();
+    	/*start = clock();
     	while (1) {
     		diff = clock() - start;
     		elapsedsec = diff / CLOCKS_PER_SEC;
@@ -888,6 +889,11 @@ void* journalAutomatico (){
     			journalMemoria();
     			break;
     		}
-        }
+        }*/
+    	sleep(configuracion->RETARDO_JOURNAL / 1000);
+    	sem_wait(&loggerSemaforo);
+    	log_debug(logger, "Journal automático ejecutando");
+    	sem_post(&loggerSemaforo);
+    	journalMemoria();
     }
 }

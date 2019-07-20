@@ -189,7 +189,7 @@ void enviarListaGossiping(int socketEnvio);
 void enviaLista(int socketMem);
 void armarPropioNodo();
 int nodoSocketEstaEnLista(int socketID);
-void gossipingMemoria();
+void* gossipingMemoria();
 void serializarNodo(TablaGossip* nodo, char* paqueteSerializado);
 int recibirNodoYDeserializar(TablaGossip *nodo, int socketMem);
 int nodoEstaEnLista(t_list* lista, TablaGossip* nodo);

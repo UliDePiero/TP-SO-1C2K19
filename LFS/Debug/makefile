@@ -24,11 +24,8 @@ endif
 # All Target
 all: LFS
 
-dependents:
-	-cd /home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug && $(MAKE) all
-
 # Tool invocations
-LFS: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug/libBiblioCompartida.so
+LFS: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
 	gcc -L"/home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug" -o "LFS" $(OBJS) $(USER_OBJS) $(LIBS)
@@ -41,6 +38,5 @@ clean:
 	-@echo ' '
 
 .PHONY: all clean dependents
-/home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug/libBiblioCompartida.so:
 
 -include ../makefile.targets

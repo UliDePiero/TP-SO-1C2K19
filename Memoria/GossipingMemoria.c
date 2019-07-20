@@ -106,14 +106,19 @@ void enviaLista(int socketMem) {
 
 void armarPropioNodo() {
 	TablaGossip* nodoMem = malloc(sizeof(TablaGossip));
-
+	//puts("ASIGNÉ MEMORIA NODO MEM");
 	nodoMem->IDMemoria = configuracion->MEMORY_NUMBER;
+	//puts("ASIGNÉ ID MEMORIA");
 	strcpy(nodoMem->IPMemoria, configuracion->IP_PROPIA); // CHEQUEAR
+	//puts("ASIGNÉ IP MEMORIA");
 	nodoMem->puertoMemoria = configuracion->PUERTO;
+	//puts("ASIGNÉ PUERTO MEMORIA");
 	nodoMem->socketMemoria = 1;
+	//puts("ASIGNÉ SOCKET MEMORIA");
 
 	// Agrego al nodo correspondiente a la propia memoria en la primera posición de la listaGossiping de dicha memoria
 	list_add(listaGossiping, nodoMem);
+	//puts("AGREGUÉ NODO A LISTA");
 }
 
 int nodoSocketEstaEnLista(int socketID) {
@@ -134,8 +139,10 @@ int nodoSocketEstaEnLista(int socketID) {
 		return 0;
 }
 
-void gossipingMemoria() {
+void* gossipingMemoria() {
+	//puts("ENTRÉ");
 	armarPropioNodo();
+	//puts("PASÉ ARMAR PROPIO NODO");
 	// Memoria intercambia listaGossiping con todos sus seeds
 	int seed = 0;
 	while (configuracion->PUERTO_SEEDS[seed] != 0 && seed < CANT_MAX_SEEDS) {

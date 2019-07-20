@@ -440,10 +440,10 @@ TablaGossip* elegirMemoriaCriterioEC() {
 }
 
 void* describeAutomatico (){
-    clock_t start, diff;
-    int elapsedsec;
+    //clock_t start, diff;
+    //int elapsedsec;
     while (1) {
-    	start = clock();
+    	/*start = clock();
     	while (1) {
     		diff = clock() - start;
     		elapsedsec = diff / CLOCKS_PER_SEC;
@@ -454,6 +454,11 @@ void* describeAutomatico (){
     			ejecutarDescribe("DESCRIBE");
     			break;
     		}
-        }
+        }*/
+    	sleep(configuracion->METADATA_REFRESH / 1000);
+    	sem_wait(&loggerSemaforo);
+    	log_debug(logger, "DESCRIBE automático ejecutando");
+    	sem_post(&loggerSemaforo);
+    	ejecutarDescribe("DESCRIBE");
     }
 }
