@@ -90,7 +90,7 @@ int main() {
 	sem_init(&semEjecutarLQL, 0, 0);
 	sem_init(&loggerSemaforo, 1, 1);
 	sem_init(&mutexTablas, 0, 1);
-
+/*
 TablaGossip* nodo = malloc(sizeof(TablaGossip));
 nodo->IDMemoria = 0;
 strcpy(nodo->IPMemoria,configuracion->IP_MEMORIA);
@@ -100,6 +100,7 @@ nodo->criterioSHC=0;
 nodo->puertoMemoria=configuracion->PUERTO_MEMORIA;
 list_add(listaGossiping,nodo);
 conectarConNuevaMemoria(nodo);
+*/
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
 
 	// cliente
@@ -107,13 +108,17 @@ conectarConNuevaMemoria(nodo);
 	socketMemoria = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
 
 	crearHiloIndependiente(&hiloPlanificacion, (void*) planificacion, NULL,"Kernel(Planificacion)");
-	//crearHiloIndependiente(&hiloGossipKernel,(void*)gossipingKernel, NULL, "Kernel(Gossip)");
+	crearHiloIndependiente(&hiloGossipKernel,(void*)gossipingKernel, NULL, "Kernel(Gossip)");
+	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigKernel, NULL, "Kernel (Config)");
 	crearHiloIndependiente(&hiloDescribeAutomatico,(void*)describeAutomatico, NULL, "Kernel(Describe)");
 	crearHilo(&hiloAPI, (void*) API_Kernel, NULL, "Kernel(API)");
 
 	joinearHilo(hiloAPI, NULL, "Kernel(API)");
 
 	pthread_cancel(hiloPlanificacion);
+	pthread_cancel(hiloDescribeAutomatico);
+	pthread_cancel(hiloGossipKernel);
+	pthread_cancel(hiloConfig);
 	queue_destroy(New);
 	queue_destroy(Ready);
 	queue_destroy(Exec);
@@ -126,7 +131,6 @@ conectarConNuevaMemoria(nodo);
 	list_destroy(memoriaSC);
 	list_destroy(memoriasSHC);
 	list_destroy(memoriasEC);
-	list_destroy(listaGossiping);
 	list_destroy(listaTablas);
 	sem_wait(&loggerSemaforo);
 	log_debug(logger, "Modulo Kernel cerrado");
@@ -134,7 +138,13 @@ conectarConNuevaMemoria(nodo);
 	log_destroy(logger);
 	sem_destroy(&loggerSemaforo);
 	free(configuracion);
-	desconectarseDe(socketMemoria);
+	TablaGossip* memoriaElegida;
+	for(int m=1;m<listaGossiping->elements_count;m++){
+		memoriaElegida = list_get(listaGossiping, m);
+		desconectarseDe(memoriaElegida->socketMemoria);
+		free(memoriaElegida);
+	}
+	list_destroy(listaGossiping);
 }
 void planificacion() {
 	while (1) {

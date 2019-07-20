@@ -38,6 +38,7 @@ t_log* logger;
 
 pthread_t hiloAPI;
 pthread_t hiloPlanificacion;
+pthread_t hiloConfig;
 pthread_t hiloGossipKernel;
 pthread_t hiloRespuestasRequest;
 pthread_t hiloDescribeAutomatico;

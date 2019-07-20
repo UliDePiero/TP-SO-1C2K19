@@ -47,7 +47,9 @@ sem_t mutexMemoria;
 sem_t loggerSemaforo;
 
 pthread_t hiloAPI;
+pthread_t hiloConfig;
 pthread_t hiloJournal;
+pthread_t hiloGossipMemoria;
 ///---------------------ESTRUCTURA DE CONFIGURACION DE MEMORIA-------------------------
 
 //Estructura para datos del archivo de configuracion

@@ -139,6 +139,8 @@ int main()
 	levantarMemoria();
 	listaPaginasLRU = list_create();
 
+	crearHiloIndependiente(&hiloGossipMemoria,(void*)gossipingMemoria, NULL, "proceso Memoria(Gossip)");
+	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigMemoria, NULL, "proceso Memoria(Config)");
 	crearHiloIndependiente(&hiloJournal,(void*)journalAutomatico, NULL, "proceso Memoria(Journal)");
 
 	seed=0;
@@ -383,6 +385,8 @@ void terminar(){
 		s++;
 	}
 	pthread_cancel(hiloJournal);
+	pthread_cancel(hiloGossipMemoria);
+	pthread_cancel(hiloConfig);
 	sem_wait(&loggerSemaforo);
 	log_debug(logger, "Modulo Memoria cerrada");
 	sem_post(&loggerSemaforo);
