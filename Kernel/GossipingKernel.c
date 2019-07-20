@@ -26,7 +26,7 @@ int pideRetardoGossiping() {
 
 void armarNodoMemoria(TablaGossip* nodo) {
 	// Cargo datos faltantes del nodo
-	if(nodo->IPMemoria != configuracion->IP_MEMORIA && nodo->puertoMemoria != configuracion->PUERTO_MEMORIA)
+	if(nodo->IPMemoria != configuracion->IP_MEMORIA || nodo->puertoMemoria != configuracion->PUERTO_MEMORIA)
 		nodo->socketMemoria = 1;
 	else
 		nodo->socketMemoria = socketMemoria;
