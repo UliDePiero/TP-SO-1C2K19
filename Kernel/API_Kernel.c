@@ -162,6 +162,8 @@ void respuestas(void* socket_Mem){
 	char **tabla;
 	Tabla* tab;
 	int numeroTabla;
+	int status;
+	TablaGossip* nodoRecibido;
 	tMensaje tipo_mensaje;
 	while(conexion != 0){
 		conexion=recibirPaquete(socket_Memoria,&tipo_mensaje,&sPayload,logger,"Respuesta de MEMORIA");
@@ -247,6 +249,14 @@ void respuestas(void* socket_Mem){
 					sem_post(&loggerSemaforo);
 				}
 					//puts("\n>");
+				break;
+			case GOSSIPING:
+				for (int i = 0; i < atoi(sPayload); i++) {
+					nodoRecibido = malloc(sizeof(TablaGossip));
+					status = recibirNodoYDeserializar(nodoRecibido, socket_Memoria);
+					if (status)
+						armarNodoMemoria(nodoRecibido);
+				}
 				break;
 			case ERROR_EN_COMANDO:
 				//printf("\nHubo un error en la ejecucion del comando %s en MEMORIA", sPayload);

@@ -164,6 +164,8 @@ int main()
 	char* retorno;
 	int retornoINT;
 	t_list* retornoLista;
+	int status;
+	TablaGossip* nodoRecibido;
 	crearHiloIndependiente(&hiloAPI,(void*)API_Memoria, NULL, "proceso Memoria(API)");
 
 	while (1) {
@@ -356,13 +358,21 @@ int main()
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "Pedido de Lista de Gossiping a Memoria");
 				sem_post(&loggerSemaforo);
+				sem_wait(&mutexMemoria);
 				enviarListaGossiping(socketActivo);
+				sem_wait(&mutexMemoria);
 				break;
 			case GOSSIPING_RECIBE:
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "Envío de Lista de Gossiping a Memoria");
 				sem_post(&loggerSemaforo);
-				recibeLista(socketActivo);
+				//recibeLista(socketActivo);
+				for (int i = 0; i < atoi(sPayload); i++) {
+				nodoRecibido = malloc(sizeof(TablaGossip));
+				status = recibirNodoYDeserializar(nodoRecibido, socketActivo);
+				if (status)
+					armarNodoMemoria(nodoRecibido);
+				}
 				break;
 			default:
 				//printf("Tipo de mensaje desconocido \n");
@@ -370,7 +380,6 @@ int main()
 				log_error(logger, "El tipo de mensaje ingresado es desconocido", sPayload);
 				sem_post(&loggerSemaforo);
 				break;
-
 			}
 		}
 	}

@@ -90,6 +90,7 @@ int main() {
 	sem_init(&semEjecutarLQL, 0, 0);
 	sem_init(&loggerSemaforo, 1, 1);
 	sem_init(&mutexTablas, 0, 1);
+	sem_init(&gossip, 0, 1);
 /*
 TablaGossip* nodo = malloc(sizeof(TablaGossip));
 nodo->IDMemoria = 0;
@@ -107,7 +108,7 @@ conectarConNuevaMemoria(nodo);
 	//int socketMEMORIA = conectarAUnServidor(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA);
 	socketMemoria = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
 
-	crearHiloIndependiente(&hiloPlanificacion, (void*) planificacion, NULL,"Kernel(Planificacion)");
+	crearHiloIndependiente(&hiloPlanif, (void*) planificacion, NULL,"Kernel(Planificacion)");
 	crearHiloIndependiente(&hiloGossipKernel,(void*)gossipingKernel, NULL, "Kernel(Gossip)");
 	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigKernel, NULL, "Kernel (Config)");
 	crearHiloIndependiente(&hiloDescribeAutomatico,(void*)describeAutomatico, NULL, "Kernel(Describe)");
@@ -115,7 +116,7 @@ conectarConNuevaMemoria(nodo);
 
 	joinearHilo(hiloAPI, NULL, "Kernel(API)");
 
-	pthread_cancel(hiloPlanificacion);
+	pthread_cancel(hiloPlanif);
 	pthread_cancel(hiloDescribeAutomatico);
 	pthread_cancel(hiloGossipKernel);
 	pthread_cancel(hiloConfig);
@@ -146,6 +147,7 @@ conectarConNuevaMemoria(nodo);
 	}
 	list_destroy(listaGossiping);
 }
+
 void planificacion() {
 	while (1) {
 		sem_wait(&semMultiprocesamiento);

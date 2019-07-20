@@ -16,11 +16,14 @@ int pideRetardoGossiping() {
 			"Kernel realiza pedido de Retardo de Gossiping a Memoria");
 	liberarPaquete(msjeEnviado);
 
-	tPaquete* msjeRecibido = malloc(sizeof(tPaquete));
-	recv(socketMemoria, msjeRecibido, sizeof(tPaquete), 0);
-	int retardoGossiping = atoi(msjeRecibido->payload);
-	liberarPaquete(msjeRecibido);
-
+	//tPaquete* msjeRecibido = malloc(sizeof(tPaquete));
+	char* msjeRecibido;
+	tMensaje tipo_mensaje;
+	recibirPaquete(socketMemoria,&tipo_mensaje,&msjeRecibido,logger,"Respuesta de MEMORIA");
+	//recv(socketMemoria, msjeRecibido, sizeof(tPaquete), 0);
+	int retardoGossiping = atoi(msjeRecibido);
+	if(msjeRecibido != NULL) free(msjeRecibido);
+	sem_post(&gossip);
 	return retardoGossiping;
 }
 
@@ -42,7 +45,7 @@ void armarNodoMemoria(TablaGossip* nodo) {
 		free(nodo); // Si el nodo ya se encontraba en listaGossiping, lo libero
 }
 
-void pideListaGossiping(int socketMem) {
+void pideListaGossiping_1(int socketMem) {
 	tPaquete* msjeEnviado = malloc(sizeof(tPaquete));
 	msjeEnviado->type = GOSSIPING;
 	strcpy(msjeEnviado->payload, "Kernel pide Lista de Gossiping a Memoria");
@@ -54,6 +57,36 @@ void pideListaGossiping(int socketMem) {
 	int status;
 	int cantElementosListaRecibida;
 
+	//recv(socketMem, &cantElementosListaRecibida, sizeof(int), 0);
+	char* msjeRecibido = malloc(sizeof(char)*10);
+	//tMensaje tipo_mensaje;
+	//recibirPaquete(socketMem,&tipo_mensaje,&msjeRecibido,logger,"Respuesta de MEMORIA");
+
+	recv(socketMemoria, msjeRecibido, sizeof(tPaquete), 0);
+	cantElementosListaRecibida = atoi(msjeRecibido);
+
+//printf("\n%d",cantElementosListaRecibida);
+	for (int i = 0; i < cantElementosListaRecibida; i++) {
+		TablaGossip* nodoRecibido = malloc(sizeof(TablaGossip));
+		status = recibirNodoYDeserializar(nodoRecibido, socketMem);
+		if (status)
+			armarNodoMemoria(nodoRecibido);
+	}
+	sem_post(&gossip);
+}
+
+void pideListaGossiping(int socketMem) {
+	tPaquete* msjeEnviado = malloc(sizeof(tPaquete));
+	msjeEnviado->type = GOSSIPING;
+	strcpy(msjeEnviado->payload, "Kernel pide Lista de Gossiping a Memoria");
+	msjeEnviado->length = sizeof(msjeEnviado->payload);
+	enviarPaquete(socketMem, msjeEnviado, logger,
+			"Kernel realiza pedido de Lista de Gossiping a Memoria");
+	liberarPaquete(msjeEnviado);
+/*
+	int status;
+	int cantElementosListaRecibida;
+
 	recv(socketMem, &cantElementosListaRecibida, sizeof(int), 0);
 
 	for (int i = 0; i < cantElementosListaRecibida; i++) {
@@ -61,7 +94,7 @@ void pideListaGossiping(int socketMem) {
 		status = recibirNodoYDeserializar(nodoRecibido, socketMem);
 		if (status)
 			armarNodoMemoria(nodoRecibido);
-	}
+	}*/
 }
 
 void conectarConNuevaMemoria(TablaGossip* nodo) {
@@ -95,14 +128,17 @@ void conectarConNuevaMemoria(TablaGossip* nodo) {
 
 void gossipingKernel() {
 	// Pide a la Memoria conectada por Archivo de Configuración el Retardo de Gossiping
+	sem_wait(&gossip);
 	int retardoGossiping = pideRetardoGossiping();
-
+	sem_wait(&loggerSemaforo);
+	log_debug(logger, "Retardo gossiping: %d",retardoGossiping);
+	sem_post(&loggerSemaforo);
+	sem_wait(&gossip);
 	sem_wait(&loggerSemaforo);
 	log_debug(logger, "Kernel hace Gossiping con Memoria");
 	sem_post(&loggerSemaforo);
 	// Pide a la memoria del archivo de configuración la Lista de Gossiping
-	pideListaGossiping(socketMemoria);
-
+	pideListaGossiping_1(socketMemoria);
 	while (1) {
 		sleep(retardoGossiping / 1000);
 
@@ -119,17 +155,25 @@ void gossipingKernel() {
 
 int recibirNodoYDeserializar(TablaGossip *nodo, int socketMem) {
 	int status;
+	//tMensaje tipo_mensaje;
 
-	status = recv(socketMem, &(nodo->IDMemoria), sizeof(nodo->IDMemoria), 0);
+	//status = recibirPaquete(socketMem,&tipo_mensaje,&(nodo->IDMemoria),logger,"Respuesta de MEMORIA(listasGossip)");
+
+	status = recv(socketMem, &(nodo->IDMemoria), sizeof(nodo->IDMemoria), MSG_WAITALL);
+	printf("ID%d",nodo->IDMemoria);
+
 	if (!status)
 		return 0;
 
-	status = recv(socketMem, nodo->IPMemoria, sizeof(nodo->IPMemoria), 0);
+	//status = recibirPaquete(socketMem,&tipo_mensaje,nodo->IPMemoria,logger,"Respuesta de MEMORIA(listasGossip)");
+	status = recv(socketMem, nodo->IPMemoria, sizeof(nodo->IPMemoria), MSG_WAITALL);
+	printf("ip%s",nodo->IPMemoria);
 	if (!status)
 		return 0;
-
+	//status = recibirPaquete(socketMem,&tipo_mensaje,&(nodo->puertoMemoria),logger,"Respuesta de MEMORIA(listasGossip)");
 	status = recv(socketMem, &(nodo->puertoMemoria),
-			sizeof(nodo->puertoMemoria), 0);
+			sizeof(nodo->puertoMemoria), MSG_WAITALL);
+	printf("puerto%d",nodo->puertoMemoria);
 	if (!status)
 		return 0;
 

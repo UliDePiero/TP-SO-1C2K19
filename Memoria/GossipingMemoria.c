@@ -79,7 +79,7 @@ void enviarListaGossiping(int socketEnvio) {
 	char* paqueteSerializado = malloc(tamanioPaquete);
 	t_link_element* nodoAux = listaGossiping->head;
 
-	send(socketEnvio, &listaGossiping->elements_count, sizeof(int), 0);
+	send(socketEnvio, string_itoa(listaGossiping->elements_count), sizeof(int), 0);
 
 	for (int i = 0; i < listaGossiping->elements_count; i++) {
 		nodoGossipAux = nodoAux->data;
@@ -90,18 +90,39 @@ void enviarListaGossiping(int socketEnvio) {
 		nodoAux = nodoAux->next;
 	}
 	free(paqueteSerializado);
+	sem_post(&mutexMemoria);
 }
 
 void enviaLista(int socketMem) {
 	tPaquete* msjeEnviado = malloc(sizeof(tPaquete));
 	msjeEnviado->type = GOSSIPING_RECIBE;
-	strcpy(msjeEnviado->payload, "Memoria envía Lista de Gossiping");
-	msjeEnviado->length = sizeof(msjeEnviado->payload);
-	enviarPaquete(socketMem, msjeEnviado, logger,
-			"Memoria realiza envío de Lista de Gossiping");
+
+	TablaGossip* nodoGossipAux;
+	int tamanioPaquete = sizeof(nodoGossipAux->IDMemoria)
+			+ sizeof(nodoGossipAux->IPMemoria)
+			+ sizeof(nodoGossipAux->puertoMemoria);
+	char* paqueteSerializado = malloc(tamanioPaquete);
+	t_link_element* nodoAux = listaGossiping->head;
+
+	//send(socketMem, string_itoa(listaGossiping->elements_count), sizeof(int), 0);
+
+	strcpy(msjeEnviado->payload, string_itoa(listaGossiping->elements_count));
+		msjeEnviado->length = sizeof(msjeEnviado->payload);
+		enviarPaquete(socketMem, msjeEnviado, logger,
+				"Memoria realiza envío de Lista de Gossiping");
+
+	for (int i = 0; i < listaGossiping->elements_count; i++) {
+		nodoGossipAux = nodoAux->data;
+
+		serializarNodo(nodoGossipAux, paqueteSerializado);
+		send(socketMem, paqueteSerializado, tamanioPaquete, 0);
+
+		nodoAux = nodoAux->next;
+	}
+	free(paqueteSerializado);
+
 	liberarPaquete(msjeEnviado);
 
-	enviarListaGossiping(socketMem);
 }
 
 void armarPropioNodo() {
@@ -140,9 +161,7 @@ int nodoSocketEstaEnLista(int socketID) {
 }
 
 void* gossipingMemoria() {
-	//puts("ENTRÉ");
 	armarPropioNodo();
-	//puts("PASÉ ARMAR PROPIO NODO");
 	// Memoria intercambia listaGossiping con todos sus seeds
 	int seed = 0;
 	while (configuracion->PUERTO_SEEDS[seed] != 0 && seed < CANT_MAX_SEEDS) {

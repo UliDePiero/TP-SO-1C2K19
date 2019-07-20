@@ -37,7 +37,7 @@ int socketMemoria;
 t_log* logger;
 
 pthread_t hiloAPI;
-pthread_t hiloPlanificacion;
+pthread_t hiloPlanif;
 pthread_t hiloConfig;
 pthread_t hiloGossipKernel;
 pthread_t hiloRespuestasRequest;
@@ -54,6 +54,7 @@ sem_t semMultiprocesamiento;
 sem_t semEjecutarLQL;
 sem_t loggerSemaforo;
 sem_t mutexTablas;
+sem_t gossip;
 
 int LQLEnEjecucion;
 int IDLQL; //autoincremental
@@ -156,11 +157,12 @@ TablaGossip* elegirMemoriaRandom();
 int pideRetardoGossiping();
 void armarNodoMemoria(TablaGossip* nodo);
 void pideListaGossiping(int socketMem);
+void pideListaGossiping_1(int socketMem);
 void conectarConNuevaMemoria(TablaGossip* nodo);
 void gossipingKernel();
 int recibirNodoYDeserializar(TablaGossip *nodo, int socketMem);
 int nodoEstaEnLista(t_list* lista, TablaGossip* nodo);
-void* describeAutomatico ();
-void gossipingKernel() ;
+void* describeAutomatico();
+void gossipingKernel();
 
 #endif /* PLANIFICADOR_H_ */
