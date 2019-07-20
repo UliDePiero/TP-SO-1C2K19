@@ -47,7 +47,7 @@ int configModificado(){
 			// Dentro de "mask" tenemos el evento que ocurrió y sobre dónde ocurrió,
 			// sea un archivo o un directorio
 			if (event->mask & IN_MODIFY) {
-				printf("The file %s was modified.\n", event->name);
+				//printf("The file %s was modified.\n", event->name);
 				modificado = 1;
 			}
 		}
