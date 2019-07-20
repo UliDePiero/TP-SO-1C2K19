@@ -72,12 +72,12 @@ void levantarLFS(){
 	sem_init(&memtableSemaforo, 1, 1);
 	sem_init(&dumpSemaforo, 1, 1);
 	sem_init(&loggerSemaforo, 1, 1);
-	logger = log_create(logFile, "LFS", true, LOG_LEVEL_INFO);
+	logger = log_create(logFile, "LFS", true, LOG_LEVEL_TRACE);
 	configuracion = malloc(sizeof(ConfiguracionLFS));
 	configurar(configuracion);
 	levantarFileSystem();
 
-	log_info(logger, "Modulo LFS iniciado");
+	log_debug(logger, "Modulo LFS iniciado");
 }
 void destruirLFS(){
 	sem_wait(&dumpSemaforo);
@@ -87,7 +87,7 @@ void destruirLFS(){
 	pthread_cancel(hiloConfig);
 	sem_wait(&memtableSemaforo);
 	list_destroy_and_destroy_elements(tablasLFS, (void*) tablaDestruir);
-	log_info(logger, "Modulo LFS cerrado");
+	log_debug(logger, "Modulo LFS cerrado");
 	log_destroy(logger);
 	free(configuracion);
 	close(socketEscucha);
@@ -120,7 +120,6 @@ int main(){
 	t_list* retornoLista;
 	while (1) {
 
-		puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
 		if (socketActivo != -1) {
 			sem_wait(&loggerSemaforo);

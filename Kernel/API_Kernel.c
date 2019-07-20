@@ -24,7 +24,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -37,7 +37,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -50,7 +50,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -64,7 +64,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -77,7 +77,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -90,7 +90,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -103,7 +103,7 @@ void API_Kernel(void){
 				LQL = queue_peek(Exit);
 				//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+				log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
 				sem_post(&loggerSemaforo);
 				free(queue_pop(Exit));
 				sem_post(&semMultiprocesamiento);
@@ -118,7 +118,7 @@ void API_Kernel(void){
 					LQL = queue_peek(Ready);
 					//printf("\nLQL en Ready: %s\n", LQL->Instruccion);
 					sem_wait(&loggerSemaforo);
-					log_info(logger, "LQL en Ready: %s", LQL->Instruccion);
+					log_trace(logger, "LQL en Ready: %s", LQL->Instruccion);
 					sem_post(&loggerSemaforo);
 					sem_post(&semContadorLQL);
 				}
@@ -127,13 +127,13 @@ void API_Kernel(void){
 					LQL = queue_peek(Exit);
 					//printf("\nLQL en Exit: %s\n", LQL->Instruccion);
 					sem_wait(&loggerSemaforo);
-					log_info(logger, "LQL en Exit: %s", LQL->Instruccion);
+					log_trace(logger, "LQL en Exit: %s", LQL->Instruccion);
 					sem_post(&loggerSemaforo);
 					free(queue_pop(Exit));
 				}
 				//printf("\nRetorno de la ejecucion: %d\n",retornoRUN);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Retorno de la ejecucion: %d", retornoRUN);
+				log_debug(logger, "Retorno de la ejecucion: %d", retornoRUN);
 				sem_post(&loggerSemaforo);
 				sem_post(&semMultiprocesamiento);
 				break;

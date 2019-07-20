@@ -102,7 +102,7 @@ void cambiosConfigMemoria() {
 
 int main()
 {
-	logger = log_create(logFile, "Memoria",true, LOG_LEVEL_INFO);
+	logger = log_create(logFile, "Memoria",true, LOG_LEVEL_TRACE);
 	configuracion = malloc(sizeof(ConfiguracionMemoria));
 	for(int i=0;i<16;i++) configuracion->PUERTO_SEEDS[i]=0;
 	configurar(configuracion);
@@ -283,7 +283,7 @@ int main()
 					strcpy(mensaje->payload,"DROP");
 				}
 				mensaje->length = sizeof(mensaje->payload);
-				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del DROP en MEMORIA.");
+				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del DROP en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "Resultado de DROP enviado a Kernel");
@@ -307,7 +307,7 @@ int main()
 					strcpy(mensaje->payload,"JOURNAL");
 				}
 				mensaje->length = sizeof(mensaje->payload);
-				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del JOURNAL en MEMORIA.");
+				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del JOURNAL en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "Resultado de JOURNAL enviado a Kernel");
@@ -364,7 +364,7 @@ void terminar(){
 	}
 	pthread_cancel(hiloJournal);
 	sem_wait(&loggerSemaforo);
-	log_info(logger, "Modulo Memoria cerrada");
+	log_debug(logger, "Modulo Memoria cerrada");
 	sem_post(&loggerSemaforo);
 	log_destroy(logger);
 	sem_destroy(&loggerSemaforo);
@@ -707,7 +707,7 @@ void levantarMemoria(){
 			//setTimestamp(granMalloc+i*tamanioRealDeUnRegistro,-1);
 			vaciarMemoria();
 	sem_wait(&loggerSemaforo);
-	log_info(logger, "Tamanio granMalloc: %d", malloc_usable_size(granMalloc));
+	log_debug(logger, "Tamanio granMalloc: %d", malloc_usable_size(granMalloc));
 	sem_post(&loggerSemaforo);
 }
 void resetearMemoria(void* punteroMemoria){

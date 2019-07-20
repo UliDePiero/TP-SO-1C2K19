@@ -98,7 +98,7 @@ void gossipingKernel() {
 	int retardoGossiping = pideRetardoGossiping();
 
 	sem_wait(&loggerSemaforo);
-	log_info(logger, "Kernel hace Gossiping con Memoria");
+	log_debug(logger, "Kernel hace Gossiping con Memoria");
 	sem_post(&loggerSemaforo);
 	// Pide a la memoria del archivo de configuración la Lista de Gossiping
 	pideListaGossiping(socketMemoria);
@@ -107,7 +107,7 @@ void gossipingKernel() {
 		sleep(retardoGossiping / 1000);
 
 		sem_wait(&loggerSemaforo);
-		log_info(logger, "Kernel hace Gossiping con Memoria");
+		log_debug(logger, "Kernel hace Gossiping con Memoria");
 		sem_post(&loggerSemaforo);
 		if (listaGossiping->elements_count > 0) {
 			// Hago Gossiping siempre con la primera Memoria que esté en listaGossiping (Si no se desconectó, va a ser la que tenemos en el Archivo de Configuración)
