@@ -60,6 +60,6 @@ dkms.conf
 *.log
 *.bin
 
-#[Dd]ebug*/
+[Dd]ebug*/
 [Rr]elease*/
 .settings/
