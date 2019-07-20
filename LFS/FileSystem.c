@@ -449,7 +449,7 @@ void dropFS(char* nombreTabla){
 
 						if(remove(pathBloque)){
 							sem_wait(&loggerSemaforo);
-							log_error(logger, "Error al borrar el bloque \"%s\"", pathBloque);
+							//log_error(logger, "Error al borrar el bloque \"%s\"", pathBloque);
 							sem_post(&loggerSemaforo);
 						}
 						setBloqueLibre(bloque);
@@ -662,7 +662,7 @@ void compactar(char* nombreTabla){
 			char *pathBloque = string_from_format("%s/%d.bin", pathBloques, bloque);
 			if(remove(pathBloque)){
 				sem_wait(&loggerSemaforo);
-				log_error(logger, "Error al borrar el bloque \"%s\"", pathBloque);
+				//log_error(logger, "Error al borrar el bloque \"%s\"", pathBloque);
 				sem_post(&loggerSemaforo);
 			}
 			setBloqueLibre(bloque);
