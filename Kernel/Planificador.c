@@ -73,7 +73,7 @@ void cambiosConfigKernel() {
 }
 
 int main() {
-	logger = log_create(logFile, "Planificador", true, LOG_LEVEL_INFO);
+	logger = log_create(logFile, "Planificador", true, LOG_LEVEL_TRACE);
 	configuracion = malloc(sizeof(ConfiguracionKernel));
 	configurar(configuracion);
 	crearListasDeCriteriosMemorias(); // Creación de listas de criterios de consistencia
@@ -89,7 +89,17 @@ int main() {
 	sem_init(&semMultiprocesamiento, 0, configuracion->MULTIPROCESAMIENTO);
 	sem_init(&semEjecutarLQL, 0, 0);
 	sem_init(&loggerSemaforo, 1, 1);
+	sem_init(&mutexTablas, 0, 1);
 
+TablaGossip* nodo = malloc(sizeof(TablaGossip));
+nodo->IDMemoria = 0;
+strcpy(nodo->IPMemoria,configuracion->IP_MEMORIA);
+nodo->criterioSC=0;
+nodo->criterioEC=0;
+nodo->criterioSHC=0;
+nodo->puertoMemoria=configuracion->PUERTO_MEMORIA;
+list_add(listaGossiping,nodo);
+conectarConNuevaMemoria(nodo);
 	//FUNCIONES SOCKETS (Usar dependiendo de la biblioteca que usemos)
 
 	// cliente
@@ -97,7 +107,8 @@ int main() {
 	socketMemoria = connectToServer(configuracion->IP_MEMORIA, configuracion->PUERTO_MEMORIA, logger);
 
 	crearHiloIndependiente(&hiloPlanificacion, (void*) planificacion, NULL,"Kernel(Planificacion)");
-
+	//crearHiloIndependiente(&hiloGossipKernel,(void*)gossipingKernel, NULL, "Kernel(Gossip)");
+	crearHiloIndependiente(&hiloDescribeAutomatico,(void*)describeAutomatico, NULL, "Kernel(Describe)");
 	crearHilo(&hiloAPI, (void*) API_Kernel, NULL, "Kernel(API)");
 
 	joinearHilo(hiloAPI, NULL, "Kernel(API)");
@@ -110,6 +121,7 @@ int main() {
 	sem_destroy(&semContadorLQL);
 	sem_destroy(&semMultiprocesamiento);
 	sem_destroy(&semEjecutarLQL);
+	sem_destroy(&mutexTablas);
 	list_destroy(ListaLQL);
 	list_destroy(memoriaSC);
 	list_destroy(memoriasSHC);
@@ -167,7 +179,7 @@ void cargarNuevoLQL(char* ScriptLQL) {
 	strcpy(NuevoLQL->Instruccion, ScriptLQL);
 	//printf("\nNuevo LQL: %s\n", NuevoLQL->Instruccion);
 	sem_wait(&loggerSemaforo);
-	log_debug(logger, "Nuevo LQL: %s", NuevoLQL->Instruccion);
+	log_trace(logger, "Nuevo LQL: %s", NuevoLQL->Instruccion);
 	sem_post(&loggerSemaforo);
 	//list_add(ListaLQL, NuevoLQL); //creo que no es necesaria
 	queue_push(Ready, NuevoLQL);
@@ -350,7 +362,7 @@ void eliminaMemoriaDeListaGossiping(int socketMem) {
 			nodoAnterior->next = nodoActual->next;
 		listaGossiping->elements_count--;
 		sem_wait(&loggerSemaforo);
-		log_info(logger, "La Memoria %d se desconectó", nodoAux->IDMemoria);
+		log_debug(logger, "La Memoria %d se desconectó", nodoAux->IDMemoria);
 		sem_post(&loggerSemaforo);
 		desasociarMemoriaDeCriterios(nodoAux); // Se elimina la Memoria de los criterios a los que estaba asociada
 		free(nodoActual);
@@ -415,4 +427,23 @@ TablaGossip* elegirMemoriaCriterioEC() {
 		sem_post(&loggerSemaforo);
 	}
 	return NULL;
+}
+
+void* describeAutomatico (){
+    clock_t start, diff;
+    int elapsedsec;
+    while (1) {
+    	start = clock();
+    	while (1) {
+    		diff = clock() - start;
+    		elapsedsec = diff / CLOCKS_PER_SEC;
+    		if (elapsedsec >= (configuracion->METADATA_REFRESH / 1000)){
+    			sem_wait(&loggerSemaforo);
+    			log_debug(logger, "DESCRIBE automático ejecutando");
+    			sem_post(&loggerSemaforo);
+    			ejecutarDescribe("DESCRIBE");
+    			break;
+    		}
+        }
+    }
 }

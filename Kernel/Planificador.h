@@ -38,7 +38,9 @@ t_log* logger;
 
 pthread_t hiloAPI;
 pthread_t hiloPlanificacion;
+pthread_t hiloGossipKernel;
 pthread_t hiloRespuestasRequest;
+pthread_t hiloDescribeAutomatico;
 
 //Colas de procesos
 t_queue *New;
@@ -50,6 +52,7 @@ sem_t semContadorLQL;
 sem_t semMultiprocesamiento;
 sem_t semEjecutarLQL;
 sem_t loggerSemaforo;
+sem_t mutexTablas;
 
 int LQLEnEjecucion;
 int IDLQL; //autoincremental
@@ -156,5 +159,7 @@ void conectarConNuevaMemoria(TablaGossip* nodo);
 void gossipingKernel();
 int recibirNodoYDeserializar(TablaGossip *nodo, int socketMem);
 int nodoEstaEnLista(t_list* lista, TablaGossip* nodo);
+void* describeAutomatico ();
+void gossipingKernel() ;
 
 #endif /* PLANIFICADOR_H_ */

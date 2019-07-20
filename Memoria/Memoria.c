@@ -105,7 +105,7 @@ void cambiosConfigMemoria() {
 
 int main()
 {
-	logger = log_create(logFile, "Memoria",true, LOG_LEVEL_INFO);
+	logger = log_create(logFile, "Memoria",true, LOG_LEVEL_TRACE);
 	configuracion = malloc(sizeof(ConfiguracionMemoria));
 	for (int i = 0; i < CANT_MAX_SEEDS; i++) {
 		configuracion->PUERTO_SEEDS[i] = 0;
@@ -115,16 +115,25 @@ int main()
 
 	// cliente
 	socketLFS = connectToServer(configuracion->IP_FS, configuracion->PUERTO_FS, logger);
-	/*tPaquete* mensaje = malloc(sizeof(tPaquete));
-	mensaje->type = HANDSHAKE;
-	strcpy(mensaje->payload,"Memoria solicita tamanio del value");
-	mensaje->length = sizeof(mensaje->payload);
-	enviarPaquete(socketLFS, mensaje,logger,"Maximo tamanio del value");
-	liberarPaquete(mensaje);
+
+	if(socketLFS == 1){
+		log_error(logger, "LFS no conectado");
+		log_debug(logger, "Modulo Memoria cerrada");
+		log_destroy(logger);
+		free(configuracion);
+		exit(EXIT_FAILURE);
+	}
+
+	tPaquete* mensajeHAND = malloc(sizeof(tPaquete));
+	mensajeHAND->type = HANDSHAKE;
+	strcpy(mensajeHAND->payload,"Memoria solicita tamanio del value");
+	mensajeHAND->length = sizeof(mensajeHAND->payload);
+	enviarPaquete(socketLFS, mensajeHAND,logger,"Maximo tamanio del value");
+	liberarPaquete(mensajeHAND);
 	char* tamanioValue;
-	tMensaje* mensaje_handshake = NULL;
-	recibirPaquete(socketLFS,mensaje_handshake,&tamanioValue,logger,"Maximo tamanio del value");
-	maxValueSize = atoi(tamanioValue);*/
+	tMensaje mensaje_handshake;
+	recibirPaquete(socketLFS,&mensaje_handshake,&tamanioValue,logger,"Maximo tamanio del value");
+	maxValueSize = atoi(tamanioValue);
 	sem_init(&mutexMemoria, 0, 1);
 	sem_init(&loggerSemaforo, 1, 1);
 	levantarMemoria();
@@ -159,12 +168,12 @@ int main()
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
 		if (socketActivo != -1) {
 			sem_wait(&loggerSemaforo);
-			log_debug(logger, "Comunicacion establecida en el socket %d", socketActivo);
+			log_info(logger, "Comunicacion establecida en el socket %d", socketActivo);
 			sem_post(&loggerSemaforo);
 			switch (tipoMensaje) {
 			case SELECT:
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "Memoria recibió '%s'", sPayload);
+				log_info(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion SELECT
 				retorno = ejecutarSelect(sPayload);
@@ -189,7 +198,7 @@ int main()
 				break;
 			case INSERT:
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "Memoria recibió '%s'", sPayload);
+				log_info(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion INSERT
 				retorno = ejecutarInsert(sPayload);
@@ -214,7 +223,7 @@ int main()
 				break;
 			case CREATE:
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "Memoria recibió '%s'", sPayload);
+				log_info(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion CREATE
 				retorno = ejecutarCreate(sPayload);
@@ -239,7 +248,7 @@ int main()
 				break;
 			case DESCRIBE:
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "Memoria recibió '%s'", sPayload);
+				log_info(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion DESCRIBE
 				retornoLista = ejecutarDescribe(sPayload);
@@ -264,7 +273,7 @@ int main()
 					strcpy(mensaje->payload,"DESCRIBE");
 				}
 				mensaje->length = sizeof(mensaje->payload);
-				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del DESCRIBE en MEMORIA.");
+				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del DESCRIBE en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "Resultado de DESCRIBE enviado a Kernel");
@@ -272,7 +281,7 @@ int main()
 				break;
 			case DROP:
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "Memoria recibió '%s'", sPayload);
+				log_info(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion DROP
 				retorno = ejecutarDrop(sPayload);
@@ -289,7 +298,7 @@ int main()
 					strcpy(mensaje->payload,"DROP");
 				}
 				mensaje->length = sizeof(mensaje->payload);
-				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del DROP en MEMORIA.");
+				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del DROP en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "Resultado de DROP enviado a Kernel");
@@ -297,7 +306,7 @@ int main()
 				break;
 			case JOURNAL:
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "Memoria recibió '%s'", sPayload);
+				log_info(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion JOURNAL
 				retornoINT = ejecutarJournal(sPayload);
@@ -313,7 +322,7 @@ int main()
 					strcpy(mensaje->payload,"JOURNAL");
 				}
 				mensaje->length = sizeof(mensaje->payload);
-				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del JOURNAL en MEMORIA.");
+				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del JOURNAL en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "Resultado de JOURNAL enviado a Kernel");
@@ -326,7 +335,7 @@ int main()
 				break;
 			case DESCONEXION:
 				sem_wait(&loggerSemaforo);
-				log_debug(logger, "Se desconecto un cliente");
+				log_info(logger, "Se desconecto un cliente");
 				sem_post(&loggerSemaforo);
 				break;
 			case HANDSHAKE:
@@ -342,7 +351,7 @@ int main()
 				break;
 			case GOSSIPING:
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "Pedido de Lista de Gossiping a Memoria");
+				log_info(logger, "Pedido de Lista de Gossiping a Memoria");
 				sem_post(&loggerSemaforo);
 				enviarListaGossiping(socketActivo);
 				break;
@@ -656,12 +665,13 @@ char* describeMemoriaTabla(char* tabla){
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DESCRIBE_TABLA desde Memoria.");
 		sem_wait(&loggerSemaforo);
-		log_trace(logger, "'DESCRIBE %s' enviado a LFS", tabla);
+		log_info(logger, "'DESCRIBE %s' enviado a LFS", tabla);
 		sem_post(&loggerSemaforo);
 		liberarPaquete(mensaje);
 		free(comando);
 		char* sPayload;
 		tMensaje tipo_mensaje;
+		recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Cantidad de tablas");
 		recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Metadata de la tabla desde LFS");
 		sem_wait(&loggerSemaforo);
 		log_info(logger, "'DESCRIBE %s' ejecutado exitosamente", tabla);
@@ -684,7 +694,7 @@ t_list* describeMemoria(){
 		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DESCRIBE desde Memoria.");
 		liberarPaquete(mensaje);
 		sem_wait(&loggerSemaforo);
-		log_trace(logger, "'DESCRIBE' enviado a LFS");
+		log_info(logger, "'DESCRIBE' enviado a LFS");
 		sem_post(&loggerSemaforo);
 		free(comando);
 		char* sPayload;
@@ -709,7 +719,7 @@ t_list* describeMemoria(){
 
 void levantarMemoria(){
 	tablaDeSegmentos = malloc(1);
-	maxValueSize = 20; //ESTO TIENE QUE VENIR DE LFS
+	//maxValueSize = 20; //ESTO TIENE QUE VENIR DE LFS
 	tamanioRealDeUnRegistro = sizeof(uint64_t) + sizeof(uint16_t) + maxValueSize ;
 	cantidadDeRegistros = configuracion->TAM_MEM / tamanioRealDeUnRegistro;
 	granMalloc = malloc(cantidadDeRegistros*tamanioRealDeUnRegistro);
@@ -869,7 +879,7 @@ void* journalAutomatico (){
     		elapsedsec = diff / CLOCKS_PER_SEC;
     		if (elapsedsec >= (configuracion->RETARDO_JOURNAL / 1000)){
     			sem_wait(&loggerSemaforo);
-    			log_debug(logger, "Journal automático ejecutando");
+    			log_info(logger, "Journal automático ejecutando");
     			sem_post(&loggerSemaforo);
     			journalMemoria();
     			break;
