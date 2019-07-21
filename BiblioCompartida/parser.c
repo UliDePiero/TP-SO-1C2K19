@@ -204,7 +204,7 @@ char** validarComando(char* instruccion, int inputs){
 }
 char** validarComandoInsert(char* instruccion){
 	char** comando1 = string_n_split(instruccion, 4, " ");
-	for (int i = 1; i < 3; i++) {
+	for (int i = 1; i < 4; i++) {
 		if (!comando1[i]) {
 			for(int j = 0; j<i; j++)
 				free(comando1[j]);
@@ -226,10 +226,10 @@ char** validarComandoInsert(char* instruccion){
 	}
 
 	char** comando = (char**) calloc(5, sizeof(char*));
-	comando[0] = string_from_format("%s", comando1[0]);
-	comando[1] = string_from_format("%s", comando1[1]);
-	comando[2] = string_from_format("%s", comando1[2]);
-	comando[3] = string_from_format("%s", comando2[0]);
+	comando[0] = string_duplicate(comando1[0]);
+	comando[1] = string_duplicate(comando1[1]);
+	comando[2] = string_duplicate(comando1[2]);
+	comando[3] = string_duplicate(comando2[0]);
 	if(comando2[1]){
 		char** comando3 = string_n_split(comando2[1], 2, " ");
 		if(comando3[0])

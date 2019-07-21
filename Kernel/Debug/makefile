@@ -25,7 +25,7 @@ endif
 all: Kernel
 
 dependents:
-	-cd /home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug && $(MAKE) all
+	-cd /home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug && $(MAKE) clean all
 
 # Tool invocations
 Kernel: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug/libBiblioCompartida.so

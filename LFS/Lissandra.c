@@ -123,7 +123,7 @@ int main(){
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
 		if (socketActivo != -1) {
 			sem_wait(&loggerSemaforo);
-			log_info(logger, "Comunicacion establecida en el socket %d", socketActivo);
+			log_info(logger, "Comunicacion establecida en el socket %d\nMensaje: %s", socketActivo, sPayload);
 			sem_post(&loggerSemaforo);
 			switch (tipoMensaje) {
 				char** comando;
@@ -154,12 +154,16 @@ int main(){
 				case INSERT:
 					comando = validarComandoInsert(sPayload);
 					if(comando){
-						insertLFS(comando[1], atoi(comando[2]), comando[3], atoi(comando[4]));
-						free(comando[4]);
+						if(!comando[4]){
+							insertLFS(comando[1], atoi(comando[2]), comando[3], getCurrentTime());
+						}else{
+							insertLFS(comando[1], atoi(comando[2]), comando[3], atoi(comando[4]));//castear timestamp????
+							free(comando[4]);
+						}
 						for(int i = 0; i<4; i++)
 							free(comando[i]);
-							free(comando);
-						}
+						free(comando);
+					}
 					break;
 				case CREATE:
 					comando = validarComando(sPayload, 5);

@@ -24,8 +24,11 @@ endif
 # All Target
 all: Memoria
 
+dependents:
+	-cd /home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug && $(MAKE) clean all
+
 # Tool invocations
-Memoria: $(OBJS) $(USER_OBJS)
+Memoria: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug/libBiblioCompartida.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
 	gcc -L"/home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug" -o "Memoria" $(OBJS) $(USER_OBJS) $(LIBS)
@@ -38,5 +41,6 @@ clean:
 	-@echo ' '
 
 .PHONY: all clean dependents
+/home/utnso/workspace/tp-2019-1c-GGWP/BiblioCompartida/Debug/libBiblioCompartida.so:
 
 -include ../makefile.targets

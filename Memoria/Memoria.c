@@ -361,7 +361,7 @@ int main()
 				sem_wait(&mutexMemoria);
 				enviarListaGossiping(socketActivo);
 				sem_wait(&mutexMemoria);
-					sem_post(&mutexMemoria);
+				sem_post(&mutexMemoria);
 				break;
 			case GOSSIPING_RECIBE:
 				sem_wait(&loggerSemaforo);
@@ -849,6 +849,7 @@ int buscarRegistro(t_nodoLRU* nodo_reemplazo){
 
 void journalMemoria(){
 	char *instruccion;
+	char* value_comillas;
 	Registro *registro = malloc(sizeof(Registro));
 	//for revisando todas las páginas
 	sem_wait(&mutexMemoria);
@@ -858,7 +859,12 @@ void journalMemoria(){
 				if(tablaDeSegmentos[j]->tablaDePaginas[i]->modificado == 1){
 					instruccion = malloc(15+sizeof(tablaDeSegmentos[j]->tabla)+sizeof(registro->key)+sizeof(registro->value)+sizeof(registro->timestamp));
 					registro = getRegistro(tablaDeSegmentos[j]->tablaDePaginas[i]->frame);
-					sprintf (instruccion, "INSERT %s %hd %s %llu \n", tablaDeSegmentos[j]->tabla, registro->key, registro->value, registro->timestamp);
+					value_comillas = string_from_format("\"%s\"",registro->value);
+					sprintf (instruccion, "INSERT %s %hd %s %llu \n", tablaDeSegmentos[j]->tabla, registro->key, value_comillas, registro->timestamp);
+					free(value_comillas);
+					sem_wait(&loggerSemaforo);
+					log_trace(logger, "Envio: %s a LFS",instruccion);
+					sem_post(&loggerSemaforo);
 					ejecutarInsertJournal(instruccion);
 					free(instruccion);
 				}

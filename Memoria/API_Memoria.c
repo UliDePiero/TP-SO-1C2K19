@@ -91,7 +91,8 @@ char* ejecutarSelect(char* instruccion){
 }
 char* ejecutarInsert(char* instruccion){
 	char* retorno = NULL;
-	char** comando = validarComando(instruccion, 4);
+	char** comando = validarComandoInsert(instruccion);
+	//char** comando = validarComando(instruccion, 4);
 	if(comando){
 		sleep(configuracion->RETARDO_MEM / 1000);
 		insertMemoria(comando[1], atoi(comando[2]), comando[3], getCurrentTime(), 1);
