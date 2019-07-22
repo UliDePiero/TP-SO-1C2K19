@@ -31,8 +31,7 @@ void armarNodoMemoria(TablaGossip* nodo) {
 	nodo->socketMemoria = 1;
 
 	for (int i = 0; i < CANT_MAX_SEEDS; i++) {
-		if (nodo->IPMemoria == configuracion->IP_SEEDS[i]
-				&& nodo->puertoMemoria == configuracion->PUERTO_SEEDS[i])
+		if (string_equals_ignore_case(nodo->IPMemoria,configuracion->IP_SEEDS[i]) && nodo->puertoMemoria == configuracion->PUERTO_SEEDS[i])
 			nodo->socketMemoria = socketSEED[i];
 	}
 
@@ -49,7 +48,12 @@ void recibeLista(int socketMem) {
 	int status;
 	int cantElementosListaRecibida;
 
-	recv(socketMem, &cantElementosListaRecibida, sizeof(int), 0);
+	tMensaje tipoMensaje;
+	char * sPayload;
+	//recv(socketMemoria, msjeRecibido, sizeof(tPaquete), 0);
+	recibirPaquete(socketMem,&tipoMensaje,&sPayload,logger,"Recibo cantidad de listaGossiping");
+	cantElementosListaRecibida = atoi(sPayload);
+	if(sPayload)free(sPayload);
 
 	for (int i = 0; i < cantElementosListaRecibida; i++) {
 		TablaGossip* nodoRecibido = malloc(sizeof(TablaGossip));
@@ -71,25 +75,43 @@ void pideListaGossiping(int socketMem) {
 	recibeLista(socketMem);
 }
 
+void pideListaGossiping_2(int socketMem) {
+	tPaquete* msjeEnviado = malloc(sizeof(tPaquete));
+	msjeEnviado->type = GOSSIPING;
+	strcpy(msjeEnviado->payload, "Memoria pide Lista de Gossiping");
+	msjeEnviado->length = sizeof(msjeEnviado->payload);
+	enviarPaquete(socketMem, msjeEnviado, logger,
+			"Memoria realiza pedido de Lista de Gossiping");
+	liberarPaquete(msjeEnviado);
+}
+
 void enviarListaGossiping(int socketEnvio) {
-	TablaGossip* nodoGossipAux;
-	int tamanioPaquete = sizeof(nodoGossipAux->IDMemoria)
-			+ sizeof(nodoGossipAux->IPMemoria)
-			+ sizeof(nodoGossipAux->puertoMemoria);
-	char* paqueteSerializado = malloc(tamanioPaquete);
+	sem_wait(&mutexMemoria);
+	TablaGossip* nodoGossipAux = malloc(sizeof(TablaGossip));
+	int tamanioPaquete = sizeof(nodoGossipAux->IDMemoria) + sizeof(nodoGossipAux->IPMemoria) + sizeof(nodoGossipAux->puertoMemoria);
+	free(nodoGossipAux);
+	char* paqueteSerializado;
 	t_link_element* nodoAux = listaGossiping->head;
 
-	send(socketEnvio, string_itoa(listaGossiping->elements_count), sizeof(int), 0);
+	tPaquete* msjeEnviado = malloc(sizeof(tPaquete));
+	msjeEnviado->type = GOSSIPING_RECIBE;
+	char* string_mensaje = string_itoa(listaGossiping->elements_count);
+	strcpy(msjeEnviado->payload, string_mensaje);
+	if(string_mensaje) free(string_mensaje);
+	msjeEnviado->length = sizeof(msjeEnviado->payload);
+
+	enviarPaquete(socketEnvio, msjeEnviado, logger, "Envio cantidad de elementos de listaGossipig");
+	liberarPaquete(msjeEnviado);
+	//send(socketEnvio, string_itoa(listaGossiping->elements_count), sizeof(int), 0);
 
 	for (int i = 0; i < listaGossiping->elements_count; i++) {
 		nodoGossipAux = nodoAux->data;
-
+		paqueteSerializado = malloc(tamanioPaquete);
 		serializarNodo(nodoGossipAux, paqueteSerializado);
 		send(socketEnvio, paqueteSerializado, tamanioPaquete, 0);
-
+		free(paqueteSerializado);
 		nodoAux = nodoAux->next;
 	}
-	free(paqueteSerializado);
 	sem_post(&mutexMemoria);
 }
 
@@ -127,19 +149,14 @@ void enviaLista(int socketMem) {
 
 void armarPropioNodo() {
 	TablaGossip* nodoMem = malloc(sizeof(TablaGossip));
-	//puts("ASIGNÉ MEMORIA NODO MEM");
+
 	nodoMem->IDMemoria = configuracion->MEMORY_NUMBER;
-	//puts("ASIGNÉ ID MEMORIA");
-	strcpy(nodoMem->IPMemoria, configuracion->IP_PROPIA); // CHEQUEAR
-	//puts("ASIGNÉ IP MEMORIA");
+	strcpy(nodoMem->IPMemoria, configuracion->IP_PROPIA);
 	nodoMem->puertoMemoria = configuracion->PUERTO;
-	//puts("ASIGNÉ PUERTO MEMORIA");
 	nodoMem->socketMemoria = 1;
-	//puts("ASIGNÉ SOCKET MEMORIA");
 
 	// Agrego al nodo correspondiente a la propia memoria en la primera posición de la listaGossiping de dicha memoria
 	list_add(listaGossiping, nodoMem);
-	//puts("AGREGUÉ NODO A LISTA");
 }
 
 int nodoSocketEstaEnLista(int socketID) {
@@ -163,58 +180,47 @@ int nodoSocketEstaEnLista(int socketID) {
 void* gossipingMemoria() {
 	armarPropioNodo();
 	// Memoria intercambia listaGossiping con todos sus seeds
-	int seed = 0;
-	while (configuracion->PUERTO_SEEDS[seed] != 0 && seed < CANT_MAX_SEEDS) {
-		if (socketSEED[seed] != 1) {
-			sem_wait(&loggerSemaforo);
-			log_trace(logger,
-					"Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d",
-					configuracion->IP_SEEDS[seed],
-					configuracion->PUERTO_SEEDS[seed]);
-			sem_post(&loggerSemaforo);
-			pideListaGossiping(socketSEED[seed]);
-			enviaLista(socketSEED[seed]);
-		} else { // Si no puede conectarse, informa error
-			sem_wait(&loggerSemaforo);
-			log_error(logger,
-					"La memoria no pudo conectarse con su seed en la IP: %s y Puerto: %d",
-					configuracion->IP_SEEDS[seed],
-					configuracion->PUERTO_SEEDS[seed]);
-			sem_post(&loggerSemaforo);
-		}
-		seed++;
-	}
+	int seed_gos = 0;
+	while (configuracion->PUERTO_SEEDS[seed_gos] != 0 && seed_gos < CANT_MAX_SEEDS) {
 
+		sem_wait(&loggerSemaforo);
+		log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
+		sem_post(&loggerSemaforo);
+		pideListaGossiping(socketSEED[seed_gos]);
+		//enviaLista(socketSEED[seed_gos]);
+		enviarListaGossiping(socketSEED[seed_gos]);
+
+		seed_gos++;
+	}
+	sem_post(&gossipMemoria);
+	sem_post(&gossipMemoria);
 	while (1) {
 		sleep(configuracion->RETARDO_GOSSIPING / 1000);
 		int hizoGossipingConSeed = 0;
 
-		seed = 0;
-		while (configuracion->PUERTO_SEEDS[seed] != 0 && seed < CANT_MAX_SEEDS) {
-			if (nodoSocketEstaEnLista(socketSEED[seed])) {
+		seed_gos = 0;
+		while (configuracion->PUERTO_SEEDS[seed_gos] != 0 && seed_gos < CANT_MAX_SEEDS) {
+			if (nodoSocketEstaEnLista(socketSEED[seed_gos])) {
 				sem_wait(&loggerSemaforo);
-				log_trace(logger,
-						"Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d",
-						configuracion->IP_SEEDS[seed],
-						configuracion->PUERTO_SEEDS[seed]);
+				log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
 				sem_post(&loggerSemaforo);
-				pideListaGossiping(socketSEED[seed]);
-				enviaLista(socketSEED[seed]);
+				pideListaGossiping_2(socketSEED[seed_gos]);
+				//enviaLista(socketSEED[seed_gos]);
+				enviarListaGossiping(socketSEED[seed_gos]);
 				hizoGossipingConSeed = 1;
 			}
-			seed++;
+			seed_gos++;
 		}
 		// Si no pudo hacer Gossiping con ningún seed, hago con la segunda Memoria de la listaGossiping, si existe (Porque la primera va a ser sí misma)
 		if (hizoGossipingConSeed == 0) {
 			if (listaGossiping->elements_count > 1) { // Hay alguna otra memoria además de la actual
-				TablaGossip* nodoTablaGossipAux =
-						listaGossiping->head->next->data;
+				TablaGossip* nodoTablaGossipAux = listaGossiping->head->next->data;
 				sem_wait(&loggerSemaforo);
-				log_trace(logger, "Memoria hace Gossiping con la Memoria %d",
-						nodoTablaGossipAux->IDMemoria);
+				log_trace(logger, "Memoria hace Gossiping con la Memoria %d", nodoTablaGossipAux->IDMemoria);
 				sem_post(&loggerSemaforo);
-				pideListaGossiping(nodoTablaGossipAux->socketMemoria);
-				enviaLista(nodoTablaGossipAux->socketMemoria);
+				pideListaGossiping_2(nodoTablaGossipAux->socketMemoria);
+				//enviaLista(nodoTablaGossipAux->socketMemoria);
+				enviarListaGossiping(nodoTablaGossipAux->socketMemoria);
 			}
 		}
 	}

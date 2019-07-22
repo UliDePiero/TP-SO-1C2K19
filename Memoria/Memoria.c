@@ -123,6 +123,18 @@ int main()
 		free(configuracion);
 		exit(EXIT_FAILURE);
 	}
+	seed=0;
+	while (configuracion->PUERTO_SEEDS[seed] != 0 && seed < CANT_MAX_SEEDS) {
+		socketSEED[seed] = connectToServer(configuracion->IP_SEEDS[seed], configuracion->PUERTO_SEEDS[seed], logger);
+		if(socketSEED[seed] == 1) {
+			log_error(logger, "SEED no conectada");
+			log_debug(logger, "Modulo Memoria cerrada");
+			log_destroy(logger);
+			free(configuracion);
+			exit(EXIT_FAILURE);
+		}
+		seed++;
+	}
 
 	tPaquete* mensajeHAND = malloc(sizeof(tPaquete));
 	mensajeHAND->type = HANDSHAKE;
@@ -135,6 +147,7 @@ int main()
 	recibirPaquete(socketLFS,&mensaje_handshake,&tamanioValue,logger,"Maximo tamanio del value");
 	maxValueSize = atoi(tamanioValue);
 	sem_init(&mutexMemoria, 0, 1);
+	sem_init(&gossipMemoria, 0, 0);
 	sem_init(&loggerSemaforo, 1, 1);
 	levantarMemoria();
 	listaPaginasLRU = list_create();
@@ -143,12 +156,7 @@ int main()
 	crearHiloIndependiente(&hiloGossipMemoria,(void*)gossipingMemoria, NULL, "proceso Memoria(Gossip)");
 	crearHiloIndependiente(&hiloConfig,(void*)cambiosConfigMemoria, NULL, "proceso Memoria(Config)");
 	crearHiloIndependiente(&hiloJournal,(void*)journalAutomatico, NULL, "proceso Memoria(Journal)");
-
-	seed=0;
-	while (configuracion->PUERTO_SEEDS[seed] != 0 && seed < CANT_MAX_SEEDS) {
-		socketSEED[seed] = connectToServer(configuracion->IP_SEEDS[seed], configuracion->PUERTO_SEEDS[seed], logger);
-		seed++;
-	}
+	crearHiloIndependiente(&hiloAPI,(void*)API_Memoria, NULL, "proceso Memoria(API)");
 
 	//servidor
 	socketEscucha = crearSocketEscucha(configuracion->PUERTO, logger);
@@ -166,8 +174,8 @@ int main()
 	t_list* retornoLista;
 	int status;
 	TablaGossip* nodoRecibido;
-	crearHiloIndependiente(&hiloAPI,(void*)API_Memoria, NULL, "proceso Memoria(API)");
 
+	sem_wait(&gossipMemoria);
 	while (1) {
 		//puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
@@ -337,6 +345,7 @@ int main()
 				sem_wait(&loggerSemaforo);
 				log_error(logger, "Hubo un error en la ejecucion del comando %s en LFS", sPayload);
 				sem_post(&loggerSemaforo);
+				if(sPayload)free(sPayload);
 				break;
 			case DESCONEXION:
 				sem_wait(&loggerSemaforo);
@@ -344,6 +353,7 @@ int main()
 				sem_post(&loggerSemaforo);
 				break;
 			case HANDSHAKE:
+				if(sPayload)free(sPayload);
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "Kernel y Memoria realizan Handshake");
 				sem_post(&loggerSemaforo);
@@ -355,17 +365,17 @@ int main()
 				liberarPaquete(mensaje);
 				break;
 			case GOSSIPING:
+				if(sPayload)free(sPayload);
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "Pedido de Lista de Gossiping a Memoria");
 				sem_post(&loggerSemaforo);
-				sem_wait(&mutexMemoria);
 				enviarListaGossiping(socketActivo);
 				sem_wait(&mutexMemoria);
 				sem_post(&mutexMemoria);
 				break;
 			case GOSSIPING_RECIBE:
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Envío de Lista de Gossiping a Memoria");
+				log_info(logger, "Recibo Lista de Gossiping");
 				sem_post(&loggerSemaforo);
 				//recibeLista(socketActivo);
 				for (int i = 0; i < atoi(sPayload); i++) {
@@ -380,6 +390,7 @@ int main()
 				sem_wait(&loggerSemaforo);
 				log_error(logger, "El tipo de mensaje ingresado es desconocido", sPayload);
 				sem_post(&loggerSemaforo);
+				if(sPayload)free(sPayload);
 				break;
 			}
 		}
@@ -891,6 +902,7 @@ void ejecutarInsertJournal(char *instruccion){
 }
 
 void* journalAutomatico (){
+	sem_wait(&gossipMemoria);
     //clock_t start, diff;
     //int elapsedsec;
     while (1) {

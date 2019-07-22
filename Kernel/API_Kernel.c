@@ -250,7 +250,7 @@ void respuestas(void* socket_Mem){
 				}
 					//puts("\n>");
 				break;
-			case GOSSIPING:
+			case GOSSIPING_RECIBE:
 				for (int i = 0; i < atoi(sPayload); i++) {
 					nodoRecibido = malloc(sizeof(TablaGossip));
 					status = recibirNodoYDeserializar(nodoRecibido, socket_Memoria);

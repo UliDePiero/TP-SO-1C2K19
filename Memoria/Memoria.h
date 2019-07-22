@@ -44,6 +44,7 @@ int seed;
 t_log* logger;
 
 sem_t mutexMemoria;
+sem_t gossipMemoria;
 sem_t loggerSemaforo;
 
 pthread_t hiloAPI;
@@ -185,6 +186,7 @@ void conectarConNuevaMemoria(TablaGossip* nodo);
 void armarNodoMemoria(TablaGossip* nodo);
 void recibeLista(int socketMem);
 void pideListaGossiping(int socketMem);
+void pideListaGossiping_2(int socketMem);
 void enviarListaGossiping(int socketEnvio);
 void enviaLista(int socketMem);
 void armarPropioNodo();
