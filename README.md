@@ -20,3 +20,8 @@
 
 3) Desde la consola, en la carpeta Debug de cada proyecto, ejecutar ldd Ejecutable y ver como está libBiblioCompartida.so
 
+Orden de ejecucion:
+1- LFS
+2- Memoria sin seeds
+3- Memoria que tiene como seed a la anterior (Repetir)
+4- Kernel
