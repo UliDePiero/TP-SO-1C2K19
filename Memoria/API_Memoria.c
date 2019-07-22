@@ -74,7 +74,7 @@ char* ejecutarSelect(char* instruccion){
 		sleep(configuracion->RETARDO_MEM / 1000);
 		if(registro != NULL)
 		{
-			printf("value: %s\n", registro->value);
+			//printf("value: %s\n", registro->value);
 			retorno = string_duplicate(registro->value);
 			free(registro->value);
 			sem_wait(&loggerSemaforo);
@@ -132,7 +132,7 @@ char* ejecutarCreate(char* instruccion){
 	return retorno;
 }
 void muestraLista(char* elemento){
-	printf("\n%s", elemento);
+	printf("\nMetadata: %s\n", elemento);
 }
 t_list* ejecutarDescribe(char* instruccion){
 	t_list* retorno;
@@ -142,7 +142,7 @@ t_list* ejecutarDescribe(char* instruccion){
 		retorno = list_create();
 		char* metadata = describeMemoriaTabla(comando[1]);
 		list_add(retorno, metadata);
-		printf("\nMetadata: %s", /*(char*)retorno->head->data*/metadata);
+		printf("\nMetadata: %s\n", /*(char*)retorno->head->data*/metadata);
 		free(comando[1]);
 		sem_wait(&loggerSemaforo);
 		log_info(logger, "Resultado de '%s': %s ", instruccion, metadata);

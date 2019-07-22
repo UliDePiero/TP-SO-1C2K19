@@ -415,12 +415,18 @@ void terminar(){
 	log_destroy(logger);
 	sem_destroy(&loggerSemaforo);
 	sem_destroy(&mutexMemoria);
+	sem_destroy(&gossipMemoria);
 	free(configuracion);
 	close(socketEscucha);
 	exit(0);
 }
 
 void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, int flagModificado){
+	if(maxValueSize < string_length(value)){
+		sem_wait(&loggerSemaforo);
+		log_warning(logger, "El valor es mas largo que lo permitido por el File System(%d caracteres), sera acortado.", maxValueSize);
+		sem_post(&loggerSemaforo);
+	}
 	int segmento = 0, pagina = 0, registro = -1;
 	if(cantidadDeSegmentos == 0){
 		registro = 0;
@@ -736,7 +742,6 @@ t_list* describeMemoria(){
 		char* metadata;
 		for(int i=0;i<cantidadTablas; i++){
 			recibirPaquete(socketLFS,&tipo_mensaje,&sPayload,logger,"Metadata de una tabla de LFS");
-			//printf("\n%s",sPayload);
 			metadata = string_duplicate(sPayload);
 			list_add(retorno,metadata);
 			free(sPayload);

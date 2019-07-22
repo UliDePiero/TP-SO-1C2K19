@@ -380,6 +380,7 @@ void eliminaMemoriaDeListaGossiping(int socketMem) {
 		free(nodoActual);
 		free(nodoAux);
 	}
+	//desconectarseDe(socketMem);
 }
 
 TablaGossip* elegirMemoriaCriterioSC() {

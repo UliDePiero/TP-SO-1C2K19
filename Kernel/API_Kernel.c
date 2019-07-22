@@ -167,7 +167,7 @@ void respuestas(void* socket_Mem){
 	tMensaje tipo_mensaje;
 	while(conexion != 0){
 		conexion=recibirPaquete(socket_Memoria,&tipo_mensaje,&sPayload,logger,"Respuesta de MEMORIA");
-		if(conexion !=0)
+		if(conexion !=0){
 		switch (tipo_mensaje) {
 			case SELECT:
 				//printf("\nValue: %s",sPayload);
@@ -275,8 +275,9 @@ void respuestas(void* socket_Mem){
 				break;
 		}
 		if(sPayload != NULL) free(sPayload);
+		}
 	}
-	eliminaMemoriaDeListaGossiping((int)socket_Mem); // La Memoria se desconectó, la elimino de listaGossiping
+	eliminaMemoriaDeListaGossiping(socket_Memoria); // La Memoria se desconectó, la elimino de listaGossiping
 	free(socket_Mem);
 	if(listaGossiping->elements_count == 0)
 		pthread_cancel(hiloAPI);
