@@ -547,6 +547,7 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 		}
 	}
 	if(socketLFS!=1){
+		sleep(configuracion->RETARDO_FS/1000);
 		char* select_mensaje = string_from_format("SELECT %s %d",tabla,key);
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = SELECT;
@@ -568,6 +569,7 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 		}
 		else
 		{
+			sleep(configuracion->RETARDO_MEM/1000);
 			insertMemoria(tabla, key, sPayload, getCurrentTime(), 0);
 			free(sPayload);
 			Registro* registro = selectMemoria(tabla, key);
@@ -667,6 +669,7 @@ void dropMemoria(char* tabla){
 		}
 	}
 	if(socketLFS!=1){
+		sleep(configuracion->RETARDO_FS/1000);
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = DROP;
 		char* comando = string_from_format("DROP %s", tabla);
@@ -684,6 +687,7 @@ void dropMemoria(char* tabla){
 char* describeMemoriaTabla(char* tabla){
 	char* retorno;
 	if(socketLFS!=1){
+		sleep(configuracion->RETARDO_FS/1000);
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = DESCRIBE;
 		char* comando = string_from_format("DESCRIBE %s", tabla);
@@ -712,6 +716,7 @@ char* describeMemoriaTabla(char* tabla){
 t_list* describeMemoria(){
 	t_list* retorno = list_create();
 	if(socketLFS!=1){
+		sleep(configuracion->RETARDO_FS/1000);
 		tPaquete* mensaje = malloc(sizeof(tPaquete));
 		mensaje->type = DESCRIBE;
 		char* comando = string_from_format("DESCRIBE");
@@ -735,6 +740,7 @@ t_list* describeMemoria(){
 			metadata = string_duplicate(sPayload);
 			list_add(retorno,metadata);
 			free(sPayload);
+			sleep(configuracion->RETARDO_FS/1000);
 		}
 		sem_wait(&loggerSemaforo);
 		log_info(logger, "'DESCRIBE' ejecutado exitosamente");
@@ -749,9 +755,9 @@ void levantarMemoria(){
 	tamanioRealDeUnRegistro = sizeof(uint64_t) + sizeof(uint16_t) + maxValueSize ;
 	cantidadDeRegistros = configuracion->TAM_MEM / tamanioRealDeUnRegistro;
 	granMalloc = malloc(cantidadDeRegistros*tamanioRealDeUnRegistro);
-	for(int i=0; i <cantidadDeRegistros; i++)
+	//for(int i=0; i <cantidadDeRegistros; i++)
 			//setTimestamp(granMalloc+i*tamanioRealDeUnRegistro,-1);
-			vaciarMemoria();
+	vaciarMemoria();
 	sem_wait(&loggerSemaforo);
 	log_debug(logger, "Tamanio granMalloc: %d", malloc_usable_size(granMalloc));
 	sem_post(&loggerSemaforo);
@@ -893,6 +899,7 @@ void journalMemoria(){
 }
 
 void ejecutarInsertJournal(char *instruccion){
+	sleep(configuracion->RETARDO_FS/1000);
 	tPaquete* mensaje = malloc(sizeof(tPaquete));
 	mensaje->type = INSERT;
 	strcpy(mensaje->payload,instruccion);
