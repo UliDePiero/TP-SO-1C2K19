@@ -109,7 +109,7 @@ int main()
 	configuracion = malloc(sizeof(ConfiguracionMemoria));
 	for (int i = 0; i < CANT_MAX_SEEDS; i++) {
 		configuracion->PUERTO_SEEDS[i] = 0;
-		socketSEED[i] = 0;
+		socketSEED[i] = 1;
 	}
 	configurar(configuracion);
 
@@ -123,18 +123,11 @@ int main()
 		free(configuracion);
 		exit(EXIT_FAILURE);
 	}
-	seed=0;
+	/*seed=0;
 	while (configuracion->PUERTO_SEEDS[seed] != 0 && seed < CANT_MAX_SEEDS) {
 		socketSEED[seed] = connectToServer(configuracion->IP_SEEDS[seed], configuracion->PUERTO_SEEDS[seed], logger);
-		if(socketSEED[seed] == 1) {
-			log_error(logger, "SEED no conectada");
-			log_debug(logger, "Modulo Memoria cerrada");
-			log_destroy(logger);
-			free(configuracion);
-			exit(EXIT_FAILURE);
-		}
 		seed++;
-	}
+	}*/
 
 	tPaquete* mensajeHAND = malloc(sizeof(tPaquete));
 	mensajeHAND->type = HANDSHAKE;
@@ -347,11 +340,6 @@ int main()
 				sem_post(&loggerSemaforo);
 				if(sPayload)free(sPayload);
 				break;
-			case DESCONEXION:
-				sem_wait(&loggerSemaforo);
-				log_info(logger, "Se desconecto un cliente");
-				sem_post(&loggerSemaforo);
-				break;
 			case HANDSHAKE:
 				if(sPayload)free(sPayload);
 				sem_wait(&loggerSemaforo);
@@ -378,11 +366,29 @@ int main()
 				log_info(logger, "Recibo Lista de Gossiping");
 				sem_post(&loggerSemaforo);
 				//recibeLista(socketActivo);
+				int seed_n;
+				for (seed_n = 0; seed_n < CANT_MAX_SEEDS; seed_n++) {
+					if(socketActivo == socketSEED[seed_n])
+						break;
+				}
 				for (int i = 0; i < atoi(sPayload); i++) {
-				nodoRecibido = malloc(sizeof(TablaGossip));
-				status = recibirNodoYDeserializar(nodoRecibido, socketActivo);
-				if (status)
-					armarNodoMemoria(nodoRecibido);
+					nodoRecibido = malloc(sizeof(TablaGossip));
+					status = recibirNodoYDeserializar(nodoRecibido, socketActivo);
+					if (status){
+						armarNodoMemoria(nodoRecibido,seed_n);
+					}
+				}
+				break;
+			case DESCONEXION:
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Se desconecto un cliente, socket: %d", socketActivo);
+				sem_post(&loggerSemaforo);
+				for (int i = 0; i < CANT_MAX_SEEDS; i++) {
+					if(socketActivo == socketSEED[i]){
+						eliminaMemoriaDeListaGossiping(socketActivo);
+						socketSEED[i] = 1;
+						seed--;
+					}
 				}
 				break;
 			default:

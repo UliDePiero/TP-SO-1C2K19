@@ -182,10 +182,11 @@ t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo);
 void removerElemento(t_list* lista, t_nodoLRU* nodo);
 
 // Funciones para Gossiping
-void conectarConNuevaMemoria(TablaGossip* nodo);
-void armarNodoMemoria(TablaGossip* nodo);
-void recibeLista(int socketMem);
-void pideListaGossiping(int socketMem);
+void eliminaMemoriaDeListaGossiping(int socketMem);
+void conectarConNuevaMemoria(TablaGossip* nodo, int seed_gos);
+void armarNodoMemoria(TablaGossip* nodo, int seed_gos);
+void recibeLista(int socketMem, int seed_gos);
+void pideListaGossiping(int socketMem, int seed_gos);
 void pideListaGossiping_2(int socketMem);
 void enviarListaGossiping(int socketEnvio);
 void enviaLista(int socketMem);

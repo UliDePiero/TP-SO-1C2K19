@@ -7,7 +7,35 @@
 
 #include "Memoria.h"
 
-void conectarConNuevaMemoria(TablaGossip* nodo) {
+void eliminaMemoriaDeListaGossiping(int socketMem) {
+	t_link_element* nodoActual = listaGossiping->head;
+	t_link_element* nodoAnterior = NULL;
+	TablaGossip* nodoAux;
+
+	if (nodoActual)
+		nodoAux = nodoActual->data;
+	while (nodoActual && nodoAux->socketMemoria != socketMem) {
+		nodoAnterior = nodoActual;
+		nodoActual = nodoActual->next;
+		if (nodoActual)
+			nodoAux = nodoActual->data;
+	}
+	if (nodoActual && nodoAux->socketMemoria == socketMem) {
+		if (!nodoAnterior)
+			listaGossiping->head = nodoActual->next;
+		else
+			nodoAnterior->next = nodoActual->next;
+		listaGossiping->elements_count--;
+		sem_wait(&loggerSemaforo);
+		log_debug(logger, "La Memoria %d se desconectó", nodoAux->IDMemoria);
+		sem_post(&loggerSemaforo);
+		free(nodoActual);
+		free(nodoAux);
+	}
+	//desconectarseDe(socketMem);
+}
+
+void conectarConNuevaMemoria(TablaGossip* nodo, int seed_gos) {
 	// Cada vez que se conoce una nueva Memoria del pool por Gossiping, hay que conectarse a ella
 	nodo->socketMemoria = connectToServer(nodo->IPMemoria, nodo->puertoMemoria,
 			logger);
@@ -18,6 +46,10 @@ void conectarConNuevaMemoria(TablaGossip* nodo) {
 		log_trace(logger, "Memoria se conectó correctamente a la Memoria %d",
 				nodo->IDMemoria);
 		sem_post(&loggerSemaforo);
+		if(seed_gos < CANT_MAX_SEEDS){
+			socketSEED[seed_gos] = nodo->socketMemoria;
+			seed++;
+		}
 	} else {
 		sem_wait(&loggerSemaforo);
 		log_error(logger, "Falló la conexión con la Memoria %d",
@@ -26,7 +58,7 @@ void conectarConNuevaMemoria(TablaGossip* nodo) {
 	}
 }
 
-void armarNodoMemoria(TablaGossip* nodo) {
+void armarNodoMemoria(TablaGossip* nodo, int seed_gos) {
 	// Cargo dato faltante del nodo
 	nodo->socketMemoria = 1;
 
@@ -39,12 +71,12 @@ void armarNodoMemoria(TablaGossip* nodo) {
 	if (!nodoEstaEnLista(listaGossiping, nodo)) {
 		list_add(listaGossiping, nodo);
 		if (nodo->socketMemoria == 1)
-			conectarConNuevaMemoria(nodo);
+			conectarConNuevaMemoria(nodo, seed_gos);
 	} else
 		free(nodo); // Si el nodo ya se encontraba en listaGossiping, lo libero
 }
 
-void recibeLista(int socketMem) {
+void recibeLista(int socketMem, int seed_gos) {
 	int status;
 	int cantElementosListaRecibida;
 
@@ -59,11 +91,11 @@ void recibeLista(int socketMem) {
 		TablaGossip* nodoRecibido = malloc(sizeof(TablaGossip));
 		status = recibirNodoYDeserializar(nodoRecibido, socketMem);
 		if (status)
-			armarNodoMemoria(nodoRecibido);
+			armarNodoMemoria(nodoRecibido, seed_gos);
 	}
 }
 
-void pideListaGossiping(int socketMem) {
+void pideListaGossiping(int socketMem, int seed_gos) {
 	tPaquete* msjeEnviado = malloc(sizeof(tPaquete));
 	msjeEnviado->type = GOSSIPING;
 	strcpy(msjeEnviado->payload, "Memoria pide Lista de Gossiping");
@@ -72,7 +104,7 @@ void pideListaGossiping(int socketMem) {
 			"Memoria realiza pedido de Lista de Gossiping");
 	liberarPaquete(msjeEnviado);
 
-	recibeLista(socketMem);
+	recibeLista(socketMem, seed_gos);
 }
 
 void pideListaGossiping_2(int socketMem) {
@@ -186,9 +218,16 @@ void* gossipingMemoria() {
 		sem_wait(&loggerSemaforo);
 		log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
 		sem_post(&loggerSemaforo);
-		pideListaGossiping(socketSEED[seed_gos]);
-		//enviaLista(socketSEED[seed_gos]);
-		enviarListaGossiping(socketSEED[seed_gos]);
+		socketSEED[seed_gos] = connectToServer(configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos], logger);
+		if(socketSEED[seed] == 1) {
+			sem_wait(&loggerSemaforo);
+			log_error(logger, "SEED no conectada");
+			sem_post(&loggerSemaforo);
+		}else {
+			pideListaGossiping(socketSEED[seed_gos],seed_gos);
+			//enviaLista(socketSEED[seed_gos]);
+			enviarListaGossiping(socketSEED[seed_gos]);
+		}
 
 		seed_gos++;
 	}
@@ -196,23 +235,37 @@ void* gossipingMemoria() {
 	sem_post(&gossipMemoria);
 	while (1) {
 		sleep(configuracion->RETARDO_GOSSIPING / 1000);
-		int hizoGossipingConSeed = 0;
+		//int hizoGossipingConSeed = 0;
 
 		seed_gos = 0;
 		while (configuracion->PUERTO_SEEDS[seed_gos] != 0 && seed_gos < CANT_MAX_SEEDS) {
+			sem_wait(&loggerSemaforo);
+			log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
+			sem_post(&loggerSemaforo);
 			if (nodoSocketEstaEnLista(socketSEED[seed_gos])) {
-				sem_wait(&loggerSemaforo);
-				log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
-				sem_post(&loggerSemaforo);
 				pideListaGossiping_2(socketSEED[seed_gos]);
 				//enviaLista(socketSEED[seed_gos]);
 				enviarListaGossiping(socketSEED[seed_gos]);
-				hizoGossipingConSeed = 1;
+				//hizoGossipingConSeed = 1;
+			}else{
+				socketSEED[seed_gos] = connectToServer(configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos], logger);
+				if(socketSEED[seed] == 1) {
+					sem_wait(&loggerSemaforo);
+					log_error(logger, "SEED no conectada");
+					sem_post(&loggerSemaforo);
+				}else {
+					pideListaGossiping_2(socketSEED[seed_gos]);
+					//enviaLista(socketSEED[seed_gos]);
+					enviarListaGossiping(socketSEED[seed_gos]);
+					//hizoGossipingConSeed = 1;
+				}
 			}
 			seed_gos++;
 		}
+		//En el TP no encuentro donde se menciona hacer GOSSIPING con una memoria que no es seed de esta
+
 		// Si no pudo hacer Gossiping con ningún seed, hago con la segunda Memoria de la listaGossiping, si existe (Porque la primera va a ser sí misma)
-		if (hizoGossipingConSeed == 0) {
+		/*if (hizoGossipingConSeed == 0) {
 			if (listaGossiping->elements_count > 1) { // Hay alguna otra memoria además de la actual
 				TablaGossip* nodoTablaGossipAux = listaGossiping->head->next->data;
 				sem_wait(&loggerSemaforo);
@@ -222,7 +275,7 @@ void* gossipingMemoria() {
 				//enviaLista(nodoTablaGossipAux->socketMemoria);
 				enviarListaGossiping(nodoTablaGossipAux->socketMemoria);
 			}
-		}
+		}*/
 	}
 }
 
