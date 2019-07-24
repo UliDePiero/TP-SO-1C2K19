@@ -24,8 +24,6 @@ Orden de ejecucion:
 
 1- LFS
 
-2- Memoria sin seeds
+2- Memoria
 
-3- Memoria que tiene como seed a la anterior (Repetir)
-
-4- Kernel
+3- Kernel
