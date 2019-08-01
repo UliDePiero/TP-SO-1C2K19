@@ -11,7 +11,8 @@
 
 //Ruta del archivo de configuraciones
 //#define RUTA_CONFIG "./Memoria.config" // Para correr desde Eclipse
-#define RUTA_CONFIG "../Memoria.config" // Para correr desde Consola
+#define RUTA_CONFIG "../Memoria.config" // Para correr desde Consola // Para memoria 1
+//#define RUTA_CONFIG "../Memoria2.config" // Para memoria 2
 #define logFile "../Memoria.log"
 #define BACKLOG 5 //Creo que se pueden conectar solo 2 clientes pero hay que verificar
 #define CANT_MAX_SEEDS 16
@@ -182,6 +183,7 @@ t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo);
 void removerElemento(t_list* lista, t_nodoLRU* nodo);
 
 // Funciones para Gossiping
+void conectateconmigo(int socket);
 void eliminaMemoriaDeListaGossiping(int socketMem);
 void conectarConNuevaMemoria(TablaGossip* nodo, int seed_gos);
 void armarNodoMemoria(TablaGossip* nodo, int seed_gos);

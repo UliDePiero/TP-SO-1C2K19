@@ -157,18 +157,18 @@ int recibirNodoYDeserializar(TablaGossip *nodo, int socketMem) {
 	int status;
 
 	status = recv(socketMem, &(nodo->IDMemoria), sizeof(nodo->IDMemoria), MSG_WAITALL);
-	printf("ID%d",nodo->IDMemoria);
+	//printf("ID%d",nodo->IDMemoria);
 
 	if (!status)
 		return 0;
 
 	status = recv(socketMem, nodo->IPMemoria, sizeof(nodo->IPMemoria), MSG_WAITALL);
-	printf("ip%s",nodo->IPMemoria);
+	//printf("ip%s",nodo->IPMemoria);
 	if (!status)
 		return 0;
 	status = recv(socketMem, &(nodo->puertoMemoria),
 			sizeof(nodo->puertoMemoria), MSG_WAITALL);
-	printf("puerto%d",nodo->puertoMemoria);
+	//printf("puerto%d",nodo->puertoMemoria);
 	if (!status)
 		return 0;
 

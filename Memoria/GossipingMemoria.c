@@ -62,11 +62,15 @@ void armarNodoMemoria(TablaGossip* nodo, int seed_gos) {
 	// Cargo dato faltante del nodo
 	nodo->socketMemoria = 1;
 
-	for (int i = 0; i < CANT_MAX_SEEDS; i++) {
-		if (string_equals_ignore_case(nodo->IPMemoria,configuracion->IP_SEEDS[i]) && nodo->puertoMemoria == configuracion->PUERTO_SEEDS[i])
-			nodo->socketMemoria = socketSEED[i];
+	if(seed_gos < CANT_MAX_SEEDS){
+		for (int i = 0; i < CANT_MAX_SEEDS; i++) {
+			if(configuracion->PUERTO_SEEDS[i] != 0){
+				log_warning(logger,"IPSEED: %s",configuracion->IP_SEEDS[i]);
+				if (string_equals_ignore_case(nodo->IPMemoria,configuracion->IP_SEEDS[i]) && nodo->puertoMemoria == configuracion->PUERTO_SEEDS[i])
+					nodo->socketMemoria = socketSEED[i];
+			}
+		}
 	}
-
 	// Si el nodo no está en listaGossiping, lo agrego y me conecto
 	if (!nodoEstaEnLista(listaGossiping, nodo)) {
 		list_add(listaGossiping, nodo);
@@ -192,21 +196,36 @@ void armarPropioNodo() {
 }
 
 int nodoSocketEstaEnLista(int socketID) {
-	t_link_element* nodoActual = listaGossiping->head;
-	TablaGossip* nodoAux;
+	if(socketID != 1){
+		t_link_element* nodoActual = listaGossiping->head;
+		TablaGossip* nodoAux;
 
-	if (nodoActual)
-		nodoAux = nodoActual->data;
-
-	while (nodoActual && nodoAux->socketMemoria != socketID) {
-		nodoActual = nodoActual->next;
 		if (nodoActual)
 			nodoAux = nodoActual->data;
-	}
-	if (nodoActual)
-		return 1;
-	else
+
+		while (nodoActual && nodoAux->socketMemoria != socketID) {
+			nodoActual = nodoActual->next;
+			if (nodoActual)
+				nodoAux = nodoActual->data;
+		}
+		if (nodoActual)
+			return 1;
+		else
+			return 0;
+	}else
 		return 0;
+}
+
+void conectateconmigo(int socket){
+	tPaquete* msjeEnviado = malloc(sizeof(tPaquete));
+	msjeEnviado->type = HANDSHAKE_MEM;
+	char* string_mensaje = string_from_format("%s-%d",configuracion->IP_PROPIA,configuracion->PUERTO);
+	strcpy(msjeEnviado->payload, string_mensaje);
+	if(string_mensaje) free(string_mensaje);
+	msjeEnviado->length = sizeof(msjeEnviado->payload);
+
+	enviarPaquete(socket, msjeEnviado, logger, "Envio IP y PUERTO propios");
+	liberarPaquete(msjeEnviado);
 }
 
 void* gossipingMemoria() {
@@ -219,11 +238,12 @@ void* gossipingMemoria() {
 		log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
 		sem_post(&loggerSemaforo);
 		socketSEED[seed_gos] = connectToServer(configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos], logger);
-		if(socketSEED[seed] == 1) {
+		if(socketSEED[seed_gos] == 1) {
 			sem_wait(&loggerSemaforo);
 			log_error(logger, "SEED no conectada");
 			sem_post(&loggerSemaforo);
 		}else {
+			//conectateconmigo(socketSEED[seed_gos]);
 			pideListaGossiping(socketSEED[seed_gos],seed_gos);
 			//enviaLista(socketSEED[seed_gos]);
 			enviarListaGossiping(socketSEED[seed_gos]);
@@ -243,18 +263,21 @@ void* gossipingMemoria() {
 			log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
 			sem_post(&loggerSemaforo);
 			if (nodoSocketEstaEnLista(socketSEED[seed_gos])) {
-				pideListaGossiping_2(socketSEED[seed_gos]);
+				pideListaGossiping(socketSEED[seed_gos],seed_gos);
+				//pideListaGossiping_2(socketSEED[seed_gos]);
 				//enviaLista(socketSEED[seed_gos]);
 				enviarListaGossiping(socketSEED[seed_gos]);
 				//hizoGossipingConSeed = 1;
 			}else{
 				socketSEED[seed_gos] = connectToServer(configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos], logger);
-				if(socketSEED[seed] == 1) {
+				if(socketSEED[seed_gos] == 1) {
 					sem_wait(&loggerSemaforo);
 					log_error(logger, "SEED no conectada");
 					sem_post(&loggerSemaforo);
 				}else {
-					pideListaGossiping_2(socketSEED[seed_gos]);
+					//conectateconmigo(socketSEED[seed_gos]);
+					pideListaGossiping(socketSEED[seed_gos],seed_gos);
+					//pideListaGossiping_2(socketSEED[seed_gos]);
 					//enviaLista(socketSEED[seed_gos]);
 					enviarListaGossiping(socketSEED[seed_gos]);
 					//hizoGossipingConSeed = 1;

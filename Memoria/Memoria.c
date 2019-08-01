@@ -352,6 +352,16 @@ int main()
 				enviarPaquete(socketActivo, mensaje, logger, "Enviar Retardo de Gossiping a Kernel");
 				liberarPaquete(mensaje);
 				break;
+			/*case HANDSHAKE_MEM:
+				if(sPayload){
+					char** memoriaDATA = string_split(sPayload,"-");
+					connectToServer(memoriaDATA[0],atoi(memoriaDATA[1]),logger);
+					free(memoriaDATA[0]);
+					free(memoriaDATA[1]);
+					free(memoriaDATA);
+					free(sPayload);
+				}
+				break;*/
 			case GOSSIPING:
 				if(sPayload)free(sPayload);
 				sem_wait(&loggerSemaforo);
@@ -371,6 +381,9 @@ int main()
 					if(socketActivo == socketSEED[seed_n])
 						break;
 				}
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Cantidad de memorias en lista de Gossiping: %d", atoi(sPayload));
+				sem_post(&loggerSemaforo);
 				for (int i = 0; i < atoi(sPayload); i++) {
 					nodoRecibido = malloc(sizeof(TablaGossip));
 					status = recibirNodoYDeserializar(nodoRecibido, socketActivo);
@@ -769,9 +782,9 @@ void levantarMemoria(){
 	//for(int i=0; i <cantidadDeRegistros; i++)
 			//setTimestamp(granMalloc+i*tamanioRealDeUnRegistro,-1);
 	vaciarMemoria();
-	sem_wait(&loggerSemaforo);
+	/*sem_wait(&loggerSemaforo);
 	log_debug(logger, "Tamanio granMalloc: %d", malloc_usable_size(granMalloc));
-	sem_post(&loggerSemaforo);
+	sem_post(&loggerSemaforo);*/
 }
 void resetearMemoria(void* punteroMemoria){
 	memset(punteroMemoria,0,tamanioRealDeUnRegistro);
