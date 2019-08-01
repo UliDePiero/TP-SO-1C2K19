@@ -582,6 +582,7 @@ void compactar(char* nombreTabla){
 	char *pathBloques = string_from_format("%sBloques", puntoMontaje);
 	free(puntoMontaje);
 	t_list* direcciones = list_create();
+	int hayTempc = 0;
 
 	//RENOMBRAR .temp A .tempc
 	struct dirent *dirTemp;
@@ -599,6 +600,7 @@ void compactar(char* nombreTabla){
 					}
 					free(pathParticion);
 					list_add(direcciones, nuevoNombre);
+					hayTempc = 1;
 				}else if(string_ends_with(dirTemp->d_name, ".bin")){
 					list_add(direcciones, string_from_format("%s/%s", pathTabla, dirTemp->d_name));
 				}
@@ -606,6 +608,13 @@ void compactar(char* nombreTabla){
 		}
 		closedir(archivos);
 		sem_post(&tabla->semaforo);
+	}
+	
+	if(!hayTempc){
+		list_destroy_and_destroy_elements(direcciones, (void*) free);
+		free(pathBloques);
+		free(pathTabla);
+		return;
 	}
 
 	//OBTENER REGISTROS
