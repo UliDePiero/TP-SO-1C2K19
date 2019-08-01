@@ -451,7 +451,7 @@ int ejecutarSelect(char* instruccion){
 int ejecutarInsert(char* instruccion){
 	sleep(configuracion->SLEEP_EJECUCION / 1000);
 	int resultado = 0;
-	char** comando = validarComando(instruccion, 4);
+	char** comando = validarComandoInsert(instruccion);
 	if(comando){
 		socketElegido = elegirSocketMemoria(comando[1],atoi(comando[2]));
 		if(socketElegido != -1){
@@ -697,7 +697,7 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 	FILE *script;
 	char *stringLQL;
 	int quantum = configuracion->QUANTUM;
-
+	char *LQL_NoENTER;
 	char** comando = validarComando(instruccion, 2);
 	if(comando){
 		script = fopen(comando[1],"r");
@@ -711,12 +711,16 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 			  free(comando);
 			  return -2;
 		}
-		stringLQL = (char*)malloc(100);
+		LQL_NoENTER = (char*)malloc(100);
 		for(int i=0; i<requestEjecutadas; i++)
-			fgets(stringLQL, 100, script);
-		while(fgets(stringLQL, 100, script)!=NULL){
+			fgets(LQL_NoENTER, 100, script);
+		while(fgets(LQL_NoENTER, 100, script)!=NULL){
 			quantum--;
 			if(quantum>=0){
+				if(string_contains(LQL_NoENTER,"\n"))
+					stringLQL = string_substring_until(LQL_NoENTER,string_length(LQL_NoENTER)-1);
+				else
+					stringLQL = string_duplicate(LQL_NoENTER);
 				printf("\n%s\n",stringLQL);
 				switch(parser(stringLQL)){
 						case SELECT:
@@ -726,7 +730,7 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 							moverLQL(Exec,Exit);
 							sem_post(&semMultiprocesamiento);*/
 							if(ejecutarSelect(stringLQL)){
-								free(stringLQL);
+								free(LQL_NoENTER);
 								fclose(script);
 								for(int i = 0; i<2; i++)
 									free(comando[i]);
@@ -741,7 +745,7 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 							moverLQL(Exec,Exit);
 							sem_post(&semMultiprocesamiento);*/
 							if(ejecutarInsert(stringLQL)){
-								free(stringLQL);
+								free(LQL_NoENTER);
 								fclose(script);
 								for(int i = 0; i<2; i++)
 									free(comando[i]);
@@ -773,7 +777,7 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 							moverLQL(Exec,Exit);
 							sem_post(&semMultiprocesamiento);*/
 							if(ejecutarDrop(stringLQL)){
-								free(stringLQL);
+								free(LQL_NoENTER);
 								fclose(script);
 								for(int i = 0; i<2; i++)
 									free(comando[i]);
@@ -799,7 +803,7 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 							break;
 						case -1:
 							informarComandoInvalido();
-							free(stringLQL);
+							free(LQL_NoENTER);
 							fclose(script);
 							for(int i = 0; i<2; i++)
 								free(comando[i]);
@@ -810,9 +814,10 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 							printf("Fin de linea \n");
 							break;
 					}
+				free(stringLQL);
 			}
 			else{
-				free(stringLQL);
+				free(LQL_NoENTER);
 				fclose(script);
 				for(int i = 0; i<2; i++)
 					free(comando[i]);
@@ -820,7 +825,7 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 				return quantum;
 			}
 		}
-		free(stringLQL);
+		free(LQL_NoENTER);
 		fclose(script);
 		for(int i = 0; i<2; i++)
 			free(comando[i]);

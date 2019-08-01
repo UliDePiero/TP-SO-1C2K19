@@ -618,10 +618,11 @@ void insertLFS(char* nombreTabla, uint16_t key, char* value, uint64_t timestamp)
 		return;
 	}
 	sleep(configuracion->RETARDO / 1000);
+	sleep(1);
 	Tabla* t = tablaEncontrar(nombreTabla);
 	if(!t){
 		sem_wait(&loggerSemaforo);
-		log_error(logger, "Tabla \"%s\" no encontrada", nombreTabla);
+		log_error(logger, "Tabla \"%s\" no encontrada(INSERT)", nombreTabla);
 		sem_post(&loggerSemaforo);
 		return;
 	}
@@ -639,7 +640,7 @@ char* selectLFS(char* nombreTabla, uint16_t key){
 	Tabla* tabla = tablaEncontrar(nombreTabla);
 	if(!tabla){
 		sem_wait(&loggerSemaforo);
-		log_error(logger, "Tabla \"%s\" no encontrada", nombreTabla);
+		log_error(logger, "Tabla \"%s\" no encontrada(SELECT)", nombreTabla);
 		sem_post(&loggerSemaforo);
 		return NULL;
 	}
@@ -673,7 +674,7 @@ t_list* describeLFS(char* nombreTabla){
 			sem_post(&tabla->semaforo);
 		}else{
 			sem_wait(&loggerSemaforo);
-			log_error(logger, "Tabla \"%s\" no encontrada", nombreTabla);
+			log_error(logger, "Tabla \"%s\" no encontrada(DESCRIBE)", nombreTabla);
 			sem_post(&loggerSemaforo);
 		}
 	}else{
@@ -697,7 +698,7 @@ void dropLFS(char* nombreTabla){
 	Tabla* tabla = tablaEncontrar(nombreTabla);
 	if(!tabla){
 		sem_wait(&loggerSemaforo);
-		log_error(logger, "Tabla \"%s\" no encontrada", nombreTabla);
+		log_error(logger, "Tabla \"%s\" no encontrada(DROP)", nombreTabla);
 		sem_post(&loggerSemaforo);
 		return;
 	}
