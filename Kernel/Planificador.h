@@ -124,6 +124,7 @@ t_list* listaTablas;
 
 /* --------------------    Definición de Funciones    -------------------- */
 //Funciones usadas en API
+int eliminarTabla(char* nombreTabla);
 void limpiarListaTablas(Tabla* tabla);
 Tabla* encontrarTabla(char* nombreTabla);
 // Funciones de Configuración

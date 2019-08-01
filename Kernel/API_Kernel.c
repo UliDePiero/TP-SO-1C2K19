@@ -373,6 +373,31 @@ int elegirSocketMemoria_CREATE(char* criterio){
 
 	return -2;
 }
+int eliminarTabla(char* nombreTabla){
+	t_link_element* nodoActual = listaTablas->head;
+	t_link_element* nodoAnterior = NULL;
+	Tabla* nodoAux;
+
+	if (nodoActual)
+		nodoAux = nodoActual->data;
+	while (nodoActual && !string_equals_ignore_case(nodoAux->nombreTabla, nombreTabla)) {
+		nodoAnterior = nodoActual;
+		nodoActual = nodoActual->next;
+		if (nodoActual)
+			nodoAux = nodoActual->data;
+	}
+	if (nodoActual && string_equals_ignore_case(nodoAux->nombreTabla, nombreTabla)) {
+		if (!nodoAnterior)
+			listaTablas->head = nodoActual->next;
+		else
+			nodoAnterior->next = nodoActual->next;
+		listaTablas->elements_count--;
+		free(nodoActual);
+		free(nodoAux);
+		return 1;
+	}else
+		return 0;
+}
 Tabla* encontrarTabla(char* nombreTabla){
 	int encuentraTabla(Tabla* t) {
 		return string_equals_ignore_case(t->nombreTabla, nombreTabla);
@@ -479,6 +504,23 @@ void ejecutarCreate(char* instruccion){
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
 				sem_post(&loggerSemaforo);
+
+				sem_wait(&mutexTablas);
+				if(!encontrarTabla(comando[1])){
+					Metadata* metadata = malloc(sizeof(Metadata));
+					strcpy(metadata->consistencia,comando[2]);
+					metadata->particiones = atoi(comando[3]);
+					metadata->tiempoCompactacion = atol(comando[4]);
+					Tabla* tab = malloc(sizeof(Tabla));
+					tab->nombreTabla = malloc(sizeof(char)*string_length(comando[1]));
+					strcpy(tab->nombreTabla,comando[1]);
+					tab->metadata = metadata;
+					list_add(listaTablas,tab);
+					sem_wait(&loggerSemaforo);
+					log_info(logger, "Nueva tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tab->nombreTabla, tab->metadata->consistencia, tab->metadata->particiones, tab->metadata->tiempoCompactacion);
+					sem_post(&loggerSemaforo);
+				}
+				sem_post(&mutexTablas);
 			}
 
 			for(int i = 0; i<5; i++)
@@ -530,6 +572,17 @@ int ejecutarDrop(char* instruccion){
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
 				sem_post(&loggerSemaforo);
+
+				sem_wait(&mutexTablas);
+				Tabla* tab = encontrarTabla(comando[1]);
+				if(tab){
+					if(eliminarTabla(tab->nombreTabla)){
+						sem_wait(&loggerSemaforo);
+						log_info(logger, "Tabla eliminada %s: ", comando[1]);
+						sem_post(&loggerSemaforo);
+					}
+				}
+				sem_post(&mutexTablas);
 			}
 
 			for(int i = 0; i<2; i++)
