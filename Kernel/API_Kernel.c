@@ -718,7 +718,7 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 			quantum--;
 			if(quantum>=0){
 				printf("\n%s\n",stringLQL);
-				switch(parserSinTrim(stringLQL)){
+				switch(parser(stringLQL)){
 						case SELECT:
 							/*cargarNuevoLQL(stringLQL);
 							sem_wait(&semEjecutarLQL);
