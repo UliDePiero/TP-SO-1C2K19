@@ -132,9 +132,9 @@ void API_Kernel(void){
 					free(queue_pop(Exit));
 				}
 				//printf("\nRetorno de la ejecucion: %d\n",retornoRUN);
-				sem_wait(&loggerSemaforo);
-				log_debug(logger, "Retorno de la ejecucion: %d", retornoRUN);
-				sem_post(&loggerSemaforo);
+				//sem_wait(&loggerSemaforo);
+				//log_debug(logger, "Retorno de la ejecucion: %d", retornoRUN);
+				//sem_post(&loggerSemaforo);
 				sem_post(&semMultiprocesamiento);
 				break;
 			case METRICS:
@@ -192,7 +192,7 @@ void respuestas(void* socket_Mem){
 				break;
 			case DESCRIBE:
 				sem_wait(&mutexTablas);
-				puts("DESCRIBE:\n");
+				//puts("DESCRIBE:\n");
 				list_clean_and_destroy_elements(listaTablas,(void*)limpiarListaTablas);
 				if(strcmp(sPayload," ") != 0){
 					tablas = string_n_split(sPayload, 100, ";");
@@ -210,9 +210,9 @@ void respuestas(void* socket_Mem){
 						strcpy(tab->nombreTabla,tabla[0]);
 						tab->metadata = metadata;
 						list_add(listaTablas,tab);
-						sem_wait(&loggerSemaforo);
-						log_info(logger, "Tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tab->nombreTabla, tab->metadata->consistencia, tab->metadata->particiones, tab->metadata->tiempoCompactacion);
-						sem_post(&loggerSemaforo);
+						//sem_wait(&loggerSemaforo);
+						//log_info(logger, "Tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tab->nombreTabla, tab->metadata->consistencia, tab->metadata->particiones, tab->metadata->tiempoCompactacion);
+						//sem_post(&loggerSemaforo);
 
 						for(int i = 0; i<4; i++)
 							free(tabla[i]);
@@ -225,9 +225,9 @@ void respuestas(void* socket_Mem){
 				}
 				sem_post(&mutexTablas);
 				//puts("\n>");
-				sem_wait(&loggerSemaforo);
-				log_info(logger, "Se ejecuto corectamente el comando DESCRIBE en MEMORIA");
-				sem_post(&loggerSemaforo);
+				//sem_wait(&loggerSemaforo);
+				//log_info(logger, "Se ejecuto corectamente el comando DESCRIBE en MEMORIA");
+				//sem_post(&loggerSemaforo);
 				break;
 			case DROP:
 				//printf("\nSe elimino la tabla %s de MEMORIA", sPayload);
@@ -544,7 +544,7 @@ void ejecutarDescribe(char* instruccion){
 
 			if (resultado > 0){
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
+				//log_info(logger, "'%s' enviado exitosamente a Memoria", instruccion);
 				sem_post(&loggerSemaforo);
 			}
 

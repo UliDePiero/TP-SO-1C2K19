@@ -65,7 +65,7 @@ void armarNodoMemoria(TablaGossip* nodo, int seed_gos) {
 	if(seed_gos < CANT_MAX_SEEDS){
 		for (int i = 0; i < CANT_MAX_SEEDS; i++) {
 			if(configuracion->PUERTO_SEEDS[i] != 0){
-				log_warning(logger,"IPSEED: %s",configuracion->IP_SEEDS[i]);
+				//log_warning(logger,"IPSEED: %s",configuracion->IP_SEEDS[i]);
 				if (string_equals_ignore_case(nodo->IPMemoria,configuracion->IP_SEEDS[i]) && nodo->puertoMemoria == configuracion->PUERTO_SEEDS[i])
 					nodo->socketMemoria = socketSEED[i];
 			}
@@ -234,9 +234,9 @@ void* gossipingMemoria() {
 	int seed_gos = 0;
 	while (configuracion->PUERTO_SEEDS[seed_gos] != 0 && seed_gos < CANT_MAX_SEEDS) {
 
-		sem_wait(&loggerSemaforo);
-		log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
-		sem_post(&loggerSemaforo);
+		//sem_wait(&loggerSemaforo);
+		//log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
+		//sem_post(&loggerSemaforo);
 		socketSEED[seed_gos] = connectToServer(configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos], logger);
 		if(socketSEED[seed_gos] == 1) {
 			sem_wait(&loggerSemaforo);
@@ -259,9 +259,9 @@ void* gossipingMemoria() {
 
 		seed_gos = 0;
 		while (configuracion->PUERTO_SEEDS[seed_gos] != 0 && seed_gos < CANT_MAX_SEEDS) {
-			sem_wait(&loggerSemaforo);
-			log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
-			sem_post(&loggerSemaforo);
+			//sem_wait(&loggerSemaforo);
+			//log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
+			//sem_post(&loggerSemaforo);
 			if (nodoSocketEstaEnLista(socketSEED[seed_gos])) {
 				pideListaGossiping(socketSEED[seed_gos],seed_gos);
 				//pideListaGossiping_2(socketSEED[seed_gos]);

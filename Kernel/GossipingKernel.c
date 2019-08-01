@@ -142,9 +142,9 @@ void gossipingKernel() {
 	while (1) {
 		sleep(retardoGossiping / 1000);
 
-		sem_wait(&loggerSemaforo);
-		log_debug(logger, "Kernel hace Gossiping con Memoria");
-		sem_post(&loggerSemaforo);
+		//sem_wait(&loggerSemaforo);
+		//log_debug(logger, "Kernel hace Gossiping con Memoria");
+		//sem_post(&loggerSemaforo);
 		if (listaGossiping->elements_count > 0) {
 			// Hago Gossiping siempre con la primera Memoria que esté en listaGossiping (Si no se desconectó, va a ser la que tenemos en el Archivo de Configuración)
 			TablaGossip* nodoTablaGossipAux = listaGossiping->head->data;

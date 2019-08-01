@@ -173,9 +173,9 @@ int main()
 		//puts("Escuchando");
 		socketActivo = getConnection(&setSocketsOrquestador, &maxSock, socketEscucha, &tipoMensaje, &sPayload, logger);
 		if (socketActivo != -1) {
-			sem_wait(&loggerSemaforo);
-			log_info(logger, "Comunicacion establecida en el socket %d", socketActivo);
-			sem_post(&loggerSemaforo);
+			//sem_wait(&loggerSemaforo);
+			//log_info(logger, "Comunicacion establecida en el socket %d", socketActivo);
+			//sem_post(&loggerSemaforo);
 			switch (tipoMensaje) {
 			case SELECT:
 				sem_wait(&loggerSemaforo);
@@ -253,9 +253,9 @@ int main()
 				sem_post(&loggerSemaforo);
 				break;
 			case DESCRIBE:
-				sem_wait(&loggerSemaforo);
-				log_info(logger, "Memoria recibió '%s'", sPayload);
-				sem_post(&loggerSemaforo);
+				//sem_wait(&loggerSemaforo);
+				//log_info(logger, "Memoria recibió '%s'", sPayload);
+				//sem_post(&loggerSemaforo);
 				//funcion DESCRIBE
 				retornoLista = ejecutarDescribe(sPayload);
 				mensaje = malloc(sizeof(tPaquete));
@@ -281,9 +281,9 @@ int main()
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del DESCRIBE en MEMORIA.");
 				liberarPaquete(mensaje);
-				sem_wait(&loggerSemaforo);
-				log_info(logger, "Resultado de DESCRIBE enviado a Kernel");
-				sem_post(&loggerSemaforo);
+				//sem_wait(&loggerSemaforo);
+				//log_info(logger, "Resultado de DESCRIBE enviado a Kernel");
+				//sem_post(&loggerSemaforo);
 				break;
 			case DROP:
 				sem_wait(&loggerSemaforo);
@@ -364,26 +364,26 @@ int main()
 				break;*/
 			case GOSSIPING:
 				if(sPayload)free(sPayload);
-				sem_wait(&loggerSemaforo);
-				log_info(logger, "Pedido de Lista de Gossiping a Memoria");
-				sem_post(&loggerSemaforo);
+				//sem_wait(&loggerSemaforo);
+				//log_info(logger, "Pedido de Lista de Gossiping a Memoria");
+				//sem_post(&loggerSemaforo);
 				enviarListaGossiping(socketActivo);
 				sem_wait(&mutexMemoria);
 				sem_post(&mutexMemoria);
 				break;
 			case GOSSIPING_RECIBE:
-				sem_wait(&loggerSemaforo);
-				log_info(logger, "Recibo Lista de Gossiping");
-				sem_post(&loggerSemaforo);
+				//sem_wait(&loggerSemaforo);
+				//log_info(logger, "Recibo Lista de Gossiping");
+				//sem_post(&loggerSemaforo);
 				//recibeLista(socketActivo);
 				int seed_n;
 				for (seed_n = 0; seed_n < CANT_MAX_SEEDS; seed_n++) {
 					if(socketActivo == socketSEED[seed_n])
 						break;
 				}
-				sem_wait(&loggerSemaforo);
-				log_info(logger, "Cantidad de memorias en lista de Gossiping: %d", atoi(sPayload));
-				sem_post(&loggerSemaforo);
+				//sem_wait(&loggerSemaforo);
+				//log_info(logger, "Cantidad de memorias en lista de Gossiping: %d", atoi(sPayload));
+				//sem_post(&loggerSemaforo);
 				for (int i = 0; i < atoi(sPayload); i++) {
 					nodoRecibido = malloc(sizeof(TablaGossip));
 					status = recibirNodoYDeserializar(nodoRecibido, socketActivo);
@@ -749,9 +749,9 @@ t_list* describeMemoria(){
 		mensaje->length = sizeof(mensaje->payload);
 		enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando DESCRIBE desde Memoria.");
 		liberarPaquete(mensaje);
-		sem_wait(&loggerSemaforo);
-		log_info(logger, "'DESCRIBE' enviado a LFS");
-		sem_post(&loggerSemaforo);
+		//sem_wait(&loggerSemaforo);
+		//log_info(logger, "'DESCRIBE' enviado a LFS");
+		//sem_post(&loggerSemaforo);
 		free(comando);
 		char* sPayload;
 		tMensaje tipo_mensaje;
@@ -766,9 +766,9 @@ t_list* describeMemoria(){
 			free(sPayload);
 			sleep(configuracion->RETARDO_FS/1000);
 		}
-		sem_wait(&loggerSemaforo);
-		log_info(logger, "'DESCRIBE' ejecutado exitosamente");
-		sem_post(&loggerSemaforo);
+		//sem_wait(&loggerSemaforo);
+		//log_info(logger, "'DESCRIBE' ejecutado exitosamente");
+		//sem_post(&loggerSemaforo);
 	}
 	return retorno;
 }
@@ -903,9 +903,9 @@ void journalMemoria(){
 					value_comillas = string_from_format("\"%s\"",registro->value);
 					sprintf (instruccion, "INSERT %s %hd %s %llu \n", tablaDeSegmentos[j]->tabla, registro->key, value_comillas, registro->timestamp);
 					free(value_comillas);
-					sem_wait(&loggerSemaforo);
-					log_trace(logger, "Envio: %s a LFS",instruccion);
-					sem_post(&loggerSemaforo);
+					//sem_wait(&loggerSemaforo);
+					//log_trace(logger, "Envio: %s a LFS",instruccion);
+					//sem_post(&loggerSemaforo);
 					ejecutarInsertJournal(instruccion);
 					free(instruccion);
 				}
@@ -916,9 +916,9 @@ void journalMemoria(){
 		tablaDeSegmentos = (Segmento**) realloc(tablaDeSegmentos, 1);
 	}
 	sem_post(&mutexMemoria);
-	sem_wait(&loggerSemaforo);
-	log_info(logger, "'JOURNAL' ejecutado exitosamente");
-	sem_post(&loggerSemaforo);
+	//sem_wait(&loggerSemaforo);
+	//log_info(logger, "'JOURNAL' ejecutado exitosamente");
+	//sem_post(&loggerSemaforo);
 	free(registro);
 }
 
@@ -950,9 +950,9 @@ void* journalAutomatico (){
     		}
         }*/
     	sleep(configuracion->RETARDO_JOURNAL / 1000);
-    	sem_wait(&loggerSemaforo);
-    	log_debug(logger, "Journal automático ejecutando");
-    	sem_post(&loggerSemaforo);
+    	//sem_wait(&loggerSemaforo);
+    	//log_debug(logger, "Journal automático ejecutando");
+    	//sem_post(&loggerSemaforo);
     	journalMemoria();
     }
 }

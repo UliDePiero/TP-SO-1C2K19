@@ -139,6 +139,8 @@ conectarConNuevaMemoria(nodo);
 	log_destroy(logger);
 	sem_destroy(&loggerSemaforo);
 	free(configuracion);
+	if(listaTablas->elements_count > 0)
+		list_clean_and_destroy_elements(listaTablas,(void*)limpiarListaTablas);
 	TablaGossip* memoriaElegida;
 	for(int m=1;m<listaGossiping->elements_count;m++){
 		memoriaElegida = list_get(listaGossiping, m);
@@ -459,9 +461,9 @@ void* describeAutomatico (){
     		}
         }*/
     	sleep(configuracion->METADATA_REFRESH / 1000);
-    	sem_wait(&loggerSemaforo);
-    	log_debug(logger, "DESCRIBE automático ejecutando");
-    	sem_post(&loggerSemaforo);
+    	//sem_wait(&loggerSemaforo);
+    	//log_debug(logger, "DESCRIBE automático ejecutando");
+    	//sem_post(&loggerSemaforo);
     	ejecutarDescribe("DESCRIBE");
     }
 }
