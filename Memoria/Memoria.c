@@ -167,6 +167,7 @@ int main()
 	t_list* retornoLista;
 	int status;
 	TablaGossip* nodoRecibido;
+	int seed_n;
 
 	sem_wait(&gossipMemoria);
 	while (1) {
@@ -376,7 +377,6 @@ int main()
 				//log_info(logger, "Recibo Lista de Gossiping");
 				//sem_post(&loggerSemaforo);
 				//recibeLista(socketActivo);
-				int seed_n;
 				for (seed_n = 0; seed_n < CANT_MAX_SEEDS; seed_n++) {
 					if(socketActivo == socketSEED[seed_n])
 						break;
