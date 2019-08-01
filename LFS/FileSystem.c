@@ -441,23 +441,23 @@ void dropFS(char* nombreTabla){
 			if(strcmp(dir->d_name, ".") && strcmp(dir->d_name, "..")){
 				char *particionPath = string_from_format("%s/%s", pathTabla, dir->d_name);
 				t_config* archivoConfig = archivoConfigCrear(particionPath, camposParticion);
-				if(archivoConfigSacarLongDe(archivoConfig, "SIZE")){
-					char** blocks = archivoConfigSacarArrayDe(archivoConfig, "BLOCKS");
-					for(int i=0;blocks[i]!=NULL;i++){
-						int bloque = atoi(blocks[i]);
+				long size = archivoConfigSacarLongDe(archivoConfig, "SIZE");
+				char** blocks = archivoConfigSacarArrayDe(archivoConfig, "BLOCKS");
+				for(int i=0;blocks[i]!=NULL;i++){
+					int bloque = atoi(blocks[i]);
+					setBloqueLibre(bloque);
+					if(size){
 						char *pathBloque = string_from_format("%s/%d.bin", pathBloques, bloque);
-
 						if(remove(pathBloque)){
 							sem_wait(&loggerSemaforo);
 							//log_error(logger, "Error al borrar el bloque \"%s\"", pathBloque);
 							sem_post(&loggerSemaforo);
 						}
-						setBloqueLibre(bloque);
 						free(pathBloque);
-						free(blocks[i]);
 					}
-					free(blocks);
+					free(blocks[i]);
 				}
+				free(blocks);
 				archivoConfigDestruir(archivoConfig);
 				if(remove(particionPath)){
 					sem_wait(&loggerSemaforo);
