@@ -12,6 +12,7 @@
 //#define RUTA_CONFIG "./Kernel.config" // Para correr desde Eclipse
 #define RUTA_CONFIG "../Kernel.config" // Para correr desde Consola
 #define logFile "../Kernel.log"
+//#define logFile2 "../Kernel_tablas.log"
 
 #include <stdio.h>
 
@@ -35,6 +36,7 @@
 int socketMemoria;
 
 t_log* logger;
+//t_log* logger2;
 
 pthread_t hiloAPI;
 pthread_t hiloPlanif;

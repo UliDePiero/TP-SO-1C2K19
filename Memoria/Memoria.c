@@ -918,16 +918,15 @@ void journalMemoria(){
 		for(int j=0; j<cantidadDeSegmentos; j++){
 			for(int i=0; i<tablaDeSegmentos[j]->cantidadDePaginas; i++){
 				if(tablaDeSegmentos[j]->tablaDePaginas[i]->modificado == 1){
-					instruccion = malloc(15+sizeof(tablaDeSegmentos[j]->tabla)+sizeof(registro->key)+sizeof(registro->value)+sizeof(registro->timestamp));
+					instruccion = malloc(15+sizeof(tablaDeSegmentos[j]->tabla)+sizeof(registro->key)+maxValueSize+sizeof(registro->timestamp));
 					registro = getRegistro(tablaDeSegmentos[j]->tablaDePaginas[i]->frame);
 					value_comillas = string_from_format("\"%s\"",registro->value);
-					sprintf (instruccion, "INSERT %s %hd %s %llu \n", tablaDeSegmentos[j]->tabla, registro->key, value_comillas, registro->timestamp);
+					sprintf (instruccion, "INSERT %s %hd %s %llu", tablaDeSegmentos[j]->tabla, registro->key, value_comillas, registro->timestamp);
 					free(value_comillas);
 					//sem_wait(&loggerSemaforo);
 					//log_trace(logger, "Envio: %s a LFS",instruccion);
 					//sem_post(&loggerSemaforo);
 					ejecutarInsertJournal(instruccion);
-					free(instruccion);
 				}
 			}
 			segmentoDestruir(tablaDeSegmentos[j]);
@@ -947,6 +946,7 @@ void ejecutarInsertJournal(char *instruccion){
 	tPaquete* mensaje = malloc(sizeof(tPaquete));
 	mensaje->type = INSERT;
 	strcpy(mensaje->payload,instruccion);
+	free(instruccion);
 	mensaje->length = sizeof(mensaje->payload);
 	enviarPaquete(socketLFS, mensaje,logger,"Ejecutar comando INSERT desde Memoria.");
 	liberarPaquete(mensaje);

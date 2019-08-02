@@ -74,6 +74,7 @@ void cambiosConfigKernel() {
 
 int main() {
 	logger = log_create(logFile, "Planificador", true, LOG_LEVEL_TRACE);
+	//logger2 = log_create(logFile2, "Planificador", false, LOG_LEVEL_TRACE);
 	configuracion = malloc(sizeof(ConfiguracionKernel));
 	configurar(configuracion);
 	crearListasDeCriteriosMemorias(); // Creación de listas de criterios de consistencia

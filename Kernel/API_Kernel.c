@@ -231,11 +231,10 @@ void respuestas(void* socket_Mem){
 				break;
 			case DESCRIBE_TABLA:
 				if(strcmp(sPayload," ") != 0){
-					tablas = string_n_split(sPayload, 1, ";");
+					tabla = string_n_split(sPayload, 4, ",");
 					sem_wait(&mutexTablas);
-					tab = encontrarTabla(tablas[0]);
+					tab = encontrarTabla(tabla[0]);
 					if(!tab){
-							tabla = string_n_split(tablas[0], 4, ",");
 							metadata = malloc(sizeof(Metadata));
 							strcpy(metadata->consistencia,tabla[1]);
 							metadata->particiones = atoi(tabla[2]);
@@ -249,8 +248,6 @@ void respuestas(void* socket_Mem){
 							for(int i = 0; i<4; i++)
 								free(tabla[i]);
 							free(tabla);
-							free(tablas[0]);
-							free(tablas);
 					}
 					sem_wait(&loggerSemaforo);
 					log_info(logger, "Tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tab->nombreTabla, tab->metadata->consistencia, tab->metadata->particiones, tab->metadata->tiempoCompactacion);
@@ -431,6 +428,7 @@ int eliminarTabla(char* nombreTabla){
 }
 Tabla* encontrarTabla(char* nombreTabla){
 	int encuentraTabla(Tabla* t) {
+		//log_warning(logger2,"BUSCO :%s TENGO:%s",nombreTabla,t->nombreTabla);
 		return string_equals_ignore_case(t->nombreTabla, nombreTabla);
 	}
 	Tabla* tabla = list_find(listaTablas, (void*)encuentraTabla);
