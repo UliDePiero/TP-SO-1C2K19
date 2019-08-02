@@ -103,9 +103,17 @@ void cambiosConfigMemoria() {
 	}
 }
 
-int main()
+int main(int argc, char* argv[])
 {
 	logger = log_create(logFile, "Memoria",true, LOG_LEVEL_TRACE);
+
+	if (argc != 2) {
+		log_error(logger, "Se debe ingresar un Archivo de Configuración como parámetro");
+		exit(EXIT_FAILURE);
+	}
+	else
+		RUTA_CONFIG = argv[1];
+
 	configuracion = malloc(sizeof(ConfiguracionMemoria));
 	for (int i = 0; i < CANT_MAX_SEEDS; i++) {
 		configuracion->PUERTO_SEEDS[i] = 0;
