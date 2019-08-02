@@ -441,6 +441,7 @@ void terminar(){
 }
 
 void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, int flagModificado){
+	//mostrarlistaPaginasLRU(listaPaginasLRU);
 	if(maxValueSize < string_length(value)){
 		sem_wait(&loggerSemaforo);
 		log_warning(logger, "El valor es mas largo que lo permitido por el File System(%d caracteres), sera acortado.", maxValueSize);
@@ -549,6 +550,7 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, i
 				insertMemoria(tabla, key,value, timestamp, flagModificado);
 		}
 	}
+	//mostrarlistaPaginasLRU(listaPaginasLRU);
 }
 
 Registro* selectMemoria(char* tabla, uint16_t key){

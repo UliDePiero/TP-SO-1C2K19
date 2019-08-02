@@ -405,9 +405,9 @@ Tabla* encontrarTabla(char* nombreTabla){
 	return list_find(listaTablas, (void*)encuentraTabla);
 }
 void limpiarListaTablas(Tabla* tabla){
-	free(tabla->metadata);
-	free(tabla->nombreTabla);
-	free(tabla);
+	if(tabla->metadata)free(tabla->metadata);
+	if(tabla->nombreTabla)free(tabla->nombreTabla);
+	if(tabla)free(tabla);
 }
 
 int ejecutarSelect(char* instruccion){

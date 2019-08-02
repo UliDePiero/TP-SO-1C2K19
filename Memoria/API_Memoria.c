@@ -142,7 +142,7 @@ t_list* ejecutarDescribe(char* instruccion){
 		retorno = list_create();
 		char* metadata = describeMemoriaTabla(comando[1]);
 		list_add(retorno, metadata);
-		printf("\nMetadata: %s\n", /*(char*)retorno->head->data*/metadata);
+		//printf("\nMetadata: %s\n", /*(char*)retorno->head->data*/metadata);
 		free(comando[1]);
 		sem_wait(&loggerSemaforo);
 		log_info(logger, "Resultado de '%s': %s ", instruccion, metadata);

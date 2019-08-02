@@ -143,7 +143,6 @@ t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
 
 		if (nodoActual)
 			nodoLRUAux = nodoActual->data;
-
 		while (nodoActual
 				&& (nodoLRUAux->segmentoID != nodo->segmentoID
 						|| nodoLRUAux->paginaID != nodo->paginaID)) {
@@ -182,6 +181,5 @@ t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
 		} else
 			encolarNuevaPagina(lista, nodo);
 	}
-	free(nodo);
 	return nodoLRU;
 }

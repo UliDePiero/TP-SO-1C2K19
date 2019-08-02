@@ -11,7 +11,7 @@
 
 //Ruta del archivo de configuraciones
 //#define RUTA_CONFIG "./Memoria.config" // Para correr desde Eclipse
-#define RUTA_CONFIG "../Memoria4.config" // Para correr desde Consola // Para memoria 1
+#define RUTA_CONFIG "../Memoria3.config" // Para correr desde Consola // Para memoria 1
 //#define RUTA_CONFIG "../Memoria2.config" // Para memoria 2
 #define logFile "../Memoria.log"
 #define BACKLOG 5 //Creo que se pueden conectar solo 2 clientes pero hay que verificar

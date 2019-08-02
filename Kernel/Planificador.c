@@ -132,7 +132,6 @@ conectarConNuevaMemoria(nodo);
 	list_destroy(memoriaSC);
 	list_destroy(memoriasSHC);
 	list_destroy(memoriasEC);
-	list_destroy(listaTablas);
 	sem_wait(&loggerSemaforo);
 	log_debug(logger, "Modulo Kernel cerrado");
 	sem_post(&loggerSemaforo);
@@ -140,7 +139,7 @@ conectarConNuevaMemoria(nodo);
 	sem_destroy(&loggerSemaforo);
 	free(configuracion);
 	if(listaTablas->elements_count > 0)
-		list_clean_and_destroy_elements(listaTablas,(void*)limpiarListaTablas);
+		list_destroy_and_destroy_elements(listaTablas,(void*)limpiarListaTablas);
 	TablaGossip* memoriaElegida;
 	for(int m=1;m<listaGossiping->elements_count;m++){
 		memoriaElegida = list_get(listaGossiping, m);
