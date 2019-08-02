@@ -147,7 +147,6 @@ t_list* ejecutarDescribe(char* instruccion){
 		sem_wait(&loggerSemaforo);
 		log_info(logger, "Resultado de '%s': %s ", instruccion, metadata);
 		sem_post(&loggerSemaforo);
-		if(metadata) free(metadata);
 	}else{
 		sleep(configuracion->RETARDO_MEM / 1000);
 		retorno = describeMemoria();
