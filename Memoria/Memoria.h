@@ -14,7 +14,7 @@
 //#define RUTA_CONFIG "../Memoria3.config" // Para correr desde Consola // Para memoria 1
 //#define RUTA_CONFIG "../Memoria2.config" // Para memoria 2
 #define logFile "../Memoria.log"
-#define BACKLOG 17 //CANTIDAD DE MAXIMA DE SEEDS + KERNEL
+#define BACKLOG 17 //CANTIDAD MAXIMA DE SEEDS + KERNEL
 #define CANT_MAX_SEEDS 16
 
 #include <stdio.h>
