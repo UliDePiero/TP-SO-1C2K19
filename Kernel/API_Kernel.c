@@ -449,7 +449,7 @@ int ejecutarSelect(char* instruccion){
 	char** comando = validarComando(instruccion, 3);
 	if(comando){
 		socketElegido = elegirSocketMemoria(comando[1],atoi(comando[2]));
-		if(socketElegido != -1){
+		if(socketElegido != -1 && socketElegido != -2){
 			tPaquete* mensaje = malloc(sizeof(tPaquete));
 			mensaje->type = SELECT;
 			strcpy(mensaje->payload,instruccion);
@@ -490,7 +490,7 @@ int ejecutarInsert(char* instruccion){
 		sem_wait(&loggerSemaforo);
 		log_warning(logger, "SOCKET ELEGIDO: %d\n", socketElegido);
 		sem_post(&loggerSemaforo);
-		if(socketElegido != -1){
+		if(socketElegido != -1 && socketElegido != -2){
 			tPaquete* mensaje = malloc(sizeof(tPaquete));
 			mensaje->type = INSERT;
 			strcpy(mensaje->payload,instruccion);
@@ -528,7 +528,7 @@ void ejecutarCreate(char* instruccion){
 	char** comando = validarComando(instruccion, 5);
 	if(comando){
 		socketElegido = elegirSocketMemoria_CREATE(comando[2]);
-		if(socketElegido != -1){
+		if(socketElegido != -1 && socketElegido != -2){
 			tPaquete* mensaje = malloc(sizeof(tPaquete));
 			mensaje->type = CREATE;
 			strcpy(mensaje->payload,instruccion);
@@ -596,7 +596,7 @@ int ejecutarDrop(char* instruccion){
 	char** comando = validarComando(instruccion, 2);
 	if(comando){
 		socketElegido = elegirSocketMemoria(comando[1],-1);
-		if(socketElegido != -1){
+		if(socketElegido != -1 && socketElegido != -2){
 			tPaquete* mensaje = malloc(sizeof(tPaquete));
 			mensaje->type = DROP;
 			strcpy(mensaje->payload,instruccion);
