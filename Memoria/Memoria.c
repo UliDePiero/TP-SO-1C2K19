@@ -163,6 +163,7 @@ int main()
 	//Envio de mensajes
 	tPaquete* mensaje;
 	char* retorno;
+	char** comando_DESCRIBE;
 	int retornoINT;
 	t_list* retornoLista;
 	int status;
@@ -258,11 +259,15 @@ int main()
 				//log_info(logger, "Memoria recibió '%s'", sPayload);
 				//sem_post(&loggerSemaforo);
 				//funcion DESCRIBE
+				comando_DESCRIBE = string_n_split(sPayload, 2, " ");
 				retornoLista = ejecutarDescribe(sPayload);
 				mensaje = malloc(sizeof(tPaquete));
 				if(retornoLista != NULL)
 				{
-					mensaje->type = DESCRIBE;
+					if(comando_DESCRIBE[1])
+						mensaje->type = DESCRIBE_TABLA;
+					else
+						mensaje->type = DESCRIBE;
 					char* ret = string_new();
 					t_link_element* nodo = retornoLista->head;
 					while (nodo) {
@@ -282,6 +287,11 @@ int main()
 				mensaje->length = sizeof(mensaje->payload);
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del DESCRIBE en MEMORIA.");
 				liberarPaquete(mensaje);
+				for (int p = 0; p < 2; p++) {
+					if(comando_DESCRIBE[p])
+						free(comando_DESCRIBE[p]);
+				}
+				free(comando_DESCRIBE);
 				//sem_wait(&loggerSemaforo);
 				//log_info(logger, "Resultado de DESCRIBE enviado a Kernel");
 				//sem_post(&loggerSemaforo);

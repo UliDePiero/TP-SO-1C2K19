@@ -150,10 +150,11 @@ t_list* ejecutarDescribe(char* instruccion){
 	}else{
 		sleep(configuracion->RETARDO_MEM / 1000);
 		retorno = describeMemoria();
-		list_iterate(retorno,(void*)muestraLista);
+		//list_iterate(retorno,(void*)muestraLista);
 	}
 	free(comando[0]);
 	free(comando);
+	free(instruccion);
 	return retorno;
 }
 char* ejecutarDrop(char* instruccion){

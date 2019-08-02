@@ -161,6 +161,7 @@ void respuestas(void* socket_Mem){
 	char **tablas;
 	char **tabla;
 	Tabla* tab;
+	Metadata* metadata;
 	int numeroTabla;
 	int status;
 	TablaGossip* nodoRecibido;
@@ -192,7 +193,6 @@ void respuestas(void* socket_Mem){
 				break;
 			case DESCRIBE:
 				sem_wait(&mutexTablas);
-				//puts("DESCRIBE:\n");
 				list_clean_and_destroy_elements(listaTablas,(void*)limpiarListaTablas);
 				if(strcmp(sPayload," ") != 0){
 					tablas = string_n_split(sPayload, 100, ";");
@@ -201,7 +201,7 @@ void respuestas(void* socket_Mem){
 					{
 						tabla = string_n_split(tablas[numeroTabla], 4, ",");
 
-						Metadata* metadata = malloc(sizeof(Metadata));
+						metadata = malloc(sizeof(Metadata));
 						strcpy(metadata->consistencia,tabla[1]);
 						metadata->particiones = atoi(tabla[2]);
 						metadata->tiempoCompactacion = atol(tabla[3]);
@@ -228,6 +228,37 @@ void respuestas(void* socket_Mem){
 				//sem_wait(&loggerSemaforo);
 				//log_info(logger, "Se ejecuto corectamente el comando DESCRIBE en MEMORIA");
 				//sem_post(&loggerSemaforo);
+				break;
+			case DESCRIBE_TABLA:
+				if(strcmp(sPayload," ") != 0){
+					tablas = string_n_split(sPayload, 1, ";");
+					sem_wait(&mutexTablas);
+					tab = encontrarTabla(tablas[0]);
+					if(!tab){
+							tabla = string_n_split(tablas[0], 4, ",");
+							metadata = malloc(sizeof(Metadata));
+							strcpy(metadata->consistencia,tabla[1]);
+							metadata->particiones = atoi(tabla[2]);
+							metadata->tiempoCompactacion = atol(tabla[3]);
+							tab = malloc(sizeof(Tabla));
+							tab->nombreTabla = malloc(sizeof(char)*string_length(tabla[0]));
+							strcpy(tab->nombreTabla,tabla[0]);
+							tab->metadata = metadata;
+							list_add(listaTablas,tab);
+
+							for(int i = 0; i<4; i++)
+								free(tabla[i]);
+							free(tabla);
+							free(tablas[0]);
+							free(tablas);
+					}
+					sem_wait(&loggerSemaforo);
+					log_info(logger, "Tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tab->nombreTabla, tab->metadata->consistencia, tab->metadata->particiones, tab->metadata->tiempoCompactacion);
+					sem_post(&loggerSemaforo);
+				}
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Se ejecuto corectamente el comando DESCRIBE en MEMORIA");
+				sem_post(&loggerSemaforo);
 				break;
 			case DROP:
 				//printf("\nSe elimino la tabla %s de MEMORIA", sPayload);
@@ -316,7 +347,7 @@ TablaGossip* elegirMemoriaRandom() {
 int elegirSocketMemoria(char* tabla, int key){
 	sem_wait(&mutexTablas);
 	Tabla* tab = encontrarTabla(tabla);
-	sem_post(&mutexTablas);
+	//sem_post(&mutexTablas);
 	if(tab != NULL){
 		TablaGossip* mem;
 		if(string_equals_ignore_case(tab->metadata->consistencia,"EC")){
@@ -402,7 +433,9 @@ Tabla* encontrarTabla(char* nombreTabla){
 	int encuentraTabla(Tabla* t) {
 		return string_equals_ignore_case(t->nombreTabla, nombreTabla);
 	}
-	return list_find(listaTablas, (void*)encuentraTabla);
+	Tabla* tabla = list_find(listaTablas, (void*)encuentraTabla);
+	sem_post(&mutexTablas);
+	return tabla;
 }
 void limpiarListaTablas(Tabla* tabla){
 	if(tabla->metadata)free(tabla->metadata);
@@ -454,6 +487,9 @@ int ejecutarInsert(char* instruccion){
 	char** comando = validarComandoInsert(instruccion);
 	if(comando){
 		socketElegido = elegirSocketMemoria(comando[1],atoi(comando[2]));
+		sem_wait(&loggerSemaforo);
+		log_warning(logger, "SOCKET ELEGIDO: %d\n", socketElegido);
+		sem_post(&loggerSemaforo);
 		if(socketElegido != -1){
 			tPaquete* mensaje = malloc(sizeof(tPaquete));
 			mensaje->type = INSERT;
@@ -520,7 +556,7 @@ void ejecutarCreate(char* instruccion){
 					log_info(logger, "Nueva tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tab->nombreTabla, tab->metadata->consistencia, tab->metadata->particiones, tab->metadata->tiempoCompactacion);
 					sem_post(&loggerSemaforo);
 				}
-				sem_post(&mutexTablas);
+				//sem_post(&mutexTablas);
 			}
 
 			for(int i = 0; i<5; i++)
@@ -582,7 +618,7 @@ int ejecutarDrop(char* instruccion){
 						sem_post(&loggerSemaforo);
 					}
 				}
-				sem_post(&mutexTablas);
+				//sem_post(&mutexTablas);
 			}
 
 			for(int i = 0; i<2; i++)
