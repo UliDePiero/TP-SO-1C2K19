@@ -485,9 +485,9 @@ int ejecutarInsert(char* instruccion){
 	char** comando = validarComandoInsert(instruccion);
 	if(comando){
 		socketElegido = elegirSocketMemoria(comando[1],atoi(comando[2]));
-		sem_wait(&loggerSemaforo);
-		log_warning(logger, "SOCKET ELEGIDO: %d\n", socketElegido);
-		sem_post(&loggerSemaforo);
+		//sem_wait(&loggerSemaforo);
+		//log_warning(logger, "SOCKET ELEGIDO: %d\n", socketElegido);
+		//sem_post(&loggerSemaforo);
 		if(socketElegido != -1 && socketElegido != -2){
 			tPaquete* mensaje = malloc(sizeof(tPaquete));
 			mensaje->type = INSERT;

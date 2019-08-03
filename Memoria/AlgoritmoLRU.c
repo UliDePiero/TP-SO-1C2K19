@@ -114,6 +114,8 @@ t_nodoLRU* desencolarPrimerElementoNoModificado(t_list *lista) {
 }
 
 int estaEnListaDePaginas(t_list* lista, t_nodoLRU* nodo) {
+	mostrarlistaPaginasLRU(listaPaginasLRU);
+	printf("BUSCO: seg %d pag %d", nodo->segmentoID, nodo->paginaID);
 	t_link_element* nodoActual = lista->head;
 	t_nodoLRU* nodoLRUAux;
 
@@ -136,6 +138,7 @@ int estaEnListaDePaginas(t_list* lista, t_nodoLRU* nodo) {
 t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
 	t_nodoLRU* nodoLRU;
 	if (estaEnListaDePaginas(lista, nodo)) {
+		puts("ENCONTRE");
 		// Busca la página y actualiza su posición en la lista
 		t_link_element* nodoActual = lista->head;
 		t_link_element* nodoAnterior = NULL;
@@ -167,10 +170,16 @@ t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
 	} else {
 		if (lista->elements_count >= cantidadDeRegistros) {
 			if (!memoriaEstaFull(lista)) {
+				sem_wait(&loggerSemaforo);
+				log_warning(logger, "LRU (llenita)");
+				sem_post(&loggerSemaforo);
 				nodoLRU = desencolarPrimerElementoNoModificado(lista);
 				//encolarNuevaPagina(lista, nodo);
 			}
 			else{
+				sem_wait(&loggerSemaforo);
+				log_warning(logger, "Memoria FULL");
+				sem_post(&loggerSemaforo);
 				journalMemoria();
 				vaciarMemoria();
 				list_clean(lista);

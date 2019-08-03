@@ -155,6 +155,8 @@ void resetearMemoria(void* punteroMemoria);
 void vaciarMemoria();
 void asignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nRegistro, int flagModificado);
 void asignarRegistroASegmentoExistente(uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nPagina, int nRegistro, int flagModificado);
+void reasignarRegistroASegmentoExistente(uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nPagina, int flagModificado);
+int reasignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, uint64_t timestamp, int nSegmento_nodo, int nSegmento, int nPagina_nodo, int flagModificado);
 int buscarRegistroDisponible();
 int buscarRegistro(t_nodoLRU* nodo_reemplazo);
 

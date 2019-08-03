@@ -192,7 +192,7 @@ int main(int argc, char* argv[])
 			switch (tipoMensaje) {
 			case SELECT:
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Memoria recibió '%s'", sPayload);
+				log_debug(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion SELECT
 				retorno = ejecutarSelect(sPayload);
@@ -212,12 +212,12 @@ int main(int argc, char* argv[])
 				enviarPaquete(socketActivo, mensaje,logger,"Value del SELECT de MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Resultado de SELECT enviado a Kernel");
+				log_debug(logger, "Resultado de SELECT enviado a Kernel");
 				sem_post(&loggerSemaforo);
 				break;
 			case INSERT:
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Memoria recibió '%s'", sPayload);
+				log_debug(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion INSERT
 				retorno = ejecutarInsert(sPayload);
@@ -237,12 +237,12 @@ int main(int argc, char* argv[])
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del INSERT en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Resultado de INSERT enviado a Kernel");
+				log_debug(logger, "Resultado de INSERT enviado a Kernel");
 				sem_post(&loggerSemaforo);
 				break;
 			case CREATE:
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Memoria recibió '%s'", sPayload);
+				log_debug(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion CREATE
 				retorno = ejecutarCreate(sPayload);
@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del CREATE en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Resultado de CREATE enviado a Kernel");
+				log_debug(logger, "Resultado de CREATE enviado a Kernel");
 				sem_post(&loggerSemaforo);
 				break;
 			case DESCRIBE:
@@ -309,7 +309,7 @@ int main(int argc, char* argv[])
 				break;
 			case DROP:
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Memoria recibió '%s'", sPayload);
+				log_debug(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion DROP
 				retorno = ejecutarDrop(sPayload);
@@ -329,12 +329,12 @@ int main(int argc, char* argv[])
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del DROP en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Resultado de DROP enviado a Kernel");
+				log_debug(logger, "Resultado de DROP enviado a Kernel");
 				sem_post(&loggerSemaforo);
 				break;
 			case JOURNAL:
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Memoria recibió '%s'", sPayload);
+				log_debug(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion JOURNAL
 				retornoINT = ejecutarJournal(sPayload);
@@ -353,7 +353,7 @@ int main(int argc, char* argv[])
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del JOURNAL en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Resultado de JOURNAL enviado a Kernel");
+				log_debug(logger, "Resultado de JOURNAL enviado a Kernel");
 				sem_post(&loggerSemaforo);
 				break;
 			case ERROR_EN_COMANDO:
@@ -477,7 +477,8 @@ void terminar(){
 }
 
 void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, int flagModificado){
-	//mostrarlistaPaginasLRU(listaPaginasLRU);
+	//sem_wait(&mutexMemoria);
+	mostrarlistaPaginasLRU(listaPaginasLRU);
 	if(maxValueSize < string_length(value)){
 		sem_wait(&loggerSemaforo);
 		log_warning(logger, "El valor es mas largo que lo permitido por el File System(%d caracteres), sera acortado.", maxValueSize);
@@ -491,16 +492,16 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, i
 		nodo->modificado=flagModificado;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 		insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
 		sem_wait(&loggerSemaforo);
-		log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente", tabla, key, value, timestamp);
+		log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente(vacio)", tabla, key, value, timestamp);
 		sem_post(&loggerSemaforo);
-/*
+
 		Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
 		Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
 		printf("\nInserto: %s %d %s %llu", tabla,reg->key,reg->value,reg->timestamp );
 		printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
 		free(reg);
 		free(reg2);
-*/
+
 	}
 	else{
 		for(segmento=0; segmento<cantidadDeSegmentos; segmento++){
@@ -518,7 +519,7 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, i
 				nodo->modificado=flagModificado;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 				insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente", tabla, key, value, timestamp);
+				log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente(actualizo)", tabla, key, value, timestamp);
 				sem_post(&loggerSemaforo);
 			}else{
 				registro = buscarRegistroDisponible();
@@ -527,30 +528,39 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, i
 					t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 					nodo->modificado=flagModificado;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 					t_nodoLRU* nodo_reemplazo = insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
-					if(nodo_reemplazo->segmentoID != -1)
-						registro = buscarRegistro(nodo_reemplazo);
-					else
-						registro = -2;
+					if(nodo_reemplazo->segmentoID != -1){
+						reasignarRegistroASegmentoExistente(key, value, timestamp, nodo_reemplazo->segmentoID, nodo_reemplazo->paginaID, flagModificado);
+						t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
+						nodo->modificado=flagModificado;nodo->paginaID=nodo_reemplazo->paginaID;nodo->segmentoID=nodo_reemplazo->segmentoID;
+
+						insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
+						sem_wait(&loggerSemaforo);
+						log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente(reemplazo/TablaEncontrada)", tabla, key, value, timestamp);
+						sem_post(&loggerSemaforo);
+
+						Registro* reg2 = getRegistro(tablaDeSegmentos[nodo_reemplazo->segmentoID]->tablaDePaginas[nodo_reemplazo->paginaID]->frame);
+						printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[nodo_reemplazo->segmentoID]->tabla,reg2->key,reg2->value,reg2->timestamp );
+						free(reg2);
+						free(nodo_reemplazo);
+					}
+					else{
+						free(nodo_reemplazo);
+						insertMemoria(tabla, key,value, timestamp, flagModificado);
+					}
 				}
-				if(registro != -1 && registro != -2){
+				else{
 					asignarRegistroASegmentoExistente(key, value, timestamp, segmento, pagina, registro, flagModificado);
 					t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 					nodo->modificado=flagModificado;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 					insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
 					sem_wait(&loggerSemaforo);
-					log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente", tabla, key, value, timestamp);
+					log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente(agrego/TablaEncontrada)", tabla, key, value, timestamp);
 					sem_post(&loggerSemaforo);
-/*
-					Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
-					Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
-					printf("\nInserto: %s %d %s %llu", tabla,reg->key,reg->value,reg->timestamp );
+
+					Registro* reg = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
 					printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
 					free(reg);
-					free(reg2);
-*/
-				}
-				else if(registro == -2)
-					insertMemoria(tabla, key,value, timestamp, flagModificado);
+					}
 			}
 		}
 		else{
@@ -560,43 +570,60 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, i
 				t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 				nodo->modificado=flagModificado;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 				t_nodoLRU* nodo_reemplazo = insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
-				if(nodo_reemplazo->segmentoID != -1)
-					registro = buscarRegistro(nodo_reemplazo);
-				else
-					registro = -2;
-			}
-			if(registro != -1 && registro != -2){
+				if(nodo_reemplazo->segmentoID != -1){
+					segmento = reasignarRegistroANuevoSegmento(tabla, key, value, timestamp, nodo_reemplazo->segmentoID ,segmento, nodo_reemplazo->paginaID, flagModificado);
+					//tablaDeSegmentos[nodo_reemplazo->segmentoID]->tablaDePaginas[nodo_reemplazo->paginaID]->frame
+					t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
+					nodo->modificado=flagModificado;nodo->paginaID=pagina;nodo->segmentoID=segmento;
+
+					insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
+					sem_wait(&loggerSemaforo);
+					log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente(reemplazo/TablaNOencontrada)", tabla, key, value, timestamp);
+					sem_post(&loggerSemaforo);
+
+					Registro* reg3 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
+					printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[nodo_reemplazo->segmentoID]->tabla,reg3->key,reg3->value,reg3->timestamp );
+					free(reg3);
+					free(nodo_reemplazo);
+				}
+				else{
+					free(nodo_reemplazo);
+					insertMemoria(tabla, key,value, timestamp, flagModificado);
+				}
+			}else
+				{
 				asignarRegistroANuevoSegmento(tabla, key, value, timestamp, segmento, registro, flagModificado);
 				t_nodoLRU* nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
 				nodo->modificado=flagModificado;nodo->paginaID=pagina;nodo->segmentoID=segmento;
 				insertarEnListaDePaginasLRU(listaPaginasLRU,nodo);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente", tabla, key, value, timestamp);
+				log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente(agrego/tablaNOencontrada)", tabla, key, value, timestamp);
 				sem_post(&loggerSemaforo);
-/*
+
 				Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
 				Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
 				printf("\nInserto: %s %d %s %llu", tabla,reg->key,reg->value,reg->timestamp );
 				printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
 				free(reg);
 				free(reg2);
-*/
+				}
 			}
-			else if(registro == -2)
-				insertMemoria(tabla, key,value, timestamp, flagModificado);
 		}
-	}
-	//mostrarlistaPaginasLRU(listaPaginasLRU);
+	mostrarlistaPaginasLRU(listaPaginasLRU);
+	//sem_post(&mutexMemoria);
 }
 
 Registro* selectMemoria(char* tabla, uint16_t key){
+	mostrarlistaPaginasLRU(listaPaginasLRU);
+	//sem_wait(&mutexMemoria);
 	int segmento = 0, pagina = 0;
 	for(segmento=0; segmento<cantidadDeSegmentos; segmento++){
-		//printf("tabla: %s\n", tablaDeSegmentos[segmento]->tabla);
+		printf("tabla: %s\n", tablaDeSegmentos[segmento]->tabla);
 		if(strcmp(tablaDeSegmentos[segmento]->tabla, tabla) == 0){ break;}
 	}
 	if(segmento<cantidadDeSegmentos){
 		for(pagina=0; pagina<tablaDeSegmentos[segmento]->cantidadDePaginas; pagina++){
+			printf("key: %hd\n", getKey(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame));
 			if(getKey(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame) == key) { break;}
 		}
 		if(pagina<tablaDeSegmentos[segmento]->cantidadDePaginas){
@@ -606,6 +633,8 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 			sem_wait(&loggerSemaforo);
 			log_info(logger, "'SELECT %s %hd' ejecutado exitosamente", tabla, key);
 			sem_post(&loggerSemaforo);
+			//sem_post(&mutexMemoria);
+			mostrarlistaPaginasLRU(listaPaginasLRU);
 			return getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
 		}
 	}
@@ -628,6 +657,8 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 			sem_wait(&loggerSemaforo);
 			log_error(logger, "No se pudo encontrar la key %d o la tabla %s en LFS", key, tabla);
 			sem_post(&loggerSemaforo);
+			//sem_post(&mutexMemoria);
+			mostrarlistaPaginasLRU(listaPaginasLRU);
 			return NULL;
 		}
 		else
@@ -636,12 +667,16 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 			insertMemoria(tabla, key, sPayload, getCurrentTime(), 0);
 			free(sPayload);
 			Registro* registro = selectMemoria(tabla, key);
+			//sem_post(&mutexMemoria);
+			mostrarlistaPaginasLRU(listaPaginasLRU);
 			return registro;
 		}
 	}else{
 		sem_wait(&loggerSemaforo);
 		log_error(logger, "No se pudo encontrar la key %d: LFS no conectado", key);
 		sem_post(&loggerSemaforo);
+		//sem_post(&mutexMemoria);
+		mostrarlistaPaginasLRU(listaPaginasLRU);
 		return NULL;
 	}
 }
@@ -700,6 +735,7 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 }
 */
 void dropMemoria(char* tabla){
+	//sem_wait(&mutexMemoria);
 	int segmento = 0, pagina = 0;
 	void *pKey;
 	t_nodoLRU* nodo;
@@ -709,11 +745,13 @@ void dropMemoria(char* tabla){
 			//printf("encontre tabla\n");
 			t_list* listaPunteros = list_create();
 			for(pagina=0; pagina<tablaDeSegmentos[segmento]->cantidadDePaginas; pagina++){
-				pKey = tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame;
-				list_add(listaPunteros,pKey);
-				nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
-				nodo->modificado=-1;nodo->paginaID=pagina;nodo->segmentoID=segmento;
-				removerElemento(listaPaginasLRU,nodo);
+				if(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame != NULL){
+					pKey = tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame;
+					list_add(listaPunteros,pKey);
+					nodo = (t_nodoLRU*) malloc(sizeof(t_nodoLRU));
+					nodo->modificado=-1;nodo->paginaID=pagina;nodo->segmentoID=segmento;
+					removerElemento(listaPaginasLRU,nodo);
+				}
 			}
 			list_iterate(listaPunteros,(void*)resetearMemoria);
 			free(listaPunteros);
@@ -745,6 +783,7 @@ void dropMemoria(char* tabla){
 		sem_post(&loggerSemaforo);
 		free(comando);
 	}
+	//sem_post(&mutexMemoria);
 }
 
 char* describeMemoriaTabla(char* tabla){
@@ -831,20 +870,28 @@ void vaciarMemoria(){
 	memset(granMalloc,0,cantidadDeRegistros*tamanioRealDeUnRegistro);
 }
 uint16_t getKey(void* registro){
-	uint16_t key = *(uint16_t*)registro;
-	return key;
+	if(registro != NULL){
+		uint16_t key = *(uint16_t*)registro;
+		return key;
+	}else
+		return 0;
 }
 uint64_t getTimestamp(void* registro){
 	uint64_t timestamp = *(uint64_t*)(registro+sizeof(uint16_t));
 	return timestamp;
 }
 Registro* getRegistro(void* registro){
-	Registro* reg = (Registro*) malloc(sizeof(Registro));
-	reg->value = (char*) malloc(maxValueSize);
-	reg->key = *(uint16_t*)registro;
-	reg->timestamp = *(uint64_t*)(registro+sizeof(uint16_t));
-	strcpy(reg->value,(char*)(registro+sizeof(uint16_t)+sizeof(uint64_t)));
-	return reg;
+	if(registro != NULL){
+		//sem_wait(&mutexMemoria);
+		Registro* reg = (Registro*) malloc(sizeof(Registro));
+		reg->value = (char*) malloc(maxValueSize);
+		reg->key = *(uint16_t*)registro;
+		reg->timestamp = *(uint64_t*)(registro+sizeof(uint16_t));
+		strcpy(reg->value,(char*)(registro+sizeof(uint16_t)+sizeof(uint64_t)));
+		//sem_post(&mutexMemoria);
+		return reg;
+	}else
+		return NULL;
 }
 void setValue(void* registro, char* value){
 	memcpy(registro+sizeof(uint16_t)+sizeof(uint64_t),value,maxValueSize);
@@ -873,6 +920,12 @@ Pagina* paginaCrear(int modificado, int nRegistro){
 	Pagina* pagina = (Pagina*)malloc(sizeof(Pagina));
 	pagina->modificado = modificado;
 	pagina->frame = granMalloc + nRegistro*tamanioRealDeUnRegistro;
+	return pagina;
+}
+Pagina* paginaCrear_2(int modificado, void* frame){
+	Pagina* pagina = (Pagina*)malloc(sizeof(Pagina));
+	pagina->modificado = modificado;
+	pagina->frame = frame;
 	return pagina;
 }
 void paginaDestruir(Pagina* pagina){
@@ -905,8 +958,44 @@ void asignarRegistroASegmentoExistente(uint16_t key, char* value, uint64_t times
 	tablaDeSegmentos[nSegmento]->cantidadDePaginas ++;
 	tablaDeSegmentos[nSegmento]->tablaDePaginas = (Pagina**) realloc(tablaDeSegmentos[nSegmento]->tablaDePaginas, tablaDeSegmentos[nSegmento]->cantidadDePaginas*sizeof(Pagina*));
 	tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina] = paginaDelSegmento;
-	tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]->frame = granMalloc + nRegistro*tamanioRealDeUnRegistro;
+	//tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]->frame = granMalloc + nRegistro*tamanioRealDeUnRegistro;
 	setRegistro(granMalloc+nRegistro*tamanioRealDeUnRegistro,key,timestamp,value);
+}
+void reasignarRegistroASegmentoExistente(uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nPagina, int flagModificado){
+	Pagina* paginaDelSegmento = paginaCrear_2(flagModificado, tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]->frame);
+	paginaDestruir(tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]);
+	tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina] = paginaDelSegmento;
+	//tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]->frame = granMalloc + nRegistro*tamanioRealDeUnRegistro;
+	setRegistro(tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]->frame,key,timestamp,value);
+}
+int reasignarRegistroANuevoSegmento(char* tabla, uint16_t key, char* value, uint64_t timestamp, int nSegmento_nodo, int nSegmento, int nPagina_nodo , int flagModificado){
+	cantidadDeSegmentos++;
+	tablaDeSegmentos = (Segmento**) realloc(tablaDeSegmentos, cantidadDeSegmentos*sizeof(Segmento*));
+	Pagina* paginaDelSegmento = paginaCrear_2(flagModificado, tablaDeSegmentos[nSegmento_nodo]->tablaDePaginas[nPagina_nodo]->frame);
+	Pagina** tablaDePaginasDelSegmento = (Pagina**) malloc(sizeof(Pagina*));
+	Segmento* segmento = segmentoCrear(tabla, tablaDePaginasDelSegmento);
+	//paginaDestruir(tablaDeSegmentos[nSegmento_nodo]->tablaDePaginas[nPagina]);
+	//tablaDeSegmentos[nSegmento_nodo]->cantidadDePaginas--;
+
+	//if(tablaDeSegmentos[nSegmento_nodo]->cantidadDePaginas == 0){
+		/*segmentoDestruir(tablaDeSegmentos[nSegmento_nodo]);
+		tablaDeSegmentos[nSegmento_nodo] = segmento;
+		tablaDeSegmentos[nSegmento_nodo]->cantidadDePaginas = 1;
+		strcpy(tablaDeSegmentos[nSegmento_nodo]->tabla, tabla);
+		tablaDeSegmentos[nSegmento_nodo]->tablaDePaginas = tablaDePaginasDelSegmento;
+		tablaDeSegmentos[nSegmento_nodo]->tablaDePaginas[tablaDeSegmentos[nSegmento_nodo]->cantidadDePaginas - 1] = paginaDelSegmento;
+		setRegistro(tablaDeSegmentos[nSegmento_nodo]->tablaDePaginas[tablaDeSegmentos[nSegmento_nodo]->cantidadDePaginas - 1]->frame,key,timestamp,value);
+		return nSegmento_nodo;*/
+	//}else{
+	tablaDeSegmentos[nSegmento_nodo]->tablaDePaginas[nPagina_nodo]->frame = NULL;
+		tablaDeSegmentos[nSegmento] = segmento;
+		tablaDeSegmentos[nSegmento]->cantidadDePaginas = 1;
+		strcpy(tablaDeSegmentos[nSegmento]->tabla, tabla);
+		tablaDeSegmentos[nSegmento]->tablaDePaginas = tablaDePaginasDelSegmento;
+		tablaDeSegmentos[nSegmento]->tablaDePaginas[tablaDeSegmentos[nSegmento]->cantidadDePaginas - 1] = paginaDelSegmento;
+		setRegistro(tablaDeSegmentos[nSegmento]->tablaDePaginas[tablaDeSegmentos[nSegmento]->cantidadDePaginas - 1]->frame,key,timestamp,value);
+		return nSegmento;
+	//}
 }
 int buscarRegistroDisponible(){
 	for(int i = 0; i < cantidadDeRegistros; i++){
@@ -938,13 +1027,15 @@ void journalMemoria(){
 				if(tablaDeSegmentos[j]->tablaDePaginas[i]->modificado == 1){
 					instruccion = malloc(15+sizeof(tablaDeSegmentos[j]->tabla)+sizeof(registro->key)+maxValueSize+sizeof(registro->timestamp));
 					registro = getRegistro(tablaDeSegmentos[j]->tablaDePaginas[i]->frame);
-					value_comillas = string_from_format("\"%s\"",registro->value);
-					sprintf (instruccion, "INSERT %s %hd %s %llu", tablaDeSegmentos[j]->tabla, registro->key, value_comillas, registro->timestamp);
-					free(value_comillas);
-					//sem_wait(&loggerSemaforo);
-					//log_trace(logger, "Envio: %s a LFS",instruccion);
-					//sem_post(&loggerSemaforo);
-					ejecutarInsertJournal(instruccion);
+					if(registro != NULL){
+						value_comillas = string_from_format("\"%s\"",registro->value);
+						sprintf (instruccion, "INSERT %s %hd %s %llu", tablaDeSegmentos[j]->tabla, registro->key, value_comillas, registro->timestamp);
+						free(value_comillas);
+						//sem_wait(&loggerSemaforo);
+						//log_trace(logger, "Envio: %s a LFS",instruccion);
+						//sem_post(&loggerSemaforo);
+						ejecutarInsertJournal(instruccion);
+					}
 				}
 			}
 			segmentoDestruir(tablaDeSegmentos[j]);
@@ -952,6 +1043,8 @@ void journalMemoria(){
 		cantidadDeSegmentos = 0;
 		tablaDeSegmentos = (Segmento**) realloc(tablaDeSegmentos, 1);
 	}
+	vaciarMemoria();
+	list_clean(listaPaginasLRU);
 	sem_post(&mutexMemoria);
 	//sem_wait(&loggerSemaforo);
 	//log_info(logger, "'JOURNAL' ejecutado exitosamente");
@@ -988,9 +1081,9 @@ void* journalAutomatico (){
     		}
         }*/
     	sleep(configuracion->RETARDO_JOURNAL / 1000);
-    	//sem_wait(&loggerSemaforo);
-    	//log_debug(logger, "Journal automático ejecutando");
-    	//sem_post(&loggerSemaforo);
+    	sem_wait(&loggerSemaforo);
+    	log_debug(logger, "Journal automático ejecutando");
+    	sem_post(&loggerSemaforo);
     	journalMemoria();
     }
 }
