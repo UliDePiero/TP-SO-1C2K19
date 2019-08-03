@@ -171,6 +171,9 @@ t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo) {
 				//encolarNuevaPagina(lista, nodo);
 			}
 			else{
+				sem_wait(&loggerSemaforo);
+				log_warning(logger, "Memoria FULL");
+				sem_post(&loggerSemaforo);
 				journalMemoria();
 				vaciarMemoria();
 				list_clean(lista);

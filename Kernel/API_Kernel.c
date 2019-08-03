@@ -210,9 +210,9 @@ void respuestas(void* socket_Mem){
 						strcpy(tab->nombreTabla,tabla[0]);
 						tab->metadata = metadata;
 						list_add(listaTablas,tab);
-						//sem_wait(&loggerSemaforo);
-						//log_info(logger, "Tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tab->nombreTabla, tab->metadata->consistencia, tab->metadata->particiones, tab->metadata->tiempoCompactacion);
-						//sem_post(&loggerSemaforo);
+						sem_wait(&loggerSemaforo);
+						log_debug(logger, "Tabla %s: consistencia %s particiones %d tiempo compactacion %ld", tab->nombreTabla, tab->metadata->consistencia, tab->metadata->particiones, tab->metadata->tiempoCompactacion);
+						sem_post(&loggerSemaforo);
 
 						for(int i = 0; i<4; i++)
 							free(tabla[i]);
