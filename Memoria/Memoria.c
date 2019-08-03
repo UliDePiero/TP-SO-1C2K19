@@ -192,7 +192,7 @@ int main(int argc, char* argv[])
 			switch (tipoMensaje) {
 			case SELECT:
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Memoria recibió '%s'", sPayload);
+				log_debug(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion SELECT
 				retorno = ejecutarSelect(sPayload);
@@ -212,12 +212,12 @@ int main(int argc, char* argv[])
 				enviarPaquete(socketActivo, mensaje,logger,"Value del SELECT de MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Resultado de SELECT enviado a Kernel");
+				log_debug(logger, "Resultado de SELECT enviado a Kernel");
 				sem_post(&loggerSemaforo);
 				break;
 			case INSERT:
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Memoria recibió '%s'", sPayload);
+				log_debug(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion INSERT
 				retorno = ejecutarInsert(sPayload);
@@ -237,12 +237,12 @@ int main(int argc, char* argv[])
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucucion del INSERT en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Resultado de INSERT enviado a Kernel");
+				log_debug(logger, "Resultado de INSERT enviado a Kernel");
 				sem_post(&loggerSemaforo);
 				break;
 			case CREATE:
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Memoria recibió '%s'", sPayload);
+				log_debug(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion CREATE
 				retorno = ejecutarCreate(sPayload);
@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del CREATE en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Resultado de CREATE enviado a Kernel");
+				log_debug(logger, "Resultado de CREATE enviado a Kernel");
 				sem_post(&loggerSemaforo);
 				break;
 			case DESCRIBE:
@@ -309,7 +309,7 @@ int main(int argc, char* argv[])
 				break;
 			case DROP:
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Memoria recibió '%s'", sPayload);
+				log_debug(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion DROP
 				retorno = ejecutarDrop(sPayload);
@@ -329,12 +329,12 @@ int main(int argc, char* argv[])
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del DROP en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Resultado de DROP enviado a Kernel");
+				log_debug(logger, "Resultado de DROP enviado a Kernel");
 				sem_post(&loggerSemaforo);
 				break;
 			case JOURNAL:
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Memoria recibió '%s'", sPayload);
+				log_debug(logger, "Memoria recibió '%s'", sPayload);
 				sem_post(&loggerSemaforo);
 				//funcion JOURNAL
 				retornoINT = ejecutarJournal(sPayload);
@@ -353,7 +353,7 @@ int main(int argc, char* argv[])
 				enviarPaquete(socketActivo, mensaje,logger,"Ejecucion del JOURNAL en MEMORIA.");
 				liberarPaquete(mensaje);
 				sem_wait(&loggerSemaforo);
-				log_info(logger, "Resultado de JOURNAL enviado a Kernel");
+				log_debug(logger, "Resultado de JOURNAL enviado a Kernel");
 				sem_post(&loggerSemaforo);
 				break;
 			case ERROR_EN_COMANDO:
@@ -952,6 +952,8 @@ void journalMemoria(){
 		cantidadDeSegmentos = 0;
 		tablaDeSegmentos = (Segmento**) realloc(tablaDeSegmentos, 1);
 	}
+	vaciarMemoria();
+	list_clean(listaPaginasLRU);
 	sem_post(&mutexMemoria);
 	//sem_wait(&loggerSemaforo);
 	//log_info(logger, "'JOURNAL' ejecutado exitosamente");
@@ -988,9 +990,9 @@ void* journalAutomatico (){
     		}
         }*/
     	sleep(configuracion->RETARDO_JOURNAL / 1000);
-    	//sem_wait(&loggerSemaforo);
-    	//log_debug(logger, "Journal automático ejecutando");
-    	//sem_post(&loggerSemaforo);
+    	sem_wait(&loggerSemaforo);
+    	log_debug(logger, "Journal automático ejecutando");
+    	sem_post(&loggerSemaforo);
     	journalMemoria();
     }
 }

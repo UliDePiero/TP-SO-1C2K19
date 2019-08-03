@@ -305,15 +305,15 @@ void* gossipingMemoria() {
 
 	while (1) {
 		sleep(configuracion->RETARDO_GOSSIPING / 1000);
-		list_iterate(listaGossiping,(void*)muestraListaGossip);
+		//list_iterate(listaGossiping,(void*)muestraListaGossip);
 
 		//int hizoGossipingConSeed = 0;
 
 		seed_gos = 0;
 		while (configuracion->PUERTO_SEEDS[seed_gos] != 0 && seed_gos < CANT_MAX_SEEDS) {
-			sem_wait(&loggerSemaforo);
-			log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
-			sem_post(&loggerSemaforo);
+			//sem_wait(&loggerSemaforo);
+			//log_trace(logger, "Memoria hace Gossiping con su seed en la IP: %s y Puerto: %d", configuracion->IP_SEEDS[seed_gos], configuracion->PUERTO_SEEDS[seed_gos]);
+			//sem_post(&loggerSemaforo);
 			if (nodoSocketEstaEnLista(socketSEED[seed_gos]) && socketSEED[seed_gos] != 1) {
 				//sem_wait(&loggerSemaforo);
 				//log_warning(logger, "ESTA CONECTADA %d", socketSEED[seed_gos]);
