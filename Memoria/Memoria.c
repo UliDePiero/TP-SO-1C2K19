@@ -53,6 +53,7 @@ void configurar(ConfiguracionMemoria* configuracion) {
 void cambiosConfigMemoria() {
 	while (1) {
 		if (configModificado()) {
+			sleep(1);
 			char* campos[] = { "PUERTO", "IP_FS", "PUERTO_FS", "IP_SEEDS",
 					"PUERTO_SEEDS", "RETARDO_MEM", "RETARDO_FS", "TAM_MEM",
 					"RETARDO_JOURNAL", "RETARDO_GOSSIPING", "MEMORY_NUMBER",

@@ -34,6 +34,7 @@ void configurar(ConfiguracionKernel* configuracion) {
 void cambiosConfigKernel() {
 	while (1) {
 		if (configModificado()) {
+			sleep(1);
 			char* campos[] =
 					{ "IP_MEMORIA", "PUERTO_MEMORIA", "QUANTUM",
 							"MULTIPROCESAMIENTO", "METADATA_REFRESH",

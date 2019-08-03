@@ -159,7 +159,7 @@ TablaGossip* elegirMemoriaRandom();
 // Funciones para Gossiping
 int pideRetardoGossiping();
 void armarNodoMemoria(TablaGossip* nodo);
-void pideListaGossiping(int socketMem);
+int pideListaGossiping(int socketMem);
 void pideListaGossiping_1(int socketMem);
 void conectarConNuevaMemoria(TablaGossip* nodo);
 void gossipingKernel();
