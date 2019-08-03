@@ -305,10 +305,10 @@ void respuestas(void* socket_Mem){
 		if(sPayload != NULL) free(sPayload);
 		}
 	}
-	eliminaMemoriaDeListaGossiping(socket_Memoria); // La Memoria se desconectó, la elimino de listaGossiping
-	free(socket_Mem);
-	if(listaGossiping->elements_count == 0)
-		pthread_cancel(hiloAPI);
+	//eliminaMemoriaDeListaGossiping(socket_Memoria); // La Memoria se desconectó, la elimino de listaGossiping
+	//free(socket_Mem);
+	//if(listaGossiping->elements_count == 0)
+		//pthread_cancel(hiloAPI);
 }
 TablaGossip* elegirMemoriaRandom() {
 	int indice;
