@@ -478,7 +478,7 @@ void terminar(){
 
 void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, int flagModificado){
 	//sem_wait(&mutexMemoria);
-	mostrarlistaPaginasLRU(listaPaginasLRU);
+	//mostrarlistaPaginasLRU(listaPaginasLRU);
 	if(maxValueSize < string_length(value)){
 		sem_wait(&loggerSemaforo);
 		log_warning(logger, "El valor es mas largo que lo permitido por el File System(%d caracteres), sera acortado.", maxValueSize);
@@ -494,14 +494,14 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, i
 		sem_wait(&loggerSemaforo);
 		log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente(vacio)", tabla, key, value, timestamp);
 		sem_post(&loggerSemaforo);
-
+/*
 		Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
 		Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
 		printf("\nInserto: %s %d %s %llu", tabla,reg->key,reg->value,reg->timestamp );
 		printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
 		free(reg);
 		free(reg2);
-
+*/
 	}
 	else{
 		for(segmento=0; segmento<cantidadDeSegmentos; segmento++){
@@ -537,10 +537,10 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, i
 						sem_wait(&loggerSemaforo);
 						log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente(reemplazo/TablaEncontrada)", tabla, key, value, timestamp);
 						sem_post(&loggerSemaforo);
-
+/*
 						Registro* reg2 = getRegistro(tablaDeSegmentos[nodo_reemplazo->segmentoID]->tablaDePaginas[nodo_reemplazo->paginaID]->frame);
 						printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[nodo_reemplazo->segmentoID]->tabla,reg2->key,reg2->value,reg2->timestamp );
-						free(reg2);
+						free(reg2);*/
 						free(nodo_reemplazo);
 					}
 					else{
@@ -556,11 +556,11 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, i
 					sem_wait(&loggerSemaforo);
 					log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente(agrego/TablaEncontrada)", tabla, key, value, timestamp);
 					sem_post(&loggerSemaforo);
-
+/*
 					Registro* reg = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
 					printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
 					free(reg);
-					}
+*/					}
 			}
 		}
 		else{
@@ -580,10 +580,10 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, i
 					sem_wait(&loggerSemaforo);
 					log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente(reemplazo/TablaNOencontrada)", tabla, key, value, timestamp);
 					sem_post(&loggerSemaforo);
-
+/*
 					Registro* reg3 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
 					printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[nodo_reemplazo->segmentoID]->tabla,reg3->key,reg3->value,reg3->timestamp );
-					free(reg3);
+					free(reg3);*/
 					free(nodo_reemplazo);
 				}
 				else{
@@ -599,31 +599,31 @@ void insertMemoria(char* tabla, uint16_t key, char* value, uint64_t timestamp, i
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "'INSERT %s %hd %s %" PRIu64 "' ejecutado exitosamente(agrego/tablaNOencontrada)", tabla, key, value, timestamp);
 				sem_post(&loggerSemaforo);
-
+/*
 				Registro* reg = getRegistro(granMalloc+registro*tamanioRealDeUnRegistro);
 				Registro* reg2 = getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
 				printf("\nInserto: %s %d %s %llu", tabla,reg->key,reg->value,reg->timestamp );
 				printf("\nInserto2: %s %d %s %llu", tablaDeSegmentos[segmento]->tabla,reg->key,reg->value,reg->timestamp );
 				free(reg);
 				free(reg2);
-				}
+	*/			}
 			}
 		}
-	mostrarlistaPaginasLRU(listaPaginasLRU);
+	//mostrarlistaPaginasLRU(listaPaginasLRU);
 	//sem_post(&mutexMemoria);
 }
 
 Registro* selectMemoria(char* tabla, uint16_t key){
-	mostrarlistaPaginasLRU(listaPaginasLRU);
+	//mostrarlistaPaginasLRU(listaPaginasLRU);
 	//sem_wait(&mutexMemoria);
 	int segmento = 0, pagina = 0;
 	for(segmento=0; segmento<cantidadDeSegmentos; segmento++){
-		printf("tabla: %s\n", tablaDeSegmentos[segmento]->tabla);
+		//printf("tabla: %s\n", tablaDeSegmentos[segmento]->tabla);
 		if(strcmp(tablaDeSegmentos[segmento]->tabla, tabla) == 0){ break;}
 	}
 	if(segmento<cantidadDeSegmentos){
 		for(pagina=0; pagina<tablaDeSegmentos[segmento]->cantidadDePaginas; pagina++){
-			printf("key: %hd\n", getKey(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame));
+			//printf("key: %hd\n", getKey(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame));
 			if(getKey(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame) == key) { break;}
 		}
 		if(pagina<tablaDeSegmentos[segmento]->cantidadDePaginas){
@@ -634,7 +634,7 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 			log_info(logger, "'SELECT %s %hd' ejecutado exitosamente", tabla, key);
 			sem_post(&loggerSemaforo);
 			//sem_post(&mutexMemoria);
-			mostrarlistaPaginasLRU(listaPaginasLRU);
+			//mostrarlistaPaginasLRU(listaPaginasLRU);
 			return getRegistro(tablaDeSegmentos[segmento]->tablaDePaginas[pagina]->frame);
 		}
 	}
@@ -658,7 +658,7 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 			log_error(logger, "No se pudo encontrar la key %d o la tabla %s en LFS", key, tabla);
 			sem_post(&loggerSemaforo);
 			//sem_post(&mutexMemoria);
-			mostrarlistaPaginasLRU(listaPaginasLRU);
+			//mostrarlistaPaginasLRU(listaPaginasLRU);
 			return NULL;
 		}
 		else
@@ -668,7 +668,7 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 			free(sPayload);
 			Registro* registro = selectMemoria(tabla, key);
 			//sem_post(&mutexMemoria);
-			mostrarlistaPaginasLRU(listaPaginasLRU);
+			//mostrarlistaPaginasLRU(listaPaginasLRU);
 			return registro;
 		}
 	}else{
@@ -676,7 +676,7 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 		log_error(logger, "No se pudo encontrar la key %d: LFS no conectado", key);
 		sem_post(&loggerSemaforo);
 		//sem_post(&mutexMemoria);
-		mostrarlistaPaginasLRU(listaPaginasLRU);
+		//mostrarlistaPaginasLRU(listaPaginasLRU);
 		return NULL;
 	}
 }
