@@ -73,14 +73,16 @@ void pideListaGossiping_1(int socketMem) {
 	sem_post(&gossip);
 }
 
-void pideListaGossiping(int socketMem) {
+int pideListaGossiping(int socketMem) {
 	tPaquete* msjeEnviado = malloc(sizeof(tPaquete));
 	msjeEnviado->type = GOSSIPING;
 	strcpy(msjeEnviado->payload, "Kernel pide Lista de Gossiping a Memoria");
 	msjeEnviado->length = sizeof(msjeEnviado->payload);
-	enviarPaquete(socketMem, msjeEnviado, logger,
-			"Kernel realiza pedido de Lista de Gossiping a Memoria");
-	liberarPaquete(msjeEnviado);
+	if(enviarPaquete(socketMem, msjeEnviado, logger, "Kernel realiza pedido de Lista de Gossiping a Memoria")==-1){
+		liberarPaquete(msjeEnviado);
+		return 0;
+	}else
+		return 1;
 /*
 	int status;
 	int cantElementosListaRecibida;
@@ -148,8 +150,21 @@ void gossipingKernel() {
 		if (listaGossiping->elements_count > 0) {
 			// Hago Gossiping siempre con la primera Memoria que esté en listaGossiping (Si no se desconectó, va a ser la que tenemos en el Archivo de Configuración)
 			TablaGossip* nodoTablaGossipAux = listaGossiping->head->data;
-			pideListaGossiping(nodoTablaGossipAux->socketMemoria);
+			if(nodoTablaGossipAux)
+				if(pideListaGossiping(nodoTablaGossipAux->socketMemoria)==0)
+					listaGossiping->head->data = listaGossiping->head->next;
 		}
+		/*if (hizoGossipingConSeed == 0) {
+			if (listaGossiping->elements_count > 1) { // Hay alguna otra memoria además de la actual
+				TablaGossip* nodoTablaGossipAux = listaGossiping->head->next->data;
+				sem_wait(&loggerSemaforo);
+				log_trace(logger, "Memoria hace Gossiping con la Memoria %d", nodoTablaGossipAux->IDMemoria);
+				sem_post(&loggerSemaforo);
+				pideListaGossiping_2(nodoTablaGossipAux->socketMemoria);
+				//enviaLista(nodoTablaGossipAux->socketMemoria);
+				enviarListaGossiping(nodoTablaGossipAux->socketMemoria);
+			}
+		}*/
 	}
 }
 

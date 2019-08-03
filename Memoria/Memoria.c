@@ -120,7 +120,9 @@ int main(int argc, char* argv[])
 		socketSEED[i] = 1;
 	}
 	configurar(configuracion);
-
+	for (int i = 0; i < BACKLOG; i++) {
+			cliente[i][0] = 0;
+	}
 	// cliente
 	socketLFS = connectToServer(configuracion->IP_FS, configuracion->PUERTO_FS, logger);
 
@@ -176,8 +178,8 @@ int main(int argc, char* argv[])
 	t_list* retornoLista;
 	int status;
 	TablaGossip* nodoRecibido;
-	int seed_n;
-
+	//int seed_n;
+	cantidadClientes = 0;
 	sem_wait(&gossipMemoria);
 	while (1) {
 		//puts("Escuchando");
@@ -371,20 +373,24 @@ int main(int argc, char* argv[])
 				enviarPaquete(socketActivo, mensaje, logger, "Enviar Retardo de Gossiping a Kernel");
 				liberarPaquete(mensaje);
 				break;
-			/*case HANDSHAKE_MEM:
-				if(sPayload){
-					char** memoriaDATA = string_split(sPayload,"-");
-					connectToServer(memoriaDATA[0],atoi(memoriaDATA[1]),logger);
-					free(memoriaDATA[0]);
-					free(memoriaDATA[1]);
-					free(memoriaDATA);
-					free(sPayload);
+			case HANDSHAKE_MEM:
+				sem_wait(&loggerSemaforo);
+				log_info(logger, "Memorias realizan Handshake");
+				sem_post(&loggerSemaforo);
+				for (int i = 0; i < BACKLOG; i++) {
+					if(cliente[i][0] == 0){
+						cliente[i][0] = socketActivo;
+						cliente[i][1] = atoi(sPayload);
+						cantidadClientes ++;
+						break;
+					}
 				}
-				break;*/
+				if(sPayload)free(sPayload);
+				break;
 			case GOSSIPING:
 				if(sPayload)free(sPayload);
 				//sem_wait(&loggerSemaforo);
-				//log_info(logger, "Pedido de Lista de Gossiping a Memoria");
+				//log_info(logger, "Me piden Lista de Gossiping");
 				//sem_post(&loggerSemaforo);
 				enviarListaGossiping(socketActivo);
 				sem_wait(&mutexMemoria);
@@ -395,10 +401,10 @@ int main(int argc, char* argv[])
 				//log_info(logger, "Recibo Lista de Gossiping");
 				//sem_post(&loggerSemaforo);
 				//recibeLista(socketActivo);
-				for (seed_n = 0; seed_n < CANT_MAX_SEEDS; seed_n++) {
+				/*for (seed_n = 0; seed_n < CANT_MAX_SEEDS; seed_n++) {
 					if(socketActivo == socketSEED[seed_n])
 						break;
-				}
+				}*/
 				//sem_wait(&loggerSemaforo);
 				//log_info(logger, "Cantidad de memorias en lista de Gossiping: %d", atoi(sPayload));
 				//sem_post(&loggerSemaforo);
@@ -406,7 +412,10 @@ int main(int argc, char* argv[])
 					nodoRecibido = malloc(sizeof(TablaGossip));
 					status = recibirNodoYDeserializar(nodoRecibido, socketActivo);
 					if (status){
-						armarNodoMemoria(nodoRecibido,seed_n);
+						//sem_wait(&loggerSemaforo);
+						//log_warning(logger, "SOCKET Gossiping: %d", socketActivo);
+						//sem_post(&loggerSemaforo);
+						armarNodoMemoria(nodoRecibido,CANT_MAX_SEEDS);
 					}
 				}
 				break;
@@ -414,13 +423,7 @@ int main(int argc, char* argv[])
 				sem_wait(&loggerSemaforo);
 				log_info(logger, "Se desconecto un cliente, socket: %d", socketActivo);
 				sem_post(&loggerSemaforo);
-				for (int i = 0; i < CANT_MAX_SEEDS; i++) {
-					if(socketActivo == socketSEED[i]){
-						eliminaMemoriaDeListaGossiping(socketActivo);
-						socketSEED[i] = 1;
-						seed--;
-					}
-				}
+				eliminaMemoriaDeListaGossiping(socketActivo);
 				break;
 			default:
 				//printf("Tipo de mensaje desconocido \n");
@@ -435,8 +438,21 @@ int main(int argc, char* argv[])
 }
 
 void terminar(){
+	t_link_element* nodoActual = listaGossiping->head;
+	TablaGossip* nodoAux;
+	tPaquete* msjeEnviado;
+	for (int i = 1; i < listaGossiping->elements_count; i++) {
+		nodoAux = nodoActual->next->data;
+		msjeEnviado = malloc(sizeof(tPaquete));
+		msjeEnviado->type = DESCONEXION;
+		strcpy(msjeEnviado->payload, "Me desconecte");
+		msjeEnviado->length = sizeof(msjeEnviado->payload);
+		enviarPaquete(nodoAux->socketMemoria, msjeEnviado, logger,"Memoria avisa que se desconecta");
+		liberarPaquete(msjeEnviado);
+	}
 	memoriaPrincipalDestruir();
 	list_destroy(listaPaginasLRU);
+	list_destroy(listaGossiping);
 	if(socketLFS!=1)desconectarseDe(socketLFS);
 	int s=0;
 	while(configuracion->PUERTO_SEEDS[s] != 0 && s<seed){
@@ -454,7 +470,8 @@ void terminar(){
 	sem_destroy(&mutexMemoria);
 	sem_destroy(&gossipMemoria);
 	free(configuracion);
-	close(socketEscucha);
+	//close(socketEscucha);
+	//shutdown(socketEscucha,SHUT_RDWR);
 	exit(0);
 }
 

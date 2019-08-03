@@ -41,6 +41,8 @@ int maxSock;
 int socketActivo;
 int	socketLFS;
 int	socketSEED[CANT_MAX_SEEDS];
+int cliente[BACKLOG][2];
+int cantidadClientes;
 int seed;
 
 t_log* logger;
@@ -184,12 +186,13 @@ t_nodoLRU* insertarEnListaDePaginasLRU(t_list* lista, t_nodoLRU* nodo);
 void removerElemento(t_list* lista, t_nodoLRU* nodo);
 
 // Funciones para Gossiping
-void conectateconmigo(int socket);
+void realizarHandshake(int socket);
+void eliminaMemoriaDeListaGossipingSERVER(int socketMem);
 void eliminaMemoriaDeListaGossiping(int socketMem);
 void conectarConNuevaMemoria(TablaGossip* nodo, int seed_gos);
 void armarNodoMemoria(TablaGossip* nodo, int seed_gos);
-void recibeLista(int socketMem, int seed_gos);
-void pideListaGossiping(int socketMem, int seed_gos);
+int recibeLista(int socketMem, int seed_gos);
+int pideListaGossiping(int socketMem, int seed_gos);
 void pideListaGossiping_2(int socketMem);
 void enviarListaGossiping(int socketEnvio);
 void enviaLista(int socketMem);
@@ -199,5 +202,7 @@ void* gossipingMemoria();
 void serializarNodo(TablaGossip* nodo, char* paqueteSerializado);
 int recibirNodoYDeserializar(TablaGossip *nodo, int socketMem);
 int nodoEstaEnLista(t_list* lista, TablaGossip* nodo);
+void muestraLista(char* elemento);
+void muestraListaGossip(TablaGossip* elemento);
 
 #endif /* MEMORIA_H_ */
