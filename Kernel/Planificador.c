@@ -461,7 +461,7 @@ void* describeAutomatico (){
     			break;
     		}
         }*/
-    	sleep(configuracion->METADATA_REFRESH / 1000);
+    	usleep(configuracion->METADATA_REFRESH * 1000);
     	//sem_wait(&loggerSemaforo);
     	//log_debug(logger, "DESCRIBE automático ejecutando");
     	//sem_post(&loggerSemaforo);

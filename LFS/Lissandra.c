@@ -595,7 +595,7 @@ void createLFS(char* nombreTabla, char* consistencia, int particiones, long tiem
 		sem_post(&loggerSemaforo);
 		return;
 	}
-	sleep(configuracion->RETARDO / 1000);
+	usleep(configuracion->RETARDO * 1000);
 	if(tablaEncontrar(nombreTabla)!=NULL){
 		sem_wait(&loggerSemaforo);
 		log_error(logger, "Ya existe una tabla con el nombre \"%s\"", nombreTabla);
@@ -617,7 +617,7 @@ void insertLFS(char* nombreTabla, uint16_t key, char* value, uint64_t timestamp)
 		sem_post(&loggerSemaforo);
 		return;
 	}
-	sleep(configuracion->RETARDO / 1000);
+	usleep(configuracion->RETARDO * 1000);
 	sleep(1);
 	Tabla* t = tablaEncontrar(nombreTabla);
 	if(!t){
@@ -636,7 +636,7 @@ void insertLFS(char* nombreTabla, uint16_t key, char* value, uint64_t timestamp)
 	sem_post(&loggerSemaforo);
 }
 char* selectLFS(char* nombreTabla, uint16_t key){
-	sleep(configuracion->RETARDO / 1000);
+	usleep(configuracion->RETARDO * 1000);
 	Tabla* tabla = tablaEncontrar(nombreTabla);
 	if(!tabla){
 		sem_wait(&loggerSemaforo);
@@ -659,7 +659,7 @@ char* selectLFS(char* nombreTabla, uint16_t key){
 	}
 }
 t_list* describeLFS(char* nombreTabla){
-	sleep(configuracion->RETARDO / 1000);
+	usleep(configuracion->RETARDO * 1000);
 	t_list* listaTablas = list_create();
 	char* tabla_s;
 	if(nombreTabla){
@@ -694,7 +694,7 @@ t_list* describeLFS(char* nombreTabla){
 	return listaTablas;
 }
 void dropLFS(char* nombreTabla){
-	sleep(configuracion->RETARDO / 1000);
+	usleep(configuracion->RETARDO * 1000);
 	Tabla* tabla = tablaEncontrar(nombreTabla);
 	if(!tabla){
 		sem_wait(&loggerSemaforo);
@@ -713,10 +713,10 @@ void dumpLFS(){
 	long tiempo;
 	while(1){
 		sem_wait(&configSemaforo);
-		tiempo = configuracion->TIEMPO_DUMP/1000;
+		tiempo = configuracion->TIEMPO_DUMP*1000;
 		sem_post(&configSemaforo);
 		//printf("Dump : %hd\n", tiempo);
-		sleep(tiempo);
+		usleep(tiempo);
 		sem_wait(&dumpSemaforo);
 		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 		dump();
@@ -728,9 +728,9 @@ void dumpLFS(){
 void compactacion(char* nombreTabla){
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	Tabla* t = tablaEncontrar(nombreTabla);
-	long tiempo = t->metadata->tiempoCompactacion/1000;
+	long tiempo = t->metadata->tiempoCompactacion*1000;
 	while(1){
-		sleep(tiempo);
+		usleep(tiempo);
 		sem_wait(&t->semaforo);
 		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 		compactar(nombreTabla);

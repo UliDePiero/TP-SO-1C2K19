@@ -71,7 +71,7 @@ char* ejecutarSelect(char* instruccion){
 	char** comando = validarComando(instruccion, 3);
 	if(comando){
 		Registro* registro = selectMemoria(comando[1], atoi(comando[2]));
-		sleep(configuracion->RETARDO_MEM / 1000);
+		usleep(configuracion->RETARDO_MEM * 1000);
 		if(registro != NULL)
 		{
 			//printf("value: %s\n", registro->value);
@@ -94,7 +94,7 @@ char* ejecutarInsert(char* instruccion){
 	char** comando = validarComandoInsert(instruccion);
 	//char** comando = validarComando(instruccion, 4);
 	if(comando){
-		sleep(configuracion->RETARDO_MEM / 1000);
+		usleep(configuracion->RETARDO_MEM * 1000);
 		insertMemoria(comando[1], atoi(comando[2]), comando[3], getCurrentTime(), 1);
 		retorno = string_from_format("Tabla:%s Key:%d Value:%s",comando[1], atoi(comando[2]), comando[3]);
 		for(int i = 0; i<4; i++)
@@ -138,7 +138,7 @@ t_list* ejecutarDescribe(char* instruccion){
 	t_list* retorno;
 	char** comando = string_n_split(instruccion, 2, " ");
 	if(comando[1]){
-		sleep(configuracion->RETARDO_MEM / 1000);
+		usleep(configuracion->RETARDO_MEM * 1000);
 		retorno = list_create();
 		char* metadata = describeMemoriaTabla(comando[1]);
 		list_add(retorno, metadata);
@@ -148,7 +148,7 @@ t_list* ejecutarDescribe(char* instruccion){
 		log_info(logger, "Resultado de '%s': %s ", instruccion, metadata);
 		sem_post(&loggerSemaforo);
 	}else{
-		sleep(configuracion->RETARDO_MEM / 1000);
+		usleep(configuracion->RETARDO_MEM * 1000);
 		retorno = describeMemoria();
 		//list_iterate(retorno,(void*)muestraLista);
 	}
@@ -162,7 +162,7 @@ char* ejecutarDrop(char* instruccion){
 	//puts("drop ejecutado");
 	char** comando = validarComando(instruccion, 2);
 	if(comando){
-		sleep(configuracion->RETARDO_MEM / 1000);
+		usleep(configuracion->RETARDO_MEM * 1000);
 		dropMemoria(comando[1]);
 		retorno = string_duplicate(comando[1]);
 		for(int i = 0; i<2; i++)
@@ -177,7 +177,7 @@ int ejecutarJournal(char* instruccion){
 	int retorno = 0;
 	char** comando = validarComando(instruccion, 1);
 	if(comando){
-		sleep(configuracion->RETARDO_MEM / 1000);
+		usleep(configuracion->RETARDO_MEM * 1000);
 		journalMemoria();
 		free(comando[0]);
 		free(comando);

@@ -142,7 +142,7 @@ void gossipingKernel() {
 	pideListaGossiping_1(socketMemoria);
 
 	while (1) {
-		sleep(retardoGossiping / 1000);
+		usleep(retardoGossiping * 1000);
 
 		//sem_wait(&loggerSemaforo);
 		//log_debug(logger, "Kernel hace Gossiping con Memoria");

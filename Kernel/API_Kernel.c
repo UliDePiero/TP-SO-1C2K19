@@ -58,7 +58,7 @@ void API_Kernel(void){
 			case DESCRIBE:
 				cargarNuevoLQL(instruccion_API);
 				sem_wait(&semEjecutarLQL);
-				sleep(configuracion->SLEEP_EJECUCION / 1000);
+				usleep(configuracion->SLEEP_EJECUCION * 1000);
 				ejecutarDescribe(instruccion_API);
 				moverLQL(Exec,Exit);
 				LQL = queue_peek(Exit);
@@ -442,7 +442,7 @@ void limpiarListaTablas(Tabla* tabla){
 }
 
 int ejecutarSelect(char* instruccion){
-	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	usleep(configuracion->SLEEP_EJECUCION * 1000);
 	int resultado = 0;
 	char** comando = validarComando(instruccion, 3);
 	if(comando){
@@ -480,7 +480,7 @@ int ejecutarSelect(char* instruccion){
 	return EXIT_FAILURE;
 }
 int ejecutarInsert(char* instruccion){
-	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	usleep(configuracion->SLEEP_EJECUCION * 1000);
 	int resultado = 0;
 	char** comando = validarComandoInsert(instruccion);
 	if(comando){
@@ -521,7 +521,7 @@ int ejecutarInsert(char* instruccion){
 	return EXIT_FAILURE;
 }
 void ejecutarCreate(char* instruccion){
-	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	usleep(configuracion->SLEEP_EJECUCION * 1000);
 	int resultado = 0;
 	char** comando = validarComando(instruccion, 5);
 	if(comando){
@@ -589,7 +589,7 @@ void ejecutarDescribe(char* instruccion){
 	}
 }
 int ejecutarDrop(char* instruccion){
-	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	usleep(configuracion->SLEEP_EJECUCION * 1000);
 	int resultado = 0;
 	char** comando = validarComando(instruccion, 2);
 	if(comando){
@@ -638,7 +638,7 @@ int ejecutarDrop(char* instruccion){
 	return EXIT_FAILURE;
 }
 void ejecutarJournal(char* instruccion){
-	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	usleep(configuracion->SLEEP_EJECUCION * 1000);
 	int resultado = 0, nroMemoria = -1;
 	TablaGossip* memoriaElegida;
 	char** comando = validarComando(instruccion, 1);
@@ -700,7 +700,7 @@ void ejecutarJournal(char* instruccion){
 }
 
 void ejecutarAdd(char* instruccion) {
-	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	usleep(configuracion->SLEEP_EJECUCION * 1000);
 	char** comando = validarComando(instruccion, 5);
 	if (comando){
 		if (validacionStringsFijosAdd(comando) && cadenaEsDigito(comando[2]) && validacionStringCriterios(comando[4])) {
@@ -727,7 +727,7 @@ void ejecutarAdd(char* instruccion) {
 	}
 }
 int ejecutarRun(char* instruccion, int requestEjecutadas){
-	sleep(configuracion->SLEEP_EJECUCION / 1000);
+	usleep(configuracion->SLEEP_EJECUCION * 1000);
 	FILE *script;
 	char *stringLQL;
 	int quantum = configuracion->QUANTUM;
@@ -801,7 +801,7 @@ int ejecutarRun(char* instruccion, int requestEjecutadas){
 							ejecutarDescribe(stringLQL);
 							moverLQL(Exec,Exit);
 							sem_post(&semMultiprocesamiento);*/
-							sleep(configuracion->SLEEP_EJECUCION / 1000);
+							usleep(configuracion->SLEEP_EJECUCION * 1000);
 							ejecutarDescribe(stringLQL);
 							break;
 						case DROP:

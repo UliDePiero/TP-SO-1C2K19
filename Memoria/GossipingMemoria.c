@@ -304,7 +304,7 @@ void* gossipingMemoria() {
 	sem_post(&gossipMemoria);
 
 	while (1) {
-		sleep(configuracion->RETARDO_GOSSIPING / 1000);
+		usleep(configuracion->RETARDO_GOSSIPING * 1000);
 		//list_iterate(listaGossiping,(void*)muestraListaGossip);
 
 		//int hizoGossipingConSeed = 0;
