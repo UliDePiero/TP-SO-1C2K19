@@ -963,7 +963,7 @@ void asignarRegistroASegmentoExistente(uint16_t key, char* value, uint64_t times
 }
 void reasignarRegistroASegmentoExistente(uint16_t key, char* value, uint64_t timestamp, int nSegmento, int nPagina, int flagModificado){
 	Pagina* paginaDelSegmento = paginaCrear_2(flagModificado, tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]->frame);
-	//paginaDestruir(tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]);
+	paginaDestruir(tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]);
 	tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina] = paginaDelSegmento;
 	//tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]->frame = granMalloc + nRegistro*tamanioRealDeUnRegistro;
 	setRegistro(tablaDeSegmentos[nSegmento]->tablaDePaginas[nPagina]->frame,key,timestamp,value);
