@@ -665,11 +665,11 @@ Registro* selectMemoria(char* tabla, uint16_t key){
 		{
 			usleep(configuracion->RETARDO_MEM*1000);
 			insertMemoria(tabla, key, sPayload, getCurrentTime(), 0);
-			free(sPayload);
 			Registro* registro = malloc(sizeof(Registro));
 			registro->value = string_duplicate(sPayload);
 			registro->key = key;
 			registro->timestamp = getCurrentTime();
+			free(sPayload);
 			//sem_post(&mutexMemoria);
 			//mostrarlistaPaginasLRU(listaPaginasLRU);
 			return registro;
