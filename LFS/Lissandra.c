@@ -618,7 +618,7 @@ void insertLFS(char* nombreTabla, uint16_t key, char* value, uint64_t timestamp)
 		return;
 	}
 	usleep(configuracion->RETARDO * 1000);
-	sleep(1);
+	//sleep(1);
 	Tabla* t = tablaEncontrar(nombreTabla);
 	if(!t){
 		sem_wait(&loggerSemaforo);
